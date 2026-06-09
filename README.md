@@ -22,23 +22,26 @@ Desarrollado con **Angular 20** y **OpenLayers**.
  - **GeoServer:** Gestión y publicación de datos espaciales municipales.
 - **Google Maps API:** Capas satelitales.
 
-## 📁 Estructura del proyecto
+### 📂 Estructura del Proyecto
+
+```text
 src/
- ├── app/
- │   ├── animation/       # Componentes, pipes y utilidades reutilizables
- │   ├── components/      # 
- │   ├── core/            # Servicios globales, interceptores, guards
- │   ├── css/             #
- │   ├── interfaces/      #
- │   ├── models/          #
- │   ├── services/        #
- │   ├── util/            #
- │   ├── features/        # Módulos por dominio/funcionalidad
- │   └── app.module.ts
- ├── assets/
- ├── environments/
- │   ├── environment.ts
- │   └── environment.prod.ts
- ├── typings/
- └── main.ts
+├── app/
+│   ├── animation/      # Animaciones, transiciones y lógica visual reutilizable.
+│   ├── components/     # Componentes comunes compartidos en toda la aplicación.
+│   ├── core/           # Servicios singleton, interceptores y guards globales.
+│   ├── css/            # Estilos globales y configuraciones de diseño (Tailwind/PostCSS).
+│   ├── interfaces/     # Definiciones de tipos y contratos de datos (interfaces).
+│   ├── models/         # Clases de dominio y modelos de datos.
+│   ├── services/       # Lógica de negocio y comunicación con APIs externas.
+│   ├── util/           # Funciones auxiliares y utilidades puras.
+│   ├── features/       # Módulos organizados por dominio o funcionalidad de negocio.
+│   └── app.module.ts   # Módulo raíz principal de la aplicación.
+├── assets/             # Recursos estáticos (imágenes, iconos, fuentes).
+├── environments/       # Configuraciones por entorno (desarrollo, producción).
+│   ├── environment.ts
+│   └── environment.prod.ts
+├── typings/            # Definiciones de tipos globales (.d.ts).
+└── main.ts             # Punto de entrada de la aplicación para el bootstrap.
+```
 ```

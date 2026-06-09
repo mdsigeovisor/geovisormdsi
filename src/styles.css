@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+@import "bootstrap-icons/font/bootstrap-icons.css";
+@import "material-icons/iconfont/material-icons.css";
+
+@theme {
+  /* Definición de colores para v4 */
+  --color-primary: #518330;
+  --color-secondary: #D3E092;
+  --font-family-poppins: "Poppins", sans-serif;
+  --font-arial: Arial, Helvetica, sans-serif;
+}
+
+/* Elimina el cuadro/borde de selección de OpenLayers y mejora la carga */
+.ol-viewport {
+  outline: none !important;
+  background-color: #0b0e14 !important; /* Fondo oscuro acorde al satélite */
+}
+
+/* Oculta los controles nativos si prefieres una interfaz más limpia */
+.ol-zoom, .ol-attribution {
+  display: none !important;
+}

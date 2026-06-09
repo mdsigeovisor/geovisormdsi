@@ -1,0 +1,78 @@
+<div
+  class="absolute inset-0 z-50 flex flex-col items-center justify-center p-4 font-sans bg-primary/95 backdrop-blur-[2px]">
+  <!-- Imagen de fondo tipo sombra / marca de agua -->
+  <div class="fondo-sombra-container">
+    <img src="assets/images/fondo_welcome.jpg" class="fondo-sombra-img" alt>
+  </div>
+  <div
+    class="relative z-10 w-full max-w-md scale-[0.7] md:scale-100 overflow-hidden rounded-3xl bg-white backdrop-blur-md px-6 py-8 shadow-[0_0_100px_10px_rgba(255,255,255,0.9)] border border-white/20">
+    <div class="relative z-10 text-center">
+      <div class="mb-4 flex items-center justify-center gap-2">
+        <img src="assets/images/logomsi.jpg"
+          alt="Municipalidad de San Isidro"
+          class="hidden md:block h-24 w-auto"
+          onerror="this.onerror=null; this.src='https://v0.app/placeholder.svg';">
+      </div>
+      <div class="mb-6 text-center">
+        <h1 class="text-2xl font-bold text-primary">Bienvenidos</h1>
+        <p class="text-lg font-medium text-primary">Visor Atención al
+          Ciudadano</p>
+      </div>
+      <p class="mb-4 text-center text-sm leading-snug text-primary">
+        Acceda al visor geográfico para consultar información urbana, catastral
+        y territorial.
+      </p>
+      <div class="mb-4 flex items-center gap-3 rounded-xl bg-gray-600/30 p-4">
+        <input id="terms" type="checkbox"
+          class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+          [(ngModel)]="termsAccepted" />
+        <label for="terms"
+          class="cursor-pointer text-xs leading-tight text-primary select-none">
+          Acepto los <a routerLink="/terminos"
+            class="font-bold underline hover:text-white transition-colors">términos
+            y condiciones</a> de uso del sistema y las <a
+            routerLink="/privacidad"
+            class="font-bold underline hover:text-white transition-colors">políticas
+            de privacidad.</a>
+        </label>
+      </div>
+      <div class="flex flex-col gap-4">
+        <button routerLink="/visor" [disabled]="!termsAccepted"
+          class="flex items-center justify-center gap-2 h-10 w-full rounded-xl bg-[#fcf4dd]/80 border border-[#e9c46a]/30 text-primary text-base font-semibold transition-all hover:bg-[#f7e8c3] active:scale-[0.98] disabled:opacity-50 cursor-pointer disabled:cursor-default">
+          <span class="material-icons text-primary">account_circle</span>
+          Consulta como vecino
+        </button>
+        <button routerLink="/auth/login" [disabled]="!termsAccepted"
+          class="flex items-center justify-center gap-2 h-10 w-full rounded-xl bg-primary text-white text-base font-semibold shadow-md transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50 cursor-pointer disabled:cursor-default">
+          <span class="material-icons text-white">login</span>
+          Iniciar Sesión
+        </button>
+
+      </div>
+      <p class="mt-4 text-center text-base font-medium text-primary">MSI ©
+        {{ currentYear }}</p>
+    </div>
+  </div>
+  <div class="relative z-10 mt-8 text-center">
+    <p class="mb-3 text-white text-sm font-medium drop-shadow-md">Navegadores
+      recomendados</p>
+    <div class="flex justify-center gap-8">
+      <div class="flex flex-col items-center gap-1 group cursor-default">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/a/a0/Firefox_logo%2C_2019.svg"
+          class="h-9 w-9 drop-shadow-lg grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+          alt="Firefox">
+        <span
+          class="text-white text-xs font-semibold drop-shadow-md">Firefox</span>
+      </div>
+      <div class="flex flex-col items-center gap-1 group cursor-default">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Google_Chrome_icon_%28February_2022%29.svg"
+          class="h-9 w-9 drop-shadow-lg grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+          alt="Chrome">
+        <span
+          class="text-white text-xs font-semibold drop-shadow-md">Chrome</span>
+      </div>
+    </div>
+  </div>
+</div>

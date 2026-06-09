@@ -1,0 +1,78 @@
+<div class="flex flex-col h-full space-y-4 animate-in fade-in duration-300">
+  <!-- Lista de Secciones y Capas -->
+  <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+    <div class="space-y-3">
+    @for (section of sections(); track section.id) {
+    <div class="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition-all">
+      <!-- Cabecera de Sección -->
+      <div
+        class="flex w-full items-center justify-between p-3.5 text-left transition-colors hover:bg-gray-50 cursor-pointer group"
+        (click)="toggleSectionExpanded(section.id)">
+        <div class="flex items-center gap-2.5">
+          <div class="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary transition-transform duration-300"
+            [class.rotate-180]="section.expanded">
+            <i class="bi bi-chevron-down text-[10px]"></i>
+          </div>
+          <span class="font-bold text-gray-700 text-[11px] uppercase tracking-wider">{{ section.title }}</span>
+        </div>
+        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+          <button (click)="toggleAllLayersInSection(section.id, true); $event.stopPropagation()"
+            class="h-8 w-8 flex items-center justify-center text-primary/60 hover:bg-primary/10 hover:text-primary transition-all rounded-xl"
+            title="Mostrar todas">
+            <i class="bi bi-eye-fill"></i>
+          </button>
+          <button (click)="toggleAllLayersInSection(section.id, false); $event.stopPropagation()"
+            class="h-8 w-8 flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all rounded-xl"
+            title="Ocultar todas">
+            <i class="bi bi-eye-slash"></i>
+          </button>
+        </div>
+      </div>
+      <!-- Items de Capas -->
+      @if (section.expanded) {
+      <div
+        class="border-t border-gray-50 bg-gray-50/30 divide-y divide-gray-50 animate-in slide-in-from-top-2 duration-300">
+        @for (layer of section.layers; track layer.id) {
+        <div class="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-white group/item">
+          <div class="flex items-center gap-3">
+            <div class="relative flex items-center">
+              <input type="checkbox" [id]="section.id + '-' + layer.id" [checked]="layer.visible"
+                (change)="toggleLayerVisibility(section.id, layer.id)"
+                class="w-5 h-5 rounded-lg border-gray-300 text-primary focus:ring-primary/20 cursor-pointer transition-all accent-primary" />
+            </div>
+
+            <label [for]="section.id + '-' + layer.id"
+              class="flex-1 cursor-pointer text-[11px] font-bold text-gray-600 group-hover/item:text-primary transition-colors leading-tight">
+              {{ layer.label }}
+            </label>
+          </div>
+
+          <!-- Control de Opacidad -->
+          <div class="flex items-center gap-3 pl-8" [class.opacity-40]="!layer.visible">
+            <span class="text-[9px] font-bold text-gray-400 uppercase w-12">Opacidad</span>
+            <input type="range" min="0" max="100" [value]="layer.opacity * 100"
+              (input)="onOpacityChange(section.id, layer.id, $event); $event.stopPropagation()"
+              class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+              [disabled]="!layer.visible"
+              title="Opacidad" />
+            <span class="text-[9px] font-mono font-bold text-primary w-6">{{ (layer.opacity * 100) | number:'1.0-0' }}%</span>
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+    </div>
+  </div>
+
+  <!-- Pie de página -->
+  <div class="pt-3 border-t border-gray-100 bg-white sticky bottom-0">
+    <div class="p-3 rounded-xl bg-primary/5 border border-primary/10 flex gap-3">
+      <i class="bi bi-info-circle-fill text-primary/60 text-sm"></i>
+      <p class="text-[10px] text-primary/80 leading-normal font-medium italic">
+        Use los interruptores para activar o desactivar las capas de información geográfica sobre el mapa.
+      </p>
+    </div>
+  </div>
+</div>

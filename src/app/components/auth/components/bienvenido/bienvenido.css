@@ -1,0 +1,25 @@
+/* Estilos para el contenedor principal del componente */
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Estilos para la imagen inyectada en el HTML */
+.fondo-sombra-container {
+  position: absolute;
+  inset: 0;
+  z-index: 5; /* Por encima del fondo azul, pero debajo de la tarjeta */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fondo-sombra-img {
+  width: 100%;
+  height: 100%;
+  opacity: 0.1; /* Un poco más sutil ya que ocupa toda la pantalla */
+  filter: grayscale(100%) brightness(1.1);
+  object-fit: cover; /* Llena todo el espacio manteniendo la proporción (responsivo) */
+  object-position: center;
+}

@@ -1,0 +1,37 @@
+<div class="flex flex-col h-full space-y-4 animate-in fade-in duration-300">
+  <!-- Contenido de la leyenda -->
+  <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+    <div class="space-y-3">
+      @if (activeLegends().length === 0) {
+        <div class="flex flex-col items-center justify-center p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+          <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-3">
+            <i class="bi bi-map text-xl"></i>
+          </div>
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider leading-relaxed">No hay capas activas<br>con simbología.</p>
+          <p class="text-[10px] text-gray-400 mt-2 italic">Active capas en el panel anterior para ver su leyenda aquí.</p>
+        </div>
+      } @else {
+        @for (item of activeLegends(); track item.label) {
+          <div class="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition-all">
+            <div class="bg-gray-50/50 px-4 py-2.5 border-b border-gray-50">
+              <span class="font-bold text-gray-700 text-[11px] uppercase tracking-wider leading-tight block">{{ item.label }}</span>
+            </div>
+            <div class="p-4 flex justify-center items-center">
+              <img [src]="item.url" [alt]="item.label" class="max-w-full h-auto object-contain filter drop-shadow-sm">
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Pie de página -->
+  <div class="pt-3 border-t border-gray-100 bg-white sticky bottom-0">
+    <div class="p-3 rounded-xl bg-primary/5 border border-primary/10 flex gap-3">
+      <i class="bi bi-info-circle-fill text-primary/60 text-sm"></i>
+      <p class="text-[10px] text-primary/80 leading-normal font-medium italic">
+        La leyenda se actualiza automáticamente mostrando solo la simbología de las capas visibles en el mapa.
+      </p>
+    </div>
+  </div>
+</div>

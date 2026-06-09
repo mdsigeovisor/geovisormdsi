@@ -1,0 +1,71 @@
+/* 1. CONTENEDOR PRINCIPAL - row-reverse ancla el botón a la derecha */
+::ng-deep .custom-overview {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  align-items: flex-end !important;
+  background-color: transparent !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+::ng-deep .ol-overviewmap.ol-unselectable.ol-control {
+  background-color: transparent !important;
+  padding: 0 !important;
+}
+
+/* 2. LA VENTANA DEL MAPA */
+::ng-deep .custom-overview:not(.ol-collapsed) .ol-overviewmap-map {
+  width: 192px !important;
+  height: 192px !important;
+  background-color: #194a8b !important;
+  border: 3px solid #103461 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  display: block !important;
+}
+
+/* 3. EL BOTÓN - Con margen a la izquierda para separar del mapa cuando está abierto */
+::ng-deep .custom-overview .ol-overviewmap-button {
+  position: relative !important;
+  margin-left: 8px !important;
+  z-index: 2000 !important;
+
+  background-color: #194a8b !important;
+  border: 2px solid #ffffff !important;
+  color: white !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-weight: bold !important;
+}
+
+/* 4. RESET DEL CANVAS (Para que no se pierda) */
+::ng-deep .custom-overview .ol-viewport,
+::ng-deep .custom-overview canvas {
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  transform: none !important;
+}
+
+/* 5. ESTADO COLAPSADO */
+::ng-deep .custom-overview.ol-collapsed .ol-overviewmap-map {
+  width: 0px !important;
+  height: 0px !important;
+  border: none !important;
+  display: none !important;
+}
+
+/* 6. EL RECUADRO ROJO */
+::ng-deep .ol-overviewmap-box {
+  border: 2px solid #ff0000 !important;
+  background-color: rgba(255, 0, 0, 0.2) !important;
+}

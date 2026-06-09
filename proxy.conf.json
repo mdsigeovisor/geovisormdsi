@@ -1,0 +1,11 @@
+{
+  "/igp-proxy": {
+    "target": "https://ide.igp.gob.pe",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/igp-proxy": ""
+    },
+    "logLevel": "debug"
+  }
+}

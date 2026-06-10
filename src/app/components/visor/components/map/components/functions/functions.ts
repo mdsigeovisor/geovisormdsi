@@ -5,17 +5,17 @@ import { MapService, ANIMATION_DURATION, ZOOM_LEVEL_LOCATION, SAN_ISIDRO_ZOOM } 
 import { fromLonLat, Overlay, OverlayPositioning, transformExtent } from '../../../../../../modules/openlayers.module';
 
 @Component({
-  selector: 'app-funciones',
+  selector: 'app-functions',
   standalone: true,
   imports: [CommonModule, OverviewMapComponent],
-  templateUrl: './funciones.html',
-  styleUrl: './funciones.css',
+  templateUrl: './functions.html',
+  styleUrl: './functions.css',
 })
 export class Funciones {
   private readonly mapService = inject(MapService);
 
   /**
-   * Referencias a los elementos del DOM definidos localmente en funciones.html
+   * Referencias a los elementos del DOM definidos localmente en functions.html
    */
   @ViewChild('userMarker') userMarkerEl!: ElementRef;
   @ViewChild('locationPopup') locationPopupEl!: ElementRef;

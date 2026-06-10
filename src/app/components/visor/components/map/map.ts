@@ -5,7 +5,7 @@ import { MapService } from '../../../../services/map.service';
 // Componentes relacionados
 import { Navbar } from './components/navbar/navbar';
 import { Sidebar } from './components/sidebar/sidebar';
-import { Funciones } from './components/funciones/funciones';
+import { Funciones } from './components/functions/functions';
 /**
  * Componente principal de la interfaz del mapa.
  * Coordina la visualización de la barra de herramientas, barra lateral y los controles
@@ -27,8 +27,8 @@ export class MapComponent {
   /** Referencia al contenedor principal donde se inyecta el lienzo de OpenLayers */
   @ViewChild('mapContainer') mapContainer!: ElementRef;
 
-  private mapService = inject(MapService);
-  private cdr = inject(ChangeDetectorRef);
+  private readonly mapService = inject(MapService);
+  private readonly cdr = inject(ChangeDetectorRef);
   constructor() {
     // afterNextRender asegura que el mapa se inicialice solo en el cliente (navegador)
     afterNextRender(() => {

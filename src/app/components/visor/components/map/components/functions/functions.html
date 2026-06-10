@@ -1,8 +1,8 @@
 <!-- Controles de Zoom Personalizados -->
-@if (isReady()) {
-  <!-- Mapa de vista general -->
-  <div class="fixed right-1 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-50 animate-in fade-in duration-500">
-     <button (click)="goToSanIsidro()"
+<ng-container *ngIf="isReady()">
+  <!-- Panel de funciones flotantes -->
+  <div class="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-50 animate-in fade-in duration-500">
+    <button (click)="goToSanIsidro()"
             class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
             title="Ir a San Isidro">
       <i class="bi bi-pin-map text-xl"></i>
@@ -37,7 +37,7 @@
   <div class="hidden md:block">
     <app-overview-map [mainMap]="olMap()!"></app-overview-map>
   </div>
-}
+</ng-container>
 
 <!-- Marcador de Usuario (Punto Azul GPS) -->
 <div #userMarker

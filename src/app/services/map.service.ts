@@ -169,8 +169,11 @@ export class MapService {
    * Configura las capas base, controles y vista inicial.
    */
   initMap(target: HTMLElement): OlMap {
+    this.isReady.set(false);
     if (this._map()) {
       this._map()!.setTarget(target);
+      // Retardo de 10 segundos para mostrar el spinner si el mapa ya existe
+      setTimeout(() => this.isReady.set(true), 5000);
       return this._map()!;
     }
 
@@ -241,7 +244,7 @@ export class MapService {
       url: `${environment.geoserver.serverUrl}/${environment.geoserver.workspace}/wms`,
       version: '1.1.0',
       layerName: 'mdsibde:vw_tg_manzana',
-      zIndex: 10,
+      zIndex: 0,
       title: 'Manzana Catastral'
     });
     this.addWmsLayer({
@@ -259,6 +262,14 @@ export class MapService {
       requestAnimationFrame(() => {
         olMap.updateSize();
       });
+    });
+
+    // Esperamos a que el mapa termine de renderizar su primera vista
+    olMap.once('rendercomplete', () => {
+      // Retardo de 10 segundos una vez que el mapa está técnicamente listo
+      setTimeout(() => {
+        this.isReady.set(true);
+      }, 10000);
     });
 
     return olMap;

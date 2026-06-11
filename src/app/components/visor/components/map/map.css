@@ -11,6 +11,6 @@
   height: 100vh; /* Ajusta esto según necesites, ej. 500px o 100% de un contenedor padre */
   margin: 0;
   padding: 0;
-  background-color: #050b16; /* Fondo oscuro para suavizar la carga de mapas base */
+  background-color: #518330; /* Color institucional para suavizar la carga de mapas base */
   z-index: 0; /* Asegura que el mapa esté debajo de otros elementos como la barra lateral */
 }

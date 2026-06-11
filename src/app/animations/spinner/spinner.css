@@ -1,0 +1,20 @@
+.neon-wrapper {
+  /* Combinamos la rotación de Tailwind con el efecto de iluminación creciente */
+  /* 'spin' es la animación nativa de Tailwind. neon-grow es nuestro efecto de luz. */
+  animation: spin 1s linear infinite, neon-grow 2s ease-in-out infinite alternate !important;
+}
+
+@keyframes neon-grow {
+  0% {
+    /* Estado inicial: iluminación base */
+    filter: drop-shadow(0 0 2px #fff) 
+            drop-shadow(0 0 5px currentColor) 
+            drop-shadow(0 0 10px currentColor);
+  }
+  100% {
+    /* Estado final: la luz "crece" expandiendo drásticamente el radio del resplandor */
+    filter: drop-shadow(0 0 4px #fff) 
+            drop-shadow(0 0 20px currentColor) 
+            drop-shadow(0 0 50px currentColor);
+  }
+}

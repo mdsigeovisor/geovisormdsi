@@ -6,6 +6,7 @@ import { MapService } from '../../../../services/map.service';
 import { Navbar } from './components/navbar/navbar';
 import { Sidebar } from './components/sidebar/sidebar';
 import { Funciones } from './components/functions/functions';
+import { Spinner } from '../../../../animations/spinner/spinner';
 /**
  * Componente principal de la interfaz del mapa.
  * Coordina la visualización de la barra de herramientas, barra lateral y los controles
@@ -19,6 +20,7 @@ import { Funciones } from './components/functions/functions';
     Navbar,
     Sidebar,
     Funciones,
+    Spinner,
   ],
   templateUrl: './map.html',
   styleUrl: './map.css',
@@ -27,7 +29,7 @@ export class MapComponent {
   /** Referencia al contenedor principal donde se inyecta el lienzo de OpenLayers */
   @ViewChild('mapContainer') mapContainer!: ElementRef;
 
-  private readonly mapService = inject(MapService);
+  public readonly mapService = inject(MapService);
   private readonly cdr = inject(ChangeDetectorRef);
   constructor() {
     // afterNextRender asegura que el mapa se inicialice solo en el cliente (navegador)

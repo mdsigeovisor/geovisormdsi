@@ -14,3 +14,11 @@
   background-color: #518330; /* Color institucional para suavizar la carga de mapas base */
   z-index: 0; /* Asegura que el mapa esté debajo de otros elementos como la barra lateral */
 }
+
+.map-container.blank-base {
+  background-color: #ffffff;
+}
+
+.map-container.blank-base .ol-viewport {
+  background-color: #ffffff !important;
+}

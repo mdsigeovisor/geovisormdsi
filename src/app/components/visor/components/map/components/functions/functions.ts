@@ -102,16 +102,14 @@ export class Funciones {
   }
 
   toggleBaseLayer(): void {
-    const map = this.olMap();
-    const satLayer = this.mapService.satelliteLayer;
-    const streetLayer = this.mapService.streetsLayer;
-    if (!map || !satLayer || !streetLayer) return;
+    const currentType = this.baseLayerType();
+    const nextType = currentType === 'satellite'
+      ? 'streets'
+      : currentType === 'streets'
+        ? 'blanco'
+        : 'satellite';
 
-    const newType = this.baseLayerType() === 'satellite' ? 'streets' : 'satellite';
-    this.baseLayerType.set(newType);
-
-    satLayer.setVisible(newType === 'satellite');
-    streetLayer.setVisible(newType === 'streets');
+    this.mapService.cambiarMapaBase(nextType);
   }
 
   getCurrentLocation(): void {

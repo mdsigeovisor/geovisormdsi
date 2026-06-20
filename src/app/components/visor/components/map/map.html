@@ -13,5 +13,5 @@
 }
 <app-navbar></app-navbar>
 <app-sidebar></app-sidebar>
-<div #mapContainer class="map-container"></div>
+<div #mapContainer class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
 <app-functions></app-functions>

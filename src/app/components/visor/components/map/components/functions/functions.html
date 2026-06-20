@@ -29,8 +29,15 @@
     </button>
     <button (click)="toggleBaseLayer()"
             class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
-            [title]="baseLayerType() === 'satellite' ? 'Cambiar a Mapa de Calles' : 'Cambiar a Satélite'">
-      <i class="bi text-xl" [class.bi-map]="baseLayerType() === 'satellite'" [class.bi-layers-half]="baseLayerType() === 'streets'"></i>
+            [title]="baseLayerType() === 'satellite'
+              ? 'Cambiar a Mapa de Calles'
+              : baseLayerType() === 'streets'
+                ? 'Quitar mapa base'
+                : 'Volver a Satélite'">
+      <i class="bi text-xl"
+         [class.bi-map]="baseLayerType() === 'satellite'"
+         [class.bi-layers-half]="baseLayerType() === 'streets'"
+         [class.bi-square]="baseLayerType() === 'blanco'"></i>
     </button>
       @if (isMapBasePanelOpen()) {
     <div class="fixed right-14 top-1/2 -translate-y-1/2 z-50 w-44
@@ -39,8 +46,7 @@
                 animate-in fade-in zoom-in-95 slide-in-from-right-8 duration-300">
       <div class="px-2 py-1.5 border-b border-gray-100/50 mb-1">
         <h3 class="text-[8px] font-black text-primary uppercase tracking-[0.2em]">Galería de Mapas</h3>
-      </div>
-      
+      </div>      
     </div>
   }
   </div>
@@ -133,3 +139,4 @@
   </button>
   <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-yellow-100 rotate-45"></div>
 </div>
+

@@ -95,9 +95,10 @@ export class MapService {
       title: "Información Catastral",
       expanded: true,
       layers: [
+        { id: "veredas", label: "VEREDAS", visible: true, opacity: 1 },
         { id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
         { id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
-        
+        { id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1 },
       ],
     },    
   ]);
@@ -226,11 +227,12 @@ export class MapService {
     // Configuración de capas catastrales municipales
     const workspacePrefix = environment.geoserver.workspacePrefix;
     const catastralLayers: WmsLayerConfig[] = [
+
       
-      { id: 'lote', layerName: `${workspacePrefix}tg_lotizacion`, zIndex: 0, title: 'Lote Catastral' },
-      { id: 'manzana', layerName: `${workspacePrefix}tg_manzanas`, zIndex: 0, title: 'Manzana Catastral' },
-      
-      
+      { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
+      { id: 'lote', layerName: `${workspacePrefix}vw_tg_lote`, zIndex: 0, title: 'Lote Catastral' },
+      { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
+      { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' }
     ];
 
     // Inicializamos las capas catastrales recorriendo la lista

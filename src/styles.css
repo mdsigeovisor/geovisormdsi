@@ -13,7 +13,11 @@
 /* Elimina el cuadro/borde de selección de OpenLayers y mejora la carga */
 .ol-viewport {
   outline: none !important;
-  background-color: #0b0e14 !important; /* Fondo oscuro acorde al satélite */
+  background-color: #0b0e14;
+}
+
+.map-container.blank-base .ol-viewport {
+  background-color: #ffffff !important;
 }
 
 /* Oculta los controles nativos si prefieres una interfaz más limpia */

@@ -11,7 +11,7 @@ import { MapService } from '../../../.././../../../../services/map.service';
 })
 export class CapasComponent {
   onClose = output<void>();
-  private mapService = inject(MapService);
+  private readonly mapService = inject(MapService);
   /** Estado de minimización del panel */
   isMinimized = signal(false);
   /** Referencia al signal de secciones centralizado en el servicio */

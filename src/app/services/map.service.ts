@@ -1,55 +1,42 @@
 import { Injectable, signal, inject, NgZone, effect } from '@angular/core';
-import { OtrosService } from './otros.service';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { 
+  LayerItem, 
+  Section, 
+  WmsLayerConfig, 
+  GeoJSONFeature, 
+  WfsResponse, 
+  GeoJSONGeometry 
+} from '../interfaces/geoLayers';
 import { Observable, map } from 'rxjs';
+import {
+  INITIAL_CENTER,
+  INITIAL_ZOOM,
+  GOOGLE_SATELLITE_URL,
+  OSM_URL,
+  TRAMA_WMS_URL,
+  ANIMATION_DURATION,
+  SAN_ISIDRO_CENTER,
+  SAN_ISIDRO_ZOOM
+} from '../interfaces/map.constants';
 import {
   fromLonLat,
   OlMap,
   TileLayer,
   TileWMS,
   View,
-  XYZ
-  , transform,
-  transformExtent
+  XYZ,
+  ImageWMS,
+  
+  transform,
+  transformExtent,
+  GeoJSON
 } from '../modules/openlayers.module';
+import ImageLayer from 'ol/layer/Image';
 
-/** Coordenadas iniciales del centro del mapa (longitud, latitud) */
-export const INITIAL_CENTER = [-75.0152, -9.19];
-/** Nivel de zoom inicial del mapa */
-export const INITIAL_ZOOM = 6;
-/** URL del servicio de mapas satelitales de Google */
-const GOOGLE_SATELLITE_URL = 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}';
-/** URL del servicio de mapas de calles (OpenStreetMap) */
-export const OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-/** URL del servidor WMS de INEI para departamentos */
-const TRAMA_WMS_URL = 'https://geoespacial.inei.gob.pe/geoserver/Interoperabilidad/wms';
-/** Duración de las animaciones del mapa en milisegundos */
-export const ANIMATION_DURATION = 1000;
-/** Nivel de zoom al que se acerca el mapa al obtener la ubicación del usuario */
-export const ZOOM_LEVEL_LOCATION = 14;
-
-/** Extensión geográfica aproximada de San Isidro [oeste, sur, este, norte] en LonLat */
-// Coordenadas actualizadas para Jirón Augusto Tamayo (lon, lat)
-export const SAN_ISIDRO_CENTER: [number, number] = [-77.0295427, -12.0972444];
-export const SAN_ISIDRO_ZOOM = 17;
-
-export interface LayerItem {
-  id: string;
-  label: string;
-  visible: boolean;
-  opacity: number;
-  olLayer?: TileLayer;
-  legendUrl?: string; // Añadimos la propiedad legendUrl
-}
-
-export interface Section {
-  id: string;
-  title: string;
-  expanded: boolean;
-  layers: LayerItem[];
-}
+export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
 
 /**
  * Servicio de Angular para la gestión del mapa OpenLayers.
@@ -60,16 +47,41 @@ export interface Section {
   providedIn: 'root'
 })
 export class MapService {
+  cambiarMapaBase(tipoMapaBase: TipoMapaBase): void {
+    this.baseLayerType.set(tipoMapaBase);
+
+    if (!this.satelliteLayer || !this.streetsLayer) {
+      return;
+    }
+
+    switch (tipoMapaBase) {
+      case 'satellite':
+        this.satelliteLayer.setVisible(true);
+        this.streetsLayer.setVisible(false);
+        break;
+      case 'streets':
+        this.satelliteLayer.setVisible(false);
+        this.streetsLayer.setVisible(true);
+        break;
+      case 'topo':
+      case 'blanco':
+        this.satelliteLayer.setVisible(false);
+        this.streetsLayer.setVisible(false);
+        break;
+    }
+  }
   private readonly http = inject(HttpClient);
+  private readonly zone = inject(NgZone);
+
+  baseLayerType = signal<TipoMapaBase>('streets');
+
   /** Instancia del mapa OpenLayers */
   private readonly _map = signal<OlMap | undefined>(undefined);
   /** Exposición del mapa como Signal de solo lectura */
-  private readonly zone = inject(NgZone);
   public readonly map = this._map.asReadonly();
 
-  /** Servicio para fuentes de datos externas */
-  private readonly otrosService = inject(OtrosService);
-  /** Capa de imágenes satelitales (Google) */
+  // Capas base accesibles para manipulación directa
+  /** Capa de imágenes satelitales */
   public satelliteLayer?: TileLayer;
   /** Capa de calles (OSM) */
   public streetsLayer?: TileLayer;
@@ -79,57 +91,71 @@ export class MapService {
    */
   sections = signal<Section[]>([
     {
-      id: "tematica",
-      title: "Información Temática",
-      expanded: false,
-      layers: [
-        { id: "zonificacion", label: "ZONIFICACIÓN", visible: true, opacity: 1 },
-        { id: "equipamiento", label: "EQUIPAMIENTO URBANO", visible: true, opacity: 1 },
-        { id: "clasificacion", label: "CLASIFICACIÓN DEL PREDIO (TEMÁTICO)", visible: true, opacity: 1 },
-      ],
-    },
-    {
       id: "catastral",
       title: "Información Catastral",
       expanded: true,
       layers: [
-        { id: "sector", label: "SECTOR CATASTRAL", visible: true, opacity: 1 },
         { id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
         { id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
-        { id: "parques", label: "PARQUES", visible: true, opacity: 1 },
-        { id: "vias", label: "VIAS", visible: true, opacity: 1 },
-        { id: "edificaciones", label: "EDIFICACIONES", visible: true, opacity: 1 },
-        { id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1 },
-        { id: "puerta", label: "PUERTA (NUMERO MUNICIPAL / TIPO)", visible: true, opacity: 1 },
+        
       ],
-    },
-    {
-      id: "habilitacion",
-      title: "Habilitación Urbana",
-      expanded: false,
-      layers: [
-        { id: "limite", label: "LIMITE DE HABILITACION URBANA (NUCLEO)", visible: true, opacity: 1 },
-        { id: "manzana-urbana", label: "MANZANA URBANA", visible: true, opacity: 1 },
-        { id: "lote-urbano", label: "LOTE URBANO", visible: true, opacity: 1 },
-      ],
-    },
-    {
-      id: "nacional",
-      title: "Información Nacional",
-      expanded: false,
-      layers: [
-        { id: "ig_departamento", label: "IG DEPARTAMENTO", visible: true, opacity: 1 },
-      ],
-    },
+    },    
   ]);
 
+  /** Indica si el mapa ha sido inicializado y está listo para su uso. */
+  isReady = signal(false);
+
+  /** Coordenadas actuales del usuario (longitud, latitud). */
+  userCoords = signal<{ lon: number, lat: number } | null>(null);
+
+  /** Herramientas del sidebar activas. */
+  activeSidebarTools = signal<Set<string>>(new Set());
+
   constructor() {
-    // Efecto para sincronizar la visibilidad del mapa cuando cambia el signal de secciones
+    this.setupLayerSyncEffect();
+  }
+
+  /**
+   * Inicializa el mapa OpenLayers.
+   */
+  initMap(target: HTMLElement): OlMap {
+    this.isReady.set(false);
+
+    // Si el mapa ya existe, reasignamos el target
+    if (this._map()) {
+      const existingMap = this._map()!;
+      existingMap.setTarget(target);
+      setTimeout(() => this.isReady.set(true), 5000);
+      return existingMap;
+    }
+
+    this.setupBaseLayers();
+
+    const olMap = new OlMap({
+      target,
+      layers: [this.streetsLayer!, this.satelliteLayer!],
+      view: new View({
+        center: fromLonLat(INITIAL_CENTER),
+        zoom: INITIAL_ZOOM,
+        minZoom: 4,
+        maxZoom: 22,
+      })
+    });
+
+    this._map.set(olMap);
+    olMap.getViewport().style.cursor = 'pointer';
+    this.setupInitialWmsLayers();
+    this.handleMapResizing(olMap);
+    this.handleInitialRender(olMap);
+    return olMap;
+  }
+  /**
+   * Sincroniza la visibilidad y opacidad de las capas de OL con el Signal de secciones.
+   */
+  private setupLayerSyncEffect(): void {
     effect(() => {
-      // Iteramos sobre las secciones y capas
       this.sections().forEach((section: Section) => {
         section.layers.forEach((layerData: LayerItem) => {
-          // Si la capa de OpenLayers ya está instanciada, sincronizamos su estado
           if (layerData.olLayer) {
             layerData.olLayer.setVisible(layerData.visible);
             layerData.olLayer.setOpacity(layerData.opacity);
@@ -138,142 +164,101 @@ export class MapService {
       });
     });
   }
-
-  /**
-   * Signal que indica si el mapa ha sido inicializado y está listo para su uso.
-   * @type {Signal<boolean>}
+  /** 
+   * Configura las capas base de Google y OSM.
    */
-  isReady = signal(false);
-
-  /**
-   * Signal que almacena las coordenadas actuales del usuario (longitud, latitud).
-   * Es `null` si la ubicación no ha sido obtenida o ha sido limpiada.
-   * @type {Signal<{ lon: number, lat: number } | null>}
-   */
-  userCoords = signal<{ lon: number, lat: number } | null>(null);
-
-  /**
-   * Signal que almacena el tipo de mapa base actual.
-   * @type {WritableSignal<'satellite' | 'streets'>}
-   */
-  baseLayerType = signal<'satellite' | 'streets'>('streets');
-
-  /**
-   * Signal que rastrea qué herramientas del sidebar están activas.
-   * @type {WritableSignal<Set<string>>}
-   */
-  activeSidebarTools = signal<Set<string>>(new Set());
-
-  /**
-   * Inicializa el mapa OpenLayers en el elemento HTML proporcionado.
-   * Configura las capas base, controles y vista inicial.
-   */
-  initMap(target: HTMLElement): OlMap {
-    this.isReady.set(false);
-    if (this._map()) {
-      this._map()!.setTarget(target);
-      // Retardo de 10 segundos para mostrar el spinner si el mapa ya existe
-      setTimeout(() => this.isReady.set(true), 5000);
-      return this._map()!;
-    }
-
-    // Inicialización de fuentes
+  private setupBaseLayers(): void {
     const satelliteSource = new XYZ({
       url: GOOGLE_SATELLITE_URL,
       crossOrigin: 'anonymous',
-      transition: 1000, // 1 segundo de fade-in para una aparición muy elegante
-      interpolate: true // Evita que se vean cuadrados pixelados al hacer zoom
+      transition: 1000,
+      interpolate: true, // Evita que se vean cuadrados pixelados al hacer zoom
+      maxZoom: 19,
+      wrapX: true
     });
+
     const streetsSource = new XYZ({
       url: OSM_URL,
       crossOrigin: 'anonymous',
       transition: 1000,
-      interpolate: true
+      interpolate: true,
+      maxZoom: 19,
+      wrapX: true,
+      tileUrlFunction: (tileCoord) => {
+        if (!tileCoord) {
+          return undefined;
+        }
+
+        const [z, x, y] = tileCoord;
+        if (z <= 19) {
+          return OSM_URL
+            .replace('{z}', String(z))
+            .replace('{x}', String(x))
+            .replace('{y}', String(y));
+        }
+
+        const delta = z - 19;
+        const fallbackX = Math.floor(x / Math.pow(2, delta));
+        const fallbackY = Math.floor(y / Math.pow(2, delta));
+        return OSM_URL
+          .replace('{z}', '19')
+          .replace('{x}', String(fallbackX))
+          .replace('{y}', String(fallbackY));
+      }
     });
 
-    // Creación de capas base usando método auxiliar
     this.satelliteLayer = this.createBaseLayer(satelliteSource, 'Satélite', 'satellite');
     this.streetsLayer = this.createBaseLayer(streetsSource, 'Calles', 'streets');
+  }
 
-    const olMap = new OlMap({
-      target,
-      layers: [this.streetsLayer, this.satelliteLayer],
-      view: new View({
-        center: fromLonLat(INITIAL_CENTER),
-        zoom: INITIAL_ZOOM,
-        maxZoom: 22,
-      })
-    });
-    this._map.set(olMap);
-
-    // Cambiar el cursor a mano (pointer) al estar sobre el mapa
-    olMap.getViewport().style.cursor = 'pointer';
-
+  /** Configura la carga inicial de capas WMS. */
+  private setupInitialWmsLayers(): void {
     // Inicialización de la capa WMS de departamentos de INEI
     this.addWmsLayer({
       id: 'ig_departamento',
       url: TRAMA_WMS_URL,
-      version: '1.1.0',
       layerName: 'Interoperabilidad:ig_departamento',
+      version: '1.1.0',
       zIndex: 5, // zIndex para posicionarse sobre el mapa base
       title: 'IG Departamento'
     });
 
-        // Inicialización de la capa WMS de Lotes (mdsibde:vw_tg_lote)
-    this.addWmsLayer({
-      id: 'lote',
-      url: `${environment.geoserver.serverUrl}/${environment.geoserver.workspace}/wms`,
-      version: '1.1.0',
-      layerName: 'mdsibde:vw_tg_lote',
-      zIndex: 10,
-      title: 'Lote Catastral'
-    });
-    // Inicialización de la capa WMS de Lotes (mdsibde:vw_tg_lote_puntos)
-    this.addWmsLayer({
-      id: 'lote',
-      // Agregamos ?tiled=true al final de la URL del servidor
-      url: `${environment.geoserver.serverUrl}/${environment.geoserver.workspace}/wms?tiled=true`,
-      version: '1.1.0',
-      layerName: 'mdsibde:vw_tg_lote_puntos',
-      zIndex: 10,
-      title: 'Lote Catastral'
-    });
-    // Inicialización de la capa WMS de Lotes (mdsibde:vw_tg_manzana)
-    this.addWmsLayer({
-      id: 'lote',
-      url: `${environment.geoserver.serverUrl}/${environment.geoserver.workspace}/wms`,
-      version: '1.1.0',
-      layerName: 'mdsibde:vw_tg_manzana',
-      zIndex: 0,
-      title: 'Manzana Catastral'
-    });
-    this.addWmsLayer({
-      id: 'lote',
-      url: `${environment.geoserver.serverUrl}/${environment.geoserver.workspace}/wms`,
-      version: '1.1.0',
-      layerName: 'mdsibde:vw_tg_manzana_puntos',
-      zIndex: 10,
-      title: 'Manzana Catastral'
-    });
+    // Configuración de capas catastrales municipales
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+    const catastralLayers: WmsLayerConfig[] = [
+      
+      { id: 'lote', layerName: `${workspacePrefix}tg_lotizacion`, zIndex: 0, title: 'Lote Catastral' },
+      { id: 'manzana', layerName: `${workspacePrefix}tg_manzanas`, zIndex: 0, title: 'Manzana Catastral' },
+      
+      
+    ];
 
-    // Ejecutamos fuera de la zona de Angular para no bloquear la UI ni disparar CD
-    // Usamos requestAnimationFrame para sincronizar con el refresco de pantalla
+    // Inicializamos las capas catastrales recorriendo la lista
+    catastralLayers.forEach(config => this.addWmsLayer(config));
+  }
+
+  /**
+   * Asegura que el mapa se actualice fuera de la zona de Angular para rendimiento.
+   */
+  private handleMapResizing(olMap: OlMap): void {
     this.zone.runOutsideAngular(() => {
       requestAnimationFrame(() => {
         olMap.updateSize();
       });
     });
+  }
 
-    // Esperamos a que el mapa termine de renderizar su primera vista
+  /**
+   * Maneja el estado isReady tras el primer renderizado completo.
+   */
+  private handleInitialRender(olMap: OlMap): void {
     olMap.once('rendercomplete', () => {
-      // Retardo de 10 segundos una vez que el mapa está técnicamente listo
       setTimeout(() => {
         this.isReady.set(true);
-      }, 10000);
+      }, 5000);
     });
-
-    return olMap;
   }
+
 
   /**
    * Método auxiliar para estandarizar la creación de capas base.
@@ -292,34 +277,29 @@ export class MapService {
    * Método genérico para agregar capas WMS al mapa.
    * @private
    */
-  private addWmsLayer(options: {
-    id: string;
-    url: string;
-    version: string;
-    layerName: string;
-    zIndex: number;
-    title?: string;
-    minZoom?: number;
-    maxZoom?: number;
-    className?: string;
-  }): void {
+  private addWmsLayer(options: WmsLayerConfig): void {
     const map = this._map();
     if (!map) return;
 
-    const layer = new TileLayer({
-      source: new TileWMS({
-        url: options.url,
+    const url = options.url ?? environment.geoserver.wmsUrl;
+    const version = options.version ?? '1.1.0';
+
+    const separator = url.includes('?') ? '&' : '?';
+    const wmsUrl = options.tiled ? `${url}${separator}tiled=true` : url;
+    const layer = new ImageLayer({
+      source: new ImageWMS({
+        url: wmsUrl,
         params: {
           'LAYERS': options.layerName,
           'TILED': true,
-          'VERSION': options.version,
+          'VERSION': version,
           'FORMAT': 'image/png',
           'TRANSPARENT': true
         },
         crossOrigin: 'anonymous',
         serverType: 'geoserver'
       }),
-      className: options.className, // Aplicamos la clase CSS a la capa
+      className: options.className ?? options.id, // Aplicamos la clase CSS a la capa
       zIndex: options.zIndex,
       minZoom: options.minZoom, // Añadimos la propiedad minZoom aquí
       maxZoom: options.maxZoom, // La capa se ocultará si el zoom es igual o mayor a este valor
@@ -328,17 +308,27 @@ export class MapService {
 
     map.addLayer(layer);
 
-    const { url, version, layerName, id } = options;
-
-    // IMPORTANTE: Guardamos la instancia de la capa en el Signal para poder manipularla después
     // Generamos la URL de la leyenda para servicios WMS (estándar GetLegendGraphic)
-    const legendUrl = `${url}${url.includes('?') ? '' : '?'}` +
-      `SERVICE=WMS&VERSION=${version}&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${layerName}&TRANSPARENT=true`;
+    const legendUrl = `${url}${url.includes('?') ? '&' : '?'}` +
+      `SERVICE=WMS&VERSION=${version}&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${options.layerName}&TRANSPARENT=true`;
 
     this.sections.update(sections => sections.map(section => ({
       ...section,
-      layers: section.layers.map(l => l.id === id ? { ...l, olLayer: layer, legendUrl } : l)
+      layers: section.layers.map(l => l.id === options.id ? { ...l, olLayer: layer, legendUrl } : l)
     })));
+  }
+
+  /**
+   * Remueve una capa del mapa definitivamente basándose en su ID.
+   */
+  removeLayerById(id: string): void {
+    const currentMap = this._map();
+    if (!currentMap) return;
+
+    const layerToRemove = currentMap.getLayers().getArray()
+      .find(layer => layer.get('id') === id);
+
+    if (layerToRemove) currentMap.removeLayer(layerToRemove);
   }
 
   /**
@@ -383,6 +373,8 @@ export class MapService {
    * previas que no pasan explícitamente lat/lon.
    */
   goToSanIsidro(duration = 1800, onComplete?: (complete: boolean) => void): void {
+    this.removeLayerById('ig_departamento');
+
     // SAN_ISIDRO_CENTER almacena [lon, lat]
     const lon = SAN_ISIDRO_CENTER[0];
     const lat = SAN_ISIDRO_CENTER[1];
@@ -394,7 +386,7 @@ export class MapService {
   /**
    * Métodos para actualizar el estado de las secciones desde la UI
    */
-  toggleSectionExpanded(sectionId: string) {
+  toggleSectionExpanded(sectionId: string): void {
     this.sections.update(s => s.map(sec =>
       sec.id === sectionId ? { ...sec, expanded: !sec.expanded } : sec
     ));
@@ -447,39 +439,21 @@ export class MapService {
    * Ajusta la vista del mapa para encuadrar una geometría GeoJSON (Polygon, MultiPolygon, etc.)
    * @param geometry Objeto de geometría devuelto por el servicio WFS
    */
-  fitToGeometry(geometry: any): void {
+  fitToGeometry(geometry: GeoJSONGeometry): void {
     const map = this._map();
-    if (!map || !geometry || !geometry.coordinates) return;
+    if (!map || !geometry?.coordinates) return;
 
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    let hasCoords = false;
+    const format = new GeoJSON();
+    // Leemos la geometría directamente para evitar la ambigüedad de tipo (Feature vs Feature[])
+    const geometryOl = format.readGeometry(geometry);
 
-    // Función recursiva para procesar coordenadas de cualquier profundidad (Polygon o MultiPolygon)
-    const processCoords = (arr: any[]) => {
-      if (typeof arr[0] === 'number') {
-        const [x, y] = arr;
-        if (isNaN(x) || Math.abs(x) === Infinity) return;
-        if (x < minX) minX = x;
-        if (y < minY) minY = y;
-        if (x > maxX) maxX = x;
-        if (y > maxY) maxY = y;
-        hasCoords = true;
-      } else {
-        arr.forEach(c => processCoords(c));
-      }
-    };
-
-    processCoords(geometry.coordinates);
-
-    if (!hasCoords) return;
+    if (!geometryOl) return;
 
     const view = map.getView();
-    const extent = [minX, minY, maxX, maxY];
+    const extent = geometryOl.getExtent();
 
-    // Detectamos si las coordenadas son UTM (proyectadas) o WGS84 (geográficas)
-    // Si el valor es mayor a 180, asumimos que es una proyección (UTM)
-    const sourceProjection = Math.abs(minX) > 180 ? 'EPSG:32718' : 'EPSG:4326';
-
+    // Detectamos proyección: Si el valor de X es grande, asumimos UTM 18S
+    const sourceProjection = Math.abs(extent[0]) > 180 ? 'EPSG:32718' : 'EPSG:4326';
     const transformedExtent = transformExtent(extent, sourceProjection, view.getProjection());
 
     view.fit(transformedExtent, {
@@ -493,8 +467,8 @@ export class MapService {
    * @param codigo Código catastral en formato XX-XXX-XXX
    * @returns Observable con el feature encontrado o null
    */
-  searchLoteByCodigo(codigo: string): Observable<any> {
-    const url = `${environment.geoserver.serverUrl}/${environment.geoserver.workspace}/ows`;
+  searchLoteByCodigo(codigo: string): Observable<GeoJSONFeature | null> {
+    const url = environment.geoserver.owsUrl;
     
     // Limpiamos guiones y espacios en blanco (ej: '3112065002    ' -> '3112065002')
     const codigoSinGuiones = codigo.replaceAll('-', '').trim();
@@ -504,16 +478,15 @@ export class MapService {
       .set('service', 'WFS')
       .set('version', '1.1.0')
       .set('request', 'GetFeature')
-      .set('typeName', 'mdsibde:vw_tg_lote')
+      .set('typeName', 'mdsibde2026:vw_tg_lote')
       .set('outputFormat', 'application/json')
       // Forzamos a GeoServer a entregar coordenadas en grados decimales
       .set('srsName', 'EPSG:4326')
-      // IMPORTANTE: Se añade el operador '=' entre el campo y el valor
       .set('cql_filter', `id_lote = '${codigoSinGuiones}'`);
 
-    return this.http.get(url, { params }).pipe(
-      map((response: any) => {
-        if (response && response.features && response.features.length > 0) {
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map((response) => {
+        if (response?.features?.length > 0) {
           // Devolvemos el primer resultado encontrado
           return response.features[0];
         }

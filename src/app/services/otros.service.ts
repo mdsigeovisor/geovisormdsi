@@ -11,7 +11,7 @@ export class OtrosService {
 
   /** URL base del servidor WMS de la Municipalidad de San Isidro */
   // Usamos una ruta relativa para que sea interceptada por el proxy de desarrollo y evitar errores de CORS
-  public readonly WMS_URL = `${environment.geoserver.serverUrl}/${environment.geoserver.workspace}/wms?`;
+  public readonly WMS_URL = `${environment.geoserver.wmsUrl}?`;
 
   /** Versión estándar de WMS a utilizar en la aplicación */
   public readonly WMS_VERSION = '1.1.0';

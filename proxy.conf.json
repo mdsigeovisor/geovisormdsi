@@ -1,10 +1,10 @@
 {
-  "/igp-proxy": {
-    "target": "https://ide.igp.gob.pe",
+  "/inei-proxy": {
+    "target": "https://geoespacial.inei.gob.pe",
     "secure": false,
     "changeOrigin": true,
     "pathRewrite": {
-      "^/igp-proxy": ""
+      "^/inei-proxy": ""
     },
     "logLevel": "debug"
   }

@@ -1,7 +1,9 @@
 import { Component, computed, inject, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OverviewMapComponent } from '../overViewMap/overview-map';
-import { MapService, ANIMATION_DURATION, ZOOM_LEVEL_LOCATION, SAN_ISIDRO_ZOOM } from '../../../../../../services/map.service';
+
+import { MapService } from '../../../../../../services/map.service';
+import { ANIMATION_DURATION, ZOOM_LEVEL_LOCATION, SAN_ISIDRO_ZOOM } from '../../../../../../interfaces/map.constants';
 import { fromLonLat, Overlay, OverlayPositioning, transformExtent } from '../../../../../../modules/openlayers.module';
 
 @Component({
@@ -9,7 +11,7 @@ import { fromLonLat, Overlay, OverlayPositioning, transformExtent } from '../../
   standalone: true,
   imports: [CommonModule, OverviewMapComponent],
   templateUrl: './functions.html',
-  styleUrl: './functions.css',
+  styleUrls: ['./functions.css'],
 })
 export class Funciones {
   private readonly mapService = inject(MapService);
@@ -49,7 +51,7 @@ export class Funciones {
     if (view) {
       // BBOX proporcionado de la capa vw_tg_lote en EPSG:32718
       // [minX, minY, maxX, maxY]
-      const extent32718 = [275711.9754999997, 8660354.0511, 281469.82550000027, 8663159.2884];
+      const extent32718 = [275424.08, 8660213.79, 281757.72, 8663299.55];
       
       // Transformamos la extensión al sistema de referencia de la vista (normalmente EPSG:3857)
       const transformedExtent = transformExtent(extent32718, 'EPSG:32718', view.getProjection());
@@ -62,11 +64,11 @@ export class Funciones {
 
   goToSanIsidro(): void {
     // Coordenadas solicitadas por el usuario (Jirón Augusto Tamayo): lat, lon
-    const lat = -12.0972444;
-    const lon = -77.0295427;
+    const lat = -12.09746407;
+    const lon = -77.02910466;
 
-    // Desactivamos la capa de departamentos (INEI) al ir a San Isidro
-    this.mapService.setLayerVisibility('nacional', 'ig_departamento', false);
+    // Eliminamos definitivamente el servicio de departamentos al enfocarnos en el distrito
+    this.mapService.removeLayerById('ig_departamento');
 
     if (!this.sanIsidroMarkerEl?.nativeElement || !this.sanIsidroPopupEl?.nativeElement) {
       console.warn('Los elementos de San Isidro no están inicializados.');
@@ -252,4 +254,15 @@ export class Funciones {
     if (popup) popup.style.display = 'none';
     this.userCoords.set(null);
   }
+
+
+    isMapBasePanelOpen(): boolean {
+    return this.mapService.activeSidebarTools().has('mapbase');
+  }
+
+
+
+
+
 }
+

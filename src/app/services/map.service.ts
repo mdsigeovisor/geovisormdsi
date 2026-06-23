@@ -97,6 +97,24 @@ export class MapService {
       items: [
         {
           type: 'subsection',
+          id: 'tusne',
+          title: 'TUSNE',
+          expanded: true,
+          layers: [
+            
+          ]
+        },
+           {
+          type: 'subsection',
+          id: 'sectores',
+          title: 'SECTORES',
+          expanded: true,
+          layers: [
+          { type: 'layer', id: "sec_catastrales", label: "SECTORES CATASTRALES", visible: false, opacity: 1 },
+          ]
+        },  
+        {
+          type: 'subsection',
           id: 'limites-areas',
           title: 'Límites y Áreas',
           expanded: true,
@@ -327,7 +345,10 @@ export class MapService {
       { id: 'lote', layerName: `${workspacePrefix}vw_tg_lote`, zIndex: 0, title: 'Lote Catastral' },
       { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
-      { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec`, zIndex: 0, title: 'Área Recreativa' }
+      { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec`, zIndex: 0, title: 'Área Recreativa' },
+      { id: 'sec_catastrales', layerName: `${workspacePrefix}tg_Sectores`, zIndex: 0, title: 'Sectores Catastrales' }
+
+      
     ];
 
     // Inicializamos las capas catastrales recorriendo la lista

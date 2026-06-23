@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import { 
-  LayerItem, 
+  LayerItem,
   Section, 
   WmsLayerConfig, 
   GeoJSONFeature, 
@@ -26,7 +26,7 @@ import {
   OlMap,
   TileLayer,
   TileWMS,
-  View,
+  View,  
   XYZ,
   ImageWMS,
   
@@ -254,7 +254,8 @@ export class MapService {
     olMap.getViewport().style.cursor = 'pointer';
     this.setupInitialWmsLayers();
     this.handleMapResizing(olMap);
-    this.handleInitialRender(olMap);
+    this.handleInitialRender(olMap);    
+    this.setupMapClickHandler(olMap);
     return olMap;
   }
   /**
@@ -442,6 +443,41 @@ export class MapService {
       })
     })));
   }
+
+  /**
+   * Configura el manejador de clics en el mapa para obtener información de las capas WMS.
+   * @param olMap Instancia del mapa de OpenLayers.
+   */
+  private setupMapClickHandler(olMap: OlMap): void {
+    olMap.on('singleclick', (evt) => {
+      const view = olMap.getView();
+      const viewResolution = view.getResolution()!;
+      const source = this.getLayerById('lote')?.getSource();
+
+      if (!source) return;
+
+      const url = source.getFeatureInfoUrl(
+        evt.coordinate,
+        viewResolution,
+        view.getProjection(),
+        { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': '1' }
+      );
+
+      if (url) {
+        this.http.get<WfsResponse>(url).subscribe(response => {
+          if (response && response.features && response.features.length > 0) {
+            const feature = response.features[0];
+            const codigoLote = feature.properties['id_lote'];
+            if (codigoLote) {
+              const infoUrl = `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigoLote}`;
+              window.open(infoUrl, '_blank');
+            }
+          }
+        });
+      }
+    });
+  }
+
 
   /**
    * Remueve una capa del mapa definitivamente basándose en su ID.
@@ -651,5 +687,23 @@ export class MapService {
         return null;
       })
     );
+  }
+
+  /**
+   * Busca y devuelve una capa de OpenLayers por su ID asignado en la configuración.
+   * @param id El identificador de la capa.
+   * @returns La instancia de la capa de OpenLayers o `undefined` si no se encuentra.
+   */
+  private getLayerById(id: string): ImageLayer<ImageWMS> | undefined {
+    for (const section of this.sections()) {
+      for (const item of section.items) {
+        const layers = 'layers' in item ? item.layers : (item.type === 'layer' ? [item] : []);
+        const layerData = layers.find(l => l.id === id);
+        if (layerData && layerData.olLayer instanceof ImageLayer) {
+          return layerData.olLayer as ImageLayer<ImageWMS>;
+        }
+      }
+    }
+    return undefined;
   }
 }

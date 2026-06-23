@@ -26,13 +26,21 @@ export class Leyenda {
   activeLegends = computed(() => {
     const sections = this.mapService.sections();
     const legends: { label: string; url: string }[] = [];
+
     sections.forEach(section => {
-      section.layers.forEach(layer => {
-        if (layer.visible && layer.legendUrl) {
-          legends.push({ label: layer.label, url: layer.legendUrl });
+      section.items.forEach(item => {
+        if (item.type === 'subsection') {
+          item.layers.forEach(layer => {
+            if (layer.visible && layer.legendUrl) {
+              legends.push({ label: layer.label, url: layer.legendUrl });
+            }
+          });
+        } else if (item.type === 'layer' && item.visible && item.legendUrl) {
+          legends.push({ label: item.label, url: item.legendUrl });
         }
       });
     });
+
     return legends;
   });
 }

@@ -26,6 +26,7 @@ export interface WfsResponse {
 
 /** Configuración para la inicialización de capas WMS */
 export interface LayerItem {
+  type: 'layer';
   id: string;
   label: string;
   visible: boolean;
@@ -46,9 +47,18 @@ export interface WmsLayerConfig {
   className?: string;
 }
 
-export interface Section {
+export interface SubSection {
+  type: 'subsection';
   id: string;
   title: string;
   expanded: boolean;
   layers: LayerItem[];
+}
+
+export interface Section {
+  id: string;
+  title: string;
+  subtitle?: string;
+  expanded: boolean;
+  items: (LayerItem | SubSection)[];
 }

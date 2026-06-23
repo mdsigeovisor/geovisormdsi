@@ -92,16 +92,114 @@ export class MapService {
   sections = signal<Section[]>([
     {
       id: "catastral",
-      title: "Información Catastral",
-      expanded: true,
-      layers: [
-        { id: "veredas", label: "VEREDAS", visible: true, opacity: 1 },
-        { id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
-        { id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
-        { id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1 },
-        { id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
-      ],
-    },    
+      title: "Información Catastral",      
+      expanded: false,
+      items: [
+        {
+          type: 'subsection',
+          id: 'limites-areas',
+          title: 'Límites y Áreas',
+          expanded: true,
+          layers: [
+            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+            { type: 'layer', id: "veredas", label: "VEREDAS", visible: true, opacity: 1 },
+            { type: 'layer', id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1 } 
+          ]
+        }       
+      ]
+    },
+    {
+      id: "imaAereas",
+      title: "Imagenes Aereas",      
+      expanded: false,
+      items: [
+        {
+          type: 'subsection',
+          id: 'limites-areas',
+          title: 'Límites y Áreas',
+          expanded: true,
+          layers: [
+            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+          ]
+        }        
+      ]
+    },
+    {
+      id: "normatividadUrbana",
+      title: "Normatividad Urbana",      
+      expanded: false,
+      items: [
+        {
+          type: 'subsection',
+          id: 'limites-areas',
+          title: 'Límites y Áreas',
+          expanded: true,
+          layers: [
+            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+          ]
+        },        
+      ]
+    },
+    {
+      id: "infraestructuraUrbana",
+      title: "Infraestructura Urbana",      
+      expanded: false,
+      items: [
+        {
+          type: 'subsection',
+          id: 'limites-areas',
+          title: 'Límites y Áreas',
+          expanded: true,
+          layers: [
+            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+          ]
+        },        
+      ]
+    },
+    {
+      id: "informacionTematica",
+      title: "Información Temática",      
+      expanded: false,
+      items: [
+        {
+          type: 'subsection',
+          id: 'limites-areas',
+          title: 'Límites y Áreas',
+          expanded: true,
+          layers: [
+            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+          ]
+        },        
+      ]
+    },
+    {
+      id: "utilidades",
+      title: "Utilidades",     
+      expanded: false,
+      items: [
+        {
+          type: 'subsection',
+          id: 'limites-areas',
+          title: 'Límites y Áreas',
+          expanded: true,
+          layers: [
+            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+          ]
+        },        
+      ]
+    }    
   ]);
 
   /** Indica si el mapa ha sido inicializado y está listo para su uso. */
@@ -156,11 +254,18 @@ export class MapService {
    */
   private setupLayerSyncEffect(): void {
     effect(() => {
-      this.sections().forEach((section: Section) => {
-        section.layers.forEach((layerData: LayerItem) => {
-          if (layerData.olLayer) {
-            layerData.olLayer.setVisible(layerData.visible);
-            layerData.olLayer.setOpacity(layerData.opacity);
+      this.sections().forEach(section => {
+        section.items.forEach(item => {
+          if ('layers' in item) { // Es una SubSection
+            item.layers.forEach(layerData => {
+              if (layerData.olLayer) {
+                layerData.olLayer.setVisible(layerData.visible);
+                layerData.olLayer.setOpacity(layerData.opacity);
+              }
+            });
+          } else if (item.olLayer) { // Es un LayerItem
+            item.olLayer.setVisible(item.visible);
+            item.olLayer.setOpacity(item.opacity);
           }
         });
       });
@@ -316,7 +421,14 @@ export class MapService {
 
     this.sections.update(sections => sections.map(section => ({
       ...section,
-      layers: section.layers.map(l => l.id === options.id ? { ...l, olLayer: layer, legendUrl } : l)
+      items: section.items.map(item => {
+        if ('layers' in item) { // Es SubSection
+          item.layers = item.layers.map(l => l.id === options.id ? { ...l, olLayer: layer, legendUrl } : l);
+        } else if (item.type === 'layer' && item.id === options.id) { // Es LayerItem
+          return { ...item, olLayer: layer, legendUrl };
+        }
+        return item;
+      })
     })));
   }
 
@@ -398,7 +510,14 @@ export class MapService {
     this.sections.update(s => s.map(sec =>
       sec.id === sectionId ? {
         ...sec,
-        layers: sec.layers.map((l: LayerItem) => l.id === layerId ? { ...l, visible: !l.visible } : l)
+        items: sec.items.map(item => {
+          if ('layers' in item) { // SubSection
+            item.layers = item.layers.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l);
+          } else if (item.type === 'layer' && item.id === layerId) { // LayerItem
+            return { ...item, visible: !item.visible };
+          }
+          return item;
+        })
       } : sec
     ));
   }
@@ -407,16 +526,42 @@ export class MapService {
     this.sections.update(s => s.map(sec =>
       sec.id === sectionId ? {
         ...sec,
-        layers: sec.layers.map((l: LayerItem) => l.id === layerId ? { ...l, visible } : l)
+        items: sec.items.map(item => {
+          if ('layers' in item) { // SubSection
+            item.layers = item.layers.map(l => l.id === layerId ? { ...l, visible } : l);
+          } else if (item.type === 'layer' && item.id === layerId) { // LayerItem
+            return { ...item, visible };
+          }
+          return item;
+        })
       } : sec
     ));
   }
 
   toggleAllLayersInSection(sectionId: string, visible: boolean) {
+    this.sections.update(s => s.map(sec => {
+      if (sec.id !== sectionId) return sec;
+      return {
+        ...sec,
+        items: sec.items.map(item => 'layers' in item
+          ? { ...item, layers: item.layers.map(l => ({ ...l, visible })) }
+          : { ...item, visible: item.type === 'layer' ? visible : (item as any).visible })
+      };
+    }));
+  }
+
+  setLayerOpacity(sectionId: string, layerId: string, opacity: number) {
     this.sections.update(s => s.map(sec =>
       sec.id === sectionId ? {
         ...sec,
-        layers: sec.layers.map((l: LayerItem) => ({ ...l, visible }))
+        items: sec.items.map(item => {
+          if ('layers' in item) { // Es una SubSection
+            item.layers = item.layers.map(l => l.id === layerId ? { ...l, opacity } : l);
+          } else if (item.type === 'layer' && item.id === layerId) { // Es un LayerItem
+            return { ...item, opacity };
+          }
+          return item;
+        })
       } : sec
     ));
   }

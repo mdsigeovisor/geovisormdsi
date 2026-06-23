@@ -121,9 +121,7 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+            
           ]
         }        
       ]
@@ -139,9 +137,7 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+            
           ]
         },        
       ]
@@ -157,9 +153,7 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+            
           ]
         },        
       ]
@@ -175,9 +169,7 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+            
           ]
         },        
       ]
@@ -193,9 +185,7 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+            
           ]
         },        
       ]

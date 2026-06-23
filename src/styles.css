@@ -4,9 +4,8 @@
 
 @theme {
   /* Definición de colores para v4 */
-  --color-primary: #5c6e1c;
-  --color-secondary: #3C3C3B;
-  --color-tres: #518330;
+  --color-primary: #518330;
+  --color-secondary: #414141;  
   --font-family-poppins: "Poppins", sans-serif;
   --font-arial: Arial, Helvetica, sans-serif;
 }

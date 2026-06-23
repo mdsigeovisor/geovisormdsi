@@ -51,12 +51,11 @@
           @if (item.type === 'subsection') {
             <!-- SUBSECCIÓN -->
             <div class="border-b border-gray-100">
-              <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-100/50 cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                (click)="toggleSubSectionExpanded(section.id, item.id)" (keydown.enter)="toggleSubSectionExpanded(section.id, item.id)" (keydown.space)="$event.preventDefault(); toggleSubSectionExpanded(section.id, item.id)"
-                tabindex="0" role="button" [attr.aria-expanded]="item.expanded">
+              <button type="button" class="w-full text-left flex items-center gap-2 px-4 py-2.5 bg-gray-100/50 cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                (click)="toggleSubSectionExpanded(section.id, item.id)" [attr.aria-expanded]="item.expanded">
                 <i class="bi text-primary text-xs" [class.bi-chevron-down]="!item.expanded" [class.bi-chevron-up]="item.expanded"></i>
                 <span class="text-[10px] font-bold text-gray-600 uppercase">{{ item.title }}</span>
-              </div>
+              </button>
               @if(item.expanded) {
                 <div class="divide-y divide-gray-50">
                   @for(layer of item.layers; track layer.id) {

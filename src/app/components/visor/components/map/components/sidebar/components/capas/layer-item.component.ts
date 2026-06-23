@@ -12,7 +12,7 @@ import { LayerItem } from '../../../../../../../../interfaces/geoLayers';
       <div class="relative flex items-center">
         <input type="checkbox" [id]="sectionId() + '-' + layer().id" [checked]="layer().visible"
           (change)="toggleVisibility.emit()"
-          class="w-5 h-5 rounded-lg border-gray-300 text-primary focus:ring-primary/20 cursor-pointer transition-all accent-primary" />
+          class="w-3 h-3 rounded-md border-gray-300 text-primary focus:ring-primary/20 cursor-pointer transition-all accent-primary" />
       </div>
       <label [for]="sectionId() + '-' + layer().id"
         class="flex-1 cursor-pointer font-bold text-gray-600 group-hover/item:text-primary transition-colors leading-tight"
@@ -21,13 +21,12 @@ import { LayerItem } from '../../../../../../../../interfaces/geoLayers';
       </label>
     </div>
     <!-- Control de Opacidad -->
-    <div class="flex items-center gap-3 pl-8" [class.opacity-40]="!layer().visible">
-      <span class="font-bold text-gray-400 uppercase w-12" [class.text-[9px]]="size() === 'normal'" [class.text-[8px]]="size() === 'small'">Opacidad</span>
+    <div class="flex items-center gap-3 pl-8" [class.opacity-40]="!layer().visible">      
       <input type="range" min="0" max="100" [value]="layer().opacity * 100"
         (input)="opacityChange.emit($event)"
         class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
         [disabled]="!layer().visible" title="Opacidad" />
-      <span class="font-mono font-bold text-primary w-6" [class.text-[9px]]="size() === 'normal'" [class.text-[8px]]="size() === 'small'">{{ (layer().opacity * 100) | number:'1.0-0' }}%</span>
+      <span class="font-mono font-bold text-primary w-6" [class.text-[9px]]="size() === 'normal'" [class.text-[10px]]="size() === 'small'">{{ (layer().opacity * 100) | number:'1.0-0' }}%</span>
     </div>
     </div>
   `

@@ -123,7 +123,8 @@ export class MapService {
             { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
             { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
             { type: 'layer', id: "veredas", label: "VEREDAS", visible: true, opacity: 1 },
-            { type: 'layer', id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1 } 
+            { type: 'layer', id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1 },
+            { type: 'layer', id: "vias", label: "VÍAS", visible: true, opacity: 1 } 
           ]
         }       
       ]
@@ -347,7 +348,8 @@ export class MapService {
       { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
       { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec`, zIndex: 0, title: 'Área Recreativa' },
-      { id: 'sec_catastrales', layerName: `${workspacePrefix}tg_Sectores`, zIndex: 0, title: 'Sectores Catastrales' }
+      { id: 'sec_catastrales', layerName: `${workspacePrefix}tg_Sectores`, zIndex: 0, title: 'Sectores Catastrales' },
+      { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias' }
 
       
     ];

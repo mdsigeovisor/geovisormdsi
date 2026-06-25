@@ -108,27 +108,38 @@ export class MapService {
           type: 'subsection',
           id: 'sectores',
           title: 'SECTORES',
-          expanded: true,
+          expanded: false,
           layers: [
           { type: 'layer', id: "sec_catastrales", label: "SECTORES CATASTRALES", visible: false, opacity: 1 },
+          { type: 'layer', id: "sec_vecinal", label: "SECTORES VECINALES", visible: false, opacity: 1 },
+              
           ]
         },  
         {
           type: 'subsection',
           id: 'limites-areas',
           title: 'Límites y Áreas',
-          expanded: true,
+          expanded: false,
           layers: [
             { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
             { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
             { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
             { type: 'layer', id: "veredas", label: "VEREDAS", visible: true, opacity: 1 },
             { type: 'layer', id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1 },
-            { type: 'layer', id: "vias", label: "VÍAS", visible: true, opacity: 1 } 
+            
           ]
-        }       
+        },
+        {
+          type: 'subsection',
+          id: 'nom_vias',
+          title: 'Nomenclatura de Vías',
+          expanded: false,
+          layers: [
+            { type: 'layer', id: "vias", label: "VÍAS", visible: false, opacity: 1 } 
+          ]
+        }             
       ]
-    },
+    },     
     {
       id: "imaAereas",
       title: "Imagenes Aereas",      
@@ -348,7 +359,8 @@ export class MapService {
       { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
       { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec`, zIndex: 0, title: 'Área Recreativa' },
-      { id: 'sec_catastrales', layerName: `${workspacePrefix}tg_Sectores`, zIndex: 0, title: 'Sectores Catastrales' },
+      { id: 'sec_catastrales', layerName: `${workspacePrefix}vw_tg_sec_catastro,vw_tg_sec_catastro_puntos`, zIndex: 0, title: 'Sectores Catastrales'},
+      { id: 'sec_vecinal', layerName: `${workspacePrefix}vw_tg_secvecinales,vw_tg_secvecinales_puntos`, zIndex: 1, title: 'Sectores Vecinales'},
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias' }
 
       

@@ -20,16 +20,10 @@ export class Funciones {
    */
   @ViewChild('userMarker') userMarkerEl!: ElementRef;
   @ViewChild('locationPopup') locationPopupEl!: ElementRef;
-  @ViewChild('sanIsidroMarker') sanIsidroMarkerEl!: ElementRef;
-  @ViewChild('sanIsidroPopup') sanIsidroPopupEl!: ElementRef;
   /** Overlay para mostrar la ubicación actual del usuario */
   private locationOverlay?: Overlay;
   /** Overlay para mostrar un popup con información de la ubicación */
   private popupOverlay?: Overlay;
-  /** Overlay para mostrar el marcador de San Isidro */
-  private sanIsidroOverlay?: Overlay;
-  /** Overlay para mostrar el popup de San Isidro */
-  private sanIsidroPopupOverlay?: Overlay;
   /** Sincronización con el estado del mapa en el servicio */
   olMap = this.mapService.map;
   isReady = computed(() => !!this.olMap());
@@ -73,45 +67,51 @@ export class Funciones {
     this.mapService.cambiarMapaBase(nextType);
   }
 
-  getCurrentLocation(): void {
+  async getCurrentLocation(): Promise<void> {
     if (!this.userMarkerEl?.nativeElement || !this.locationPopupEl?.nativeElement) {
       console.warn('Los elementos de ubicación no están inicializados.');
       return;
     }
-
+  
     const markerElement = this.userMarkerEl.nativeElement;
     const popupElement = this.locationPopupEl.nativeElement;
-
+  
     if (!('geolocation' in navigator)) {
       alert('La geolocalización no está disponible en su navegador.');
       return;
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const result = { lon: position.coords.longitude, lat: position.coords.latitude };
-        const transformedCoords = fromLonLat([result.lon, result.lat]);
-        // 1. Marcamos el punto azul inmediatamente
-        this.updateUserLocationOverlay(transformedCoords, markerElement);
-        this.userCoords.set(result);
-        // 2. Animamos el mapa
-        this.olMap()?.getView().animate({
-          center: transformedCoords,
-          zoom: ZOOM_LEVEL_LOCATION,
-          duration: ANIMATION_DURATION
-        }, (complete) => {
-          // 3. Mostramos el popup al finalizar el viaje
-          if (complete) {
-            this.showLocationPopup(transformedCoords, popupElement);
-          }
+  
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
         });
-      },
-      (error) => {
-        console.error('Error al obtener ubicación:', error);
-        alert('No se pudo obtener su ubicación actual.');
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+      });
+  
+      const result = { lon: position.coords.longitude, lat: position.coords.latitude };
+      const transformedCoords = fromLonLat([result.lon, result.lat]);
+  
+      // 1. Marcamos el punto azul inmediatamente
+      this.updateUserLocationOverlay(transformedCoords, markerElement);
+      this.userCoords.set(result);
+  
+      // 2. Animamos el mapa y esperamos a que termine
+      const view = this.olMap()?.getView();
+      if (view) {
+        await view.animate({
+          center: transformedCoords,
+          zoom: 20, // Nivel de zoom para una escala aproximada de 1/1000
+          duration: ANIMATION_DURATION,
+        });
+        // 3. Mostramos el popup al finalizar el viaje
+        this.showLocationPopup(transformedCoords, popupElement);
+      }
+    } catch (error) {
+      console.error('Error al obtener ubicación:', error);
+      alert('No se pudo obtener su ubicación actual.');
+    }
   }
 
   /**
@@ -136,41 +136,6 @@ export class Funciones {
     });
     element.style.display = 'block';
     this.popupOverlay.setPosition(transformedCoords);
-  }
-
-  private updateSanIsidroOverlay(transformedCoords: number[], element: HTMLElement): void {
-    this.sanIsidroOverlay = this.getOrCreateOverlay(this.sanIsidroOverlay, element, {
-      positioning: 'center-center'
-    });
-    element.style.display = 'flex';
-    this.sanIsidroOverlay.setPosition(transformedCoords);
-  }
-
-  private showSanIsidroPopup(transformedCoords: number[], element: HTMLElement): void {
-    this.sanIsidroPopupOverlay = this.getOrCreateOverlay(this.sanIsidroPopupOverlay, element, {
-      positioning: 'bottom-center',
-      stopEvent: true,
-      offset: [0, -32]
-    });
-    element.style.display = 'block';
-    this.sanIsidroPopupOverlay.setPosition(transformedCoords);
-  }
-
-  hideSanIsidroPopup(): void {
-    this.sanIsidroPopupOverlay?.setPosition(undefined);
-    const element = this.sanIsidroPopupOverlay?.getElement();
-    if (element instanceof HTMLElement) {
-      element.style.display = 'none';
-    }
-  }
-
-  removeSanIsidroMarker(): void {
-    this.sanIsidroOverlay?.setPosition(undefined);
-    const element = this.sanIsidroOverlay?.getElement();
-    if (element instanceof HTMLElement) {
-      element.style.display = 'none';
-    }
-    this.hideSanIsidroPopup();
   }
 
   /**

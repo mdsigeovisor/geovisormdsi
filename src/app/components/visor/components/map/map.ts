@@ -42,6 +42,8 @@ export class MapComponent {
       if (this.mapService.isReady()) {
         setTimeout(() => {
           this.funcionesComponent.goHome();
+          // Eliminamos la capa del INEI después de la animación inicial
+          this.mapService.removeLayerById('ig_departamento');
         }, 5000); // 5 segundos
       }
     });

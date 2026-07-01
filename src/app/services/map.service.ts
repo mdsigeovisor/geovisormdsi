@@ -2,8 +2,7 @@ import { Injectable, signal, inject, NgZone, effect } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
-import { 
-  LayerItem,
+import {   
   Section, 
   WmsLayerConfig, 
   GeoJSONFeature, 
@@ -24,12 +23,10 @@ import {
 import {
   fromLonLat,
   OlMap,
-  TileLayer,
-  TileWMS,
+  TileLayer,  
   View,  
   XYZ,
-  ImageWMS,
-  
+  ImageWMS,  
   transform,
   transformExtent,
   GeoJSON
@@ -37,7 +34,6 @@ import {
 import ImageLayer from 'ol/layer/Image';
 
 export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
-
 /**
  * Servicio de Angular para la gestión del mapa OpenLayers.
  * Encapsula toda la lógica relacionada con la inicialización, manipulación
@@ -53,7 +49,6 @@ export class MapService {
     if (!this.satelliteLayer || !this.streetsLayer) {
       return;
     }
-
     switch (tipoMapaBase) {
       case 'satellite':
         this.satelliteLayer.setVisible(true);
@@ -72,20 +67,16 @@ export class MapService {
   }
   private readonly http = inject(HttpClient);
   private readonly zone = inject(NgZone);
-
   baseLayerType = signal<TipoMapaBase>('streets');
-
   /** Instancia del mapa OpenLayers */
   private readonly _map = signal<OlMap | undefined>(undefined);
   /** Exposición del mapa como Signal de solo lectura */
   public readonly map = this._map.asReadonly();
-
   // Capas base accesibles para manipulación directa
   /** Capa de imágenes satelitales */
   public satelliteLayer?: TileLayer;
   /** Capa de calles (OSM) */
   public streetsLayer?: TileLayer;
-
   /**
    * Signal que gestiona las secciones y capas del visor.
    */
@@ -241,23 +232,18 @@ export class MapService {
 
   /** Indica si el mapa ha sido inicializado y está listo para su uso. */
   isReady = signal(false);
-
   /** Coordenadas actuales del usuario (longitud, latitud). */
   userCoords = signal<{ lon: number, lat: number } | null>(null);
-
   /** Herramientas del sidebar activas. */
   activeSidebarTools = signal<Set<string>>(new Set());
-
   constructor() {
     this.setupLayerSyncEffect();
   }
-
   /**
    * Inicializa el mapa OpenLayers.
    */
   initMap(target: HTMLElement): OlMap {
     this.isReady.set(false);
-
     // Si el mapa ya existe, reasignamos el target
     if (this._map()) {
       const existingMap = this._map()!;
@@ -267,7 +253,6 @@ export class MapService {
     }
 
     this.setupBaseLayers();
-
     const olMap = new OlMap({
       target,
       layers: [this.streetsLayer!, this.satelliteLayer!],
@@ -379,15 +364,12 @@ export class MapService {
       { id: 'sec_catastrales', layerName: `${workspacePrefix}vw_tg_sec_catastro,vw_tg_sec_catastro_puntos`, zIndex: 0, title: 'Sectores Catastrales'},
       { id: 'sec_vecinal', layerName: `${workspacePrefix}vw_tg_secvecinales,vw_tg_secvecinales_puntos`, zIndex: 1, title: 'Sectores Vecinales'},
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias'},
-      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano`, zIndex: 0, title: 'Manzanas Colindantes' }
-
-      
+      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres`, zIndex: 0, title: 'Manzanas Colindantes'}      
     ];
 
     // Inicializamos las capas catastrales recorriendo la lista
     catastralLayers.forEach(config => this.addWmsLayer(config));
   }
-
   /**
    * Asegura que el mapa se actualice fuera de la zona de Angular para rendimiento.
    */
@@ -398,7 +380,6 @@ export class MapService {
       });
     });
   }
-
   /**
    * Maneja el estado isReady tras el primer renderizado completo.
    */
@@ -409,8 +390,6 @@ export class MapService {
       }, 5000);
     });
   }
-
-
   /**
    * Método auxiliar para estandarizar la creación de capas base.
    * @private
@@ -423,7 +402,6 @@ export class MapService {
       visible: this.baseLayerType() === type
     });
   }
-
   /**
    * Método genérico para agregar capas WMS al mapa.
    * @private
@@ -431,10 +409,8 @@ export class MapService {
   private addWmsLayer(options: WmsLayerConfig): void {
     const map = this._map();
     if (!map) return;
-
     const url = options.url ?? environment.geoserver.wmsUrl;
     const version = options.version ?? '1.1.0';
-
     const separator = url.includes('?') ? '&' : '?';
     const wmsUrl = options.tiled ? `${url}${separator}tiled=true` : url;
     const layer = new ImageLayer({
@@ -458,11 +434,9 @@ export class MapService {
     });
 
     map.addLayer(layer);
-
     // Generamos la URL de la leyenda para servicios WMS (estándar GetLegendGraphic)
     const legendUrl = `${url}${url.includes('?') ? '&' : '?'}` +
       `SERVICE=WMS&VERSION=${version}&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${options.layerName}&TRANSPARENT=true`;
-
     this.sections.update(sections => sections.map(section => ({
       ...section,
       items: section.items.map(item => {
@@ -475,7 +449,6 @@ export class MapService {
       })
     })));
   }
-
   /**
    * Configura el manejador de clics en el mapa para obtener información de las capas WMS.
    * @param olMap Instancia del mapa de OpenLayers.
@@ -485,16 +458,13 @@ export class MapService {
       const view = olMap.getView();
       const viewResolution = view.getResolution()!;
       const source = this.getLayerById('lote')?.getSource();
-
       if (!source) return;
-
       const url = source.getFeatureInfoUrl(
         evt.coordinate,
         viewResolution,
         view.getProjection(),
         { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': '1' }
       );
-
       if (url) {
         this.http.get<WfsResponse>(url).subscribe(response => {
           if (response && response.features && response.features.length > 0) {
@@ -509,31 +479,24 @@ export class MapService {
       }
     });
   }
-
-
   /**
    * Remueve una capa del mapa definitivamente basándose en su ID.
    */
   removeLayerById(id: string): void {
     const currentMap = this._map();
     if (!currentMap) return;
-
     const layerToRemove = currentMap.getLayers().getArray()
       .find(layer => layer.get('id') === id);
-
     if (layerToRemove) currentMap.removeLayer(layerToRemove);
   }
-
   /**
    * Centra y acerca el mapa al distrito de San Isidro con un vuelo animado.
    */
   goToCoordinates(lat: number, lon: number, zoom = SAN_ISIDRO_ZOOM, duration = 1800, onComplete?: (complete: boolean) => void): void {
     const map = this._map();
     if (!map) return;
-
     const view = map.getView();
     const currentZoom = view.getZoom() ?? INITIAL_ZOOM;
-
     view.animate({
       zoom: Math.max(currentZoom - 1, 4),
       duration: 500,
@@ -547,7 +510,6 @@ export class MapService {
       if (complete && onComplete) onComplete(complete);
     });
   }
-
   /**
    * Desplaza un punto (lon, lat) en metros en coordenadas proyectadas (EPSG:3857)
    * dx: desplazamiento en metros hacia el este (+), dy: hacia el norte (+)
@@ -559,7 +521,6 @@ export class MapService {
     const res = transform(shifted, 'EPSG:3857', 'EPSG:4326') as [number, number];
     return res;
   }
-
   /**
    * Centra y acerca el mapa al distrito de San Isidro usando la constante
    * `SAN_ISIDRO_CENTER`. Esta función mantiene compatibilidad con llamadas
@@ -567,7 +528,6 @@ export class MapService {
    */
   goToSanIsidro(duration = 1800, onComplete?: (complete: boolean) => void): void {
     this.removeLayerById('ig_departamento');
-
     // SAN_ISIDRO_CENTER almacena [lon, lat]
     const lon = SAN_ISIDRO_CENTER[0];
     const lat = SAN_ISIDRO_CENTER[1];
@@ -575,7 +535,6 @@ export class MapService {
     const [shiftedLon, shiftedLat] = this.offsetLonLat(lon, lat, 200, 0);
     this.goToCoordinates(shiftedLat, shiftedLon, SAN_ISIDRO_ZOOM, duration, onComplete);
   }
-
   /**
    * Métodos para actualizar el estado de las secciones desde la UI
    */
@@ -644,7 +603,6 @@ export class MapService {
       } : sec
     ));
   }
-
   /**
    * Alterna la herramienta activa del sidebar. Si se hace clic en la misma, se cierra.
    * @param toolId Identificador de la herramienta (ej: 'layers')
@@ -660,7 +618,6 @@ export class MapService {
       return newTools;
     });
   }
-
   /**
    * Ajusta la vista del mapa para encuadrar una geometría GeoJSON (Polygon, MultiPolygon, etc.)
    * @param geometry Objeto de geometría devuelto por el servicio WFS
@@ -668,37 +625,29 @@ export class MapService {
   fitToGeometry(geometry: GeoJSONGeometry): void {
     const map = this._map();
     if (!map || !geometry?.coordinates) return;
-
     const format = new GeoJSON();
     // Leemos la geometría directamente para evitar la ambigüedad de tipo (Feature vs Feature[])
     const geometryOl = format.readGeometry(geometry);
-
     if (!geometryOl) return;
-
     const view = map.getView();
     const extent = geometryOl.getExtent();
-
     // Detectamos proyección: Si el valor de X es grande, asumimos UTM 18S
     const sourceProjection = Math.abs(extent[0]) > 180 ? 'EPSG:32718' : 'EPSG:4326';
     const transformedExtent = transformExtent(extent, sourceProjection, view.getProjection());
-
     view.fit(transformedExtent, {
       duration: ANIMATION_DURATION,
       padding: [100, 100, 100, 100] // Margen para no quedar pegado a los bordes
     });
   }
-
   /**
    * Busca un lote por su código catastral (id_lote) consultando el servicio WFS de GeoServer.
    * @param codigo Código catastral en formato XX-XXX-XXX
    * @returns Observable con el feature encontrado o null
    */
   searchLoteByCodigo(codigo: string): Observable<GeoJSONFeature | null> {
-    const url = environment.geoserver.owsUrl;
-    
+    const url = environment.geoserver.owsUrl;    
     // Limpiamos guiones y espacios en blanco (ej: '3112065002    ' -> '3112065002')
     const codigoSinGuiones = codigo.replaceAll('-', '').trim();
-
     // Usamos HttpParams para asegurar la correcta construcción y codificación del cql_filter
     const params = new HttpParams()
       .set('service', 'WFS')
@@ -709,7 +658,6 @@ export class MapService {
       // Forzamos a GeoServer a entregar coordenadas en grados decimales
       .set('srsName', 'EPSG:4326')
       .set('cql_filter', `id_lote = '${codigoSinGuiones}'`);
-
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map((response) => {
         if (response?.features?.length > 0) {
@@ -720,7 +668,6 @@ export class MapService {
       })
     );
   }
-
   /**
    * Busca y devuelve una capa de OpenLayers por su ID asignado en la configuración.
    * @param id El identificador de la capa.
@@ -732,7 +679,7 @@ export class MapService {
         const layers = 'layers' in item ? item.layers : (item.type === 'layer' ? [item] : []);
         const layerData = layers.find(l => l.id === id);
         if (layerData && layerData.olLayer instanceof ImageLayer) {
-          return layerData.olLayer as ImageLayer<ImageWMS>;
+          return layerData.olLayer;
         }
       }
     }

@@ -15,3 +15,23 @@
 <app-sidebar></app-sidebar>
 <div #mapContainer class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
 <app-functions></app-functions>
+
+<!-- Modal para información del lote -->
+@if (mapService.loteInfoUrl(); as url) {
+  <div class="modal-overlay" (click)="closeLoteModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Información del Lote</h3>
+        <button class="close-button" (click)="closeLoteModal()" title="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Indicador de carga para el iframe -->
+        <div class="h-full w-full flex items-center justify-center absolute bg-white/50">
+          <app-spinner size="h-16 w-16" color="text-primary"></app-spinner>
+        </div>
+        <!-- El iframe se mostrará por encima del spinner una vez cargado -->
+        <iframe class="relative" [src]="getSafeUrl(url)" frameborder="0"></iframe>
+      </div>
+    </div>
+  </div>
+}

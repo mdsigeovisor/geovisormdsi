@@ -236,6 +236,8 @@ export class MapService {
   userCoords = signal<{ lon: number, lat: number } | null>(null);
   /** Herramientas del sidebar activas. */
   activeSidebarTools = signal<Set<string>>(new Set());
+  /** URL con la información de un lote para mostrar en un modal. */
+  loteInfoUrl = signal<string | null>(null);
   constructor() {
     this.setupLayerSyncEffect();
   }
@@ -472,12 +474,18 @@ export class MapService {
             const codigoLote = feature.properties['id_lote'];
             if (codigoLote) {
               const infoUrl = `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigoLote}`;
-              window.open(infoUrl, '_blank');
+              this.loteInfoUrl.set(infoUrl);
             }
           }
         });
       }
     });
+  }
+  /**
+   * Limpia la URL de información del lote, para cerrar el modal.
+   */
+  clearLoteInfo(): void {
+    this.loteInfoUrl.set(null);
   }
   /**
    * Remueve una capa del mapa definitivamente basándose en su ID.

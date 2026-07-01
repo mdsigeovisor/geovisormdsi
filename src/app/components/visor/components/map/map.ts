@@ -1,5 +1,6 @@
-import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect } from '@angular/core';
+import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect, SecurityContext } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 // Servicios y módulos
 import { MapService } from '../../../../services/map.service';
 // Componentes relacionados
@@ -34,6 +35,7 @@ export class MapComponent {
 
   public readonly mapService = inject(MapService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly sanitizer = inject(DomSanitizer);
 
   constructor() {
     // Usamos un 'effect' para reaccionar a los cambios de la signal 'isReady'.
@@ -60,5 +62,21 @@ export class MapComponent {
     this.mapService.initMap(this.mapContainer.nativeElement);
 
     this.cdr.detectChanges();
+  }
+
+  /**
+   * Cierra el modal de información del lote.
+   */
+  closeLoteModal(): void {
+    this.mapService.clearLoteInfo();
+  }
+
+  /**
+   * Sanitiza la URL para que sea segura de usar en un iframe.
+   * @param url La URL a sanitizar.
+   * @returns Una URL segura para recursos.
+   */
+  getSafeUrl(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 }

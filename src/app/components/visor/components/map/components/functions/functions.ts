@@ -2,8 +2,8 @@ import { Component, computed, inject, ElementRef, ViewChild } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { OverviewMapComponent } from '../overViewMap/overview-map';
 
-import { MapService } from '../../../../../../services/map.service';
-import { ANIMATION_DURATION, ZOOM_LEVEL_LOCATION, SAN_ISIDRO_ZOOM } from '../../../../../../interfaces/map.constants';
+import { MapService, TipoMapaBase } from '@services/map.service';
+import { ANIMATION_DURATION, ZOOM_LEVEL_LOCATION } from '@interfaces/map.constants';
 import { fromLonLat, Overlay, OverlayPositioning, transformExtent } from '../../../../../../modules/openlayers.module';
 
 @Component({
@@ -15,7 +15,6 @@ import { fromLonLat, Overlay, OverlayPositioning, transformExtent } from '../../
 })
 export class Funciones {
   private readonly mapService = inject(MapService);
-
   /**
    * Referencias a los elementos del DOM definidos localmente en functions.html
    */
@@ -23,7 +22,6 @@ export class Funciones {
   @ViewChild('locationPopup') locationPopupEl!: ElementRef;
   @ViewChild('sanIsidroMarker') sanIsidroMarkerEl!: ElementRef;
   @ViewChild('sanIsidroPopup') sanIsidroPopupEl!: ElementRef;
-
   /** Overlay para mostrar la ubicación actual del usuario */
   private locationOverlay?: Overlay;
   /** Overlay para mostrar un popup con información de la ubicación */
@@ -32,14 +30,12 @@ export class Funciones {
   private sanIsidroOverlay?: Overlay;
   /** Overlay para mostrar el popup de San Isidro */
   private sanIsidroPopupOverlay?: Overlay;
-
   /** Sincronización con el estado del mapa en el servicio */
   olMap = this.mapService.map;
   isReady = computed(() => !!this.olMap());
   baseLayerType = this.mapService.baseLayerType;
   /** Signal con las coordenadas actuales obtenidas por GPS */
   userCoords = this.mapService.userCoords;
-
   zoomIn(): void {
     this.adjustZoom(1);
   }
@@ -48,48 +44,12 @@ export class Funciones {
   }
   goHome(): void {
     const view = this.olMap()?.getView();
-    if (view) {
-      // BBOX proporcionado de la capa vw_tg_lote en EPSG:32718
-      // [minX, minY, maxX, maxY]
-      const extent32718 = [275424.08, 8660213.79, 281757.72, 8663299.55];
-      
-      // Transformamos la extensión al sistema de referencia de la vista (normalmente EPSG:3857)
-      const transformedExtent = transformExtent(extent32718, 'EPSG:32718', view.getProjection());
-      
-      // Ajustamos la vista para encuadrar perfectamente la extensión de los lotes
-      // El padding [20, 20, 20, 20] asegura que no toque los bordes del visor
+    if (view) {      
+      const extent32718 = [275424.08, 8660213.79, 281757.72, 8663299.55];      
+      const transformedExtent = transformExtent(extent32718, 'EPSG:32718', view.getProjection());      
       view.fit(transformedExtent, { duration: ANIMATION_DURATION / 2, padding: [20, 20, 20, 20] });
     }
   }
-
-  goToSanIsidro(): void {
-    // Coordenadas solicitadas por el usuario (Jirón Augusto Tamayo): lat, lon
-    const lat = -12.09746407;
-    const lon = -77.02910466;
-
-    // Eliminamos definitivamente el servicio de departamentos al enfocarnos en el distrito
-    this.mapService.removeLayerById('ig_departamento');
-
-    if (!this.sanIsidroMarkerEl?.nativeElement || !this.sanIsidroPopupEl?.nativeElement) {
-      console.warn('Los elementos de San Isidro no están inicializados.');
-      this.mapService.goToCoordinates(lat, lon, SAN_ISIDRO_ZOOM, 1800);
-      return;
-    }
-
-    const markerElement = this.sanIsidroMarkerEl.nativeElement;
-    const popupElement = this.sanIsidroPopupEl.nativeElement;
-    // Calcular la posición desplazada 200m a la derecha usando el servicio
-    const [shiftedLon, shiftedLat] = this.mapService.offsetLonLat(lon, lat, 200, 0);
-    const transformedCoords = fromLonLat([shiftedLon, shiftedLat]);
-
-    this.updateSanIsidroOverlay(transformedCoords, markerElement);
-    this.hideSanIsidroPopup();
-
-    this.mapService.goToCoordinates(shiftedLat, shiftedLon, SAN_ISIDRO_ZOOM, 1800, (complete) => {
-      if (complete) this.showSanIsidroPopup(transformedCoords, popupElement);
-    });
-  }
-
   /**
    * Realiza una animación de cambio de zoom relativa al valor actual.
    */
@@ -102,13 +62,14 @@ export class Funciones {
   }
 
   toggleBaseLayer(): void {
-    const currentType = this.baseLayerType();
-    const nextType = currentType === 'satellite'
-      ? 'streets'
-      : currentType === 'streets'
-        ? 'blanco'
-        : 'satellite';
-
+    const currentType = this.baseLayerType();    let nextType: TipoMapaBase;
+    if (currentType === 'satellite') {
+      nextType = 'streets';
+    } else if (currentType === 'streets') {
+      nextType = 'blanco';
+    } else {
+      nextType = 'satellite';
+    }
     this.mapService.cambiarMapaBase(nextType);
   }
 
@@ -130,11 +91,9 @@ export class Funciones {
       (position) => {
         const result = { lon: position.coords.longitude, lat: position.coords.latitude };
         const transformedCoords = fromLonLat([result.lon, result.lat]);
-
         // 1. Marcamos el punto azul inmediatamente
         this.updateUserLocationOverlay(transformedCoords, markerElement);
         this.userCoords.set(result);
-
         // 2. Animamos el mapa
         this.olMap()?.getView().animate({
           center: transformedCoords,
@@ -239,7 +198,6 @@ export class Funciones {
     map.addOverlay(newOverlay);
     return newOverlay;
   }
-
   /**
    * Oculta el marcador y el popup y resetea las coordenadas del usuario.
    */
@@ -252,15 +210,7 @@ export class Funciones {
     if (popup) popup.style.display = 'none';
     this.userCoords.set(null);
   }
-
-
     isMapBasePanelOpen(): boolean {
     return this.mapService.activeSidebarTools().has('mapbase');
   }
-
-
-
-
-
 }
-

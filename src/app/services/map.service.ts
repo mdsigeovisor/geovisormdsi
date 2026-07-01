@@ -219,7 +219,24 @@ export class MapService {
           ]
         },        
       ]
-    }    
+    },
+    {
+      id: "carto_colindantes",
+      title: "Cartografía Colindantes",     
+      expanded: false,
+      items: [
+        {
+          type: 'subsection',
+          id: 'manzanas',
+          title: 'Manzanas Colindantes',
+          expanded: true,
+          layers: [
+             { type: 'layer', id: "mz_colindantes", label: "Manzanas", visible: true, opacity: 1 } 
+            
+          ]
+        },        
+      ]
+    }       
   ]);
 
   /** Indica si el mapa ha sido inicializado y está listo para su uso. */
@@ -358,10 +375,11 @@ export class MapService {
       { id: 'lote', layerName: `${workspacePrefix}vw_tg_lote`, zIndex: 0, title: 'Lote Catastral' },
       { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
-      { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec`, zIndex: 0, title: 'Área Recreativa' },
+      { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec,vw_tg_area_privada`, zIndex: 0, title: 'Área Recreativa' },
       { id: 'sec_catastrales', layerName: `${workspacePrefix}vw_tg_sec_catastro,vw_tg_sec_catastro_puntos`, zIndex: 0, title: 'Sectores Catastrales'},
       { id: 'sec_vecinal', layerName: `${workspacePrefix}vw_tg_secvecinales,vw_tg_secvecinales_puntos`, zIndex: 1, title: 'Sectores Vecinales'},
-      { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias' }
+      { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias'},
+      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano`, zIndex: 0, title: 'Manzanas Colindantes' }
 
       
     ];

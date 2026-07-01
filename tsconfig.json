@@ -4,11 +4,20 @@
   "compileOnSave": false,
   "compilerOptions": {
     "strict": true,
+    "outDir": "./dist/out-tsc",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
+    "paths": {
+      "@app/*": ["./src/app/*"],
+      "@services/*": ["./src/app/services/*"],
+      "@interfaces/*": ["./src/app/interfaces/*"]
+    },
     "isolatedModules": true,
     "experimentalDecorators": true,
     "importHelpers": true,

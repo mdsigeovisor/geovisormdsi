@@ -5,7 +5,7 @@ export const INITIAL_ZOOM = 6;
 /** URL del servicio de mapas satelitales de Google */
 export const GOOGLE_SATELLITE_URL = 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}';
 /** URL del servicio de mapas de calles (OpenStreetMap) */
-export const OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+export const OSM_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
 /** URL del servidor WMS de INEI para departamentos */
 export const TRAMA_WMS_URL = 'https://geoespacial.inei.gob.pe/geoserver/Interoperabilidad/wms';
 /** Duración de las animaciones del mapa en milisegundos */

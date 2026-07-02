@@ -359,8 +359,8 @@ export class MapService {
     const workspacePrefix = environment.geoserver.workspacePrefix;
     const catastralLayers: WmsLayerConfig[] = [      
       { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
-      { id: 'lote', layerName: `${workspacePrefix}vw_tg_lote`, zIndex: 0, title: 'Lote Catastral' },
-      { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
+      { id: 'lote', layerName: `${workspacePrefix}vw_tg_lote,vw_tg_lote_puntos`, zIndex: 0, title: 'Lote Catastral' },
+      { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana,vw_tg_manzana_puntos`, zIndex: 0, title: 'Manzana Catastral' },
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
       { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec,vw_tg_area_privada`, zIndex: 0, title: 'Área Recreativa' },
       { id: 'sec_catastrales', layerName: `${workspacePrefix}vw_tg_sec_catastro,vw_tg_sec_catastro_puntos`, zIndex: 0, title: 'Sectores Catastrales'},

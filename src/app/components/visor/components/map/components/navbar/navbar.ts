@@ -15,6 +15,5 @@ export class Navbar implements OnInit {
     
   ngOnInit(): void {
     this.version = `${environment.version} ${environment.ambiente}`;    
-  }
-  
+  }  
 }

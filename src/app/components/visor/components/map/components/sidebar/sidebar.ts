@@ -7,6 +7,11 @@ import { CapasComponent } from './components/capas/capas';
 import { Buscar } from './components/buscar/buscar';
 import { Leyenda } from './components/leyenda/leyenda';
 import { MapService } from '../../../../../../services/map.service';
+import { Descargaspdf } from './components/descargaspdf/descargaspdf';
+import { Normativa } from './components/normativa/normativa';
+import { Infraestructura } from './components/infraestructura/infraestructura';
+import { Ortofotos } from './components/ortofotos/ortofotos';
+import { Tematica } from './components/tematica/tematica';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,9 +19,14 @@ import { MapService } from '../../../../../../services/map.service';
   imports: [
     CommonModule,
     FormsModule,
-    CapasComponent,
     Buscar,
+    CapasComponent,
+    Ortofotos,
     Leyenda,
+    Descargaspdf,
+    Normativa,
+    Infraestructura,
+    Tematica,
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
@@ -31,9 +41,14 @@ export class Sidebar implements OnInit {
 
   // Ítems de navegación vinculados a las herramientas del MapService
   menuItems: { id: string; icon: string; label: string }[] = [
-    { id: 'search', icon: 'search', label: 'Buscar' },
+    { id: 'search', icon: 'search', label: 'Consultas' },
     { id: 'layers', icon: 'layers', label: 'Capas' },
     { id: 'legend', icon: 'legend_toggle', label: 'Leyenda' },
+    { id: 'orthophotos', icon: 'satellite_alt', label: 'Ortofotos' },
+    { id: 'normativa', icon: 'gavel', label: 'Normativa' },
+    { id: 'infraestructura', icon: 'engineering', label: 'Infraestructura' },
+    { id: 'thematic', icon: 'palette', label: 'Temática' },    
+    { id: 'downloads', icon: 'download', label: 'Descargas' },
     { id: 'print', icon: 'print', label: 'Imprimir' },
     { id: 'settings', icon: 'settings', label: 'Configuración' },
     { id: 'info', icon: 'info', label: 'Acerca' }

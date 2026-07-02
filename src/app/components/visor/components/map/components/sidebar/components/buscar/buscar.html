@@ -1,62 +1,167 @@
 <div class="flex flex-col h-full space-y-4 animate-in fade-in duration-300">
   <!-- Tabs de Navegación -->
-  <div class="flex p-1 bg-gray-100 rounded-xl shrink-0">
+  <div class="flex flex-col gap-2 shrink-0">
+    <!-- Opción CUC -->
+    <button (click)="activeTab = 'cuc'"
+            [class.bg-primary/10]="activeTab === 'cuc'"
+            [class.border-primary/30]="activeTab === 'cuc'"
+            class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+      <div class="text-primary/80 text-xl"><i class="bi bi-upc-scan"></i></div>
+      <div>
+        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Código CUC</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Búsqueda por Código Único Catastral.</p>
+      </div>
+    </button>
+    <!-- Opción Código Predial -->
+    <button (click)="activeTab = 'predial'"
+            [class.bg-primary/10]="activeTab === 'predial'"
+            [class.border-primary/30]="activeTab === 'predial'"
+            class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+      <div class="text-primary/80 text-xl"><i class="bi bi-file-earmark-text"></i></div>
+      <div>
+        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Código Predial</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Búsqueda por el código de predio.</p>
+      </div>
+    </button>
+    <!-- Opción Dirección -->
     <button (click)="activeTab = 'direccion'"
-      [class.bg-white]="activeTab === 'direccion'"
-      [class.shadow-sm]="activeTab === 'direccion'"
-      [class.text-primary]="activeTab === 'direccion'"
-      class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-all text-gray-500 rounded-lg">
-      <i class="bi bi-geo-alt-fill"></i> Dirección
+            [class.bg-primary/10]="activeTab === 'direccion'"
+            [class.border-primary/30]="activeTab === 'direccion'"
+            class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+      <div class="text-primary/80 text-xl"><i class="bi bi-geo-alt-fill"></i></div>
+      <div>
+        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Dirección</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Encuentra un predio usando el nombre de la vía y número.</p>
+      </div>
     </button>
+    <!-- Opción Habilitación Urbana -->
+    <button (click)="activeTab = 'habilitacion'"
+            [class.bg-primary/10]="activeTab === 'habilitacion'"
+            [class.border-primary/30]="activeTab === 'habilitacion'"
+            class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+      <div class="text-primary/80 text-xl"><i class="bi bi-map"></i></div>
+      <div>
+        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Habilitación Urbana</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Busca por habilitación, manzana y lote.</p>
+      </div>
+    </button>
+    <!-- Opción Titular Catastral -->
+    <button (click)="activeTab = 'titular'"
+            [class.bg-primary/10]="activeTab === 'titular'"
+            [class.border-primary/30]="activeTab === 'titular'"
+            class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+      <div class="text-primary/80 text-xl"><i class="bi bi-person-badge"></i></div>
+      <div>
+        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Titular Catastral</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Busca por código de titular catastral.</p>
+      </div>
+    </button>
+    <!-- Opción Catastral -->
     <button (click)="activeTab = 'catastral'"
-      [class.bg-white]="activeTab === 'catastral'"
-      [class.shadow-sm]="activeTab === 'catastral'"
-      [class.text-primary]="activeTab === 'catastral'"
-      class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-all text-gray-500 rounded-lg">
-      <i class="bi bi-hash"></i> Catastral
+            [class.bg-primary/10]="activeTab === 'catastral'"
+            [class.border-primary/30]="activeTab === 'catastral'"
+            class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+      <div class="text-primary/80 text-xl"><i class="bi bi-hash"></i></div>
+      <div>
+        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Cód. Catastral</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Búsqueda precisa usando el código de sector, manzana y lote.</p>
+      </div>
     </button>
+    <!-- Opción Ciudadano -->
     @if (!isGuest) {
       <button (click)="activeTab = 'ciudadano'"
-        [class.bg-white]="activeTab === 'ciudadano'"
-        [class.shadow-sm]="activeTab === 'ciudadano'"
-        [class.text-primary]="activeTab === 'ciudadano'"
-        class="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-wider transition-all text-gray-500 rounded-lg">
-        <i class="bi bi-person-fill"></i> Ciudadano
+              [class.bg-primary/10]="activeTab === 'ciudadano'"
+              [class.border-primary/30]="activeTab === 'ciudadano'"
+              class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+        <div class="text-primary/80 text-xl"><i class="bi bi-person-fill"></i></div>
+        <div>
+          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Ciudadano</h3>
+          <p class="text-xs text-gray-500 mt-0.5">Busca por DNI o nombre para ver los predios de un propietario.</p>
+        </div>
       </button>
     }
+    <!-- Opción Denominación del Predio -->
+    <button (click)="activeTab = 'denominacion'"
+            [class.bg-primary/10]="activeTab === 'denominacion'"
+            [class.border-primary/30]="activeTab === 'denominacion'"
+            class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+      <div class="text-primary/80 text-xl"><i class="bi bi-building-check"></i></div>
+      <div>
+        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Denominación</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Busca un predio por su nombre o denominación.</p>
+      </div>
+    </button>
+    <!-- Opción Nombre de Parque -->
+    <button (click)="activeTab = 'parque'"
+            [class.bg-primary/10]="activeTab === 'parque'"
+            [class.border-primary/30]="activeTab === 'parque'"
+            class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+      <div class="text-primary/80 text-xl"><i class="bi bi-tree"></i></div>
+      <div>
+        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Nombre de Parque</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Busca un parque por su nombre.</p>
+      </div>
+    </button>
   </div>
 
   <!-- Contenido de Tabs -->
   <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+    <!-- Formulario Código Predial -->
+    @if (activeTab === 'predial') {
+      <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="predial-form">
+        <div>
+          <label for="predialInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Código Predial</label>
+          <input type="text" [(ngModel)]="codigoPredial"
+                 placeholder="0000000"
+                 class="w-full bg-primary/5 border-2 border-primary/10 rounded-2xl p-4 text-2xl font-mono text-center tracking-[0.2em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-black transition-all">
+
+          <p class="mt-3 text-[10px] text-gray-400 text-center italic">
+            Ingrese el código del predio para encontrarlo.
+          </p>
+        </div>
+      </div>
+    }
+    <!-- Formulario CUC -->
+    @if (activeTab === 'cuc') {
+      <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="cuc-form">
+        <div>
+          <label for="cucInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Código Único Catastral (CUC)</label>
+          <input type="text" [(ngModel)]="cuc"
+                 placeholder="000000000000" maxlength="12"
+                 class="w-full bg-primary/5 border-2 border-primary/10 rounded-2xl p-4 text-2xl font-mono text-center tracking-[0.2em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-black transition-all">
+
+          <p class="mt-3 text-[10px] text-gray-400 text-center italic">
+            Ingrese los 12 dígitos del CUC para encontrar el predio.
+          </p>
+        </div>
+      </div>
+    }
     <!-- Formulario Dirección -->
     @if (activeTab === 'direccion') {
-      <div class="space-y-4 animate-in slide-in-from-right-2 duration-300" id="direccion-form">
-        <div>
-          <label for="tipoViaSelect" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Tipo de Vía</label>
-          <div class="relative">
-             <select id="tipoViaSelect" [(ngModel)]="tipoVia" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm appearance-none focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                <option value="">Seleccione...</option>
-                @for (tipo of tiposVia; track tipo) {
-                  <option [value]="tipo">{{ tipo }}</option>
-                }
-              </select>
-              <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+      <div class="animate-in slide-in-from-right-2 duration-300" id="direccion-form">
+        <div class="grid grid-cols-2 gap-x-3 gap-y-4">
+          <div class="col-span-2">
+            <label for="tipoViaSelect" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Tipo de Vía</label>
+            <div class="relative">
+               <select id="tipoViaSelect" [(ngModel)]="tipoVia" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm appearance-none focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+                  <option value="">Seleccione...</option>
+                  @for (tipo of tiposVia; track tipo) {
+                    <option [value]="tipo">{{ tipo }}</option>
+                  }
+                </select>
+                <i class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+            </div>
           </div>
-        </div>
-
-        <div>
-          <label for="nombreViaInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de la Vía</label>
-          <input id="nombreViaInput" type="text" [(ngModel)]="nombreVia" placeholder="Ej: Av. La Marina"
-                 class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-        </div>
-
-        <div>
-          <label for="numeroMunicipalInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Número Municipal</label>
-          <input id="numeroMunicipalInput" type="text" [(ngModel)]="numeroMunicipal" placeholder="Ej: 123"
-                 class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label for="nombreViaInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de la Vía</label>
+            <input id="nombreViaInput" type="text" [(ngModel)]="nombreVia" placeholder="Ej: Av. La Marina"
+                   class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+          </div>
+          <div>
+            <label for="numeroMunicipalInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Número</label>
+            <input id="numeroMunicipalInput" type="text" [(ngModel)]="numeroMunicipal" placeholder="Ej: 123"
+                   class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+          </div>
           <div>
             <label for="blockInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Block</label>
             <input id="blockInput" type="text" [(ngModel)]="block" placeholder="Ej: A"
@@ -70,7 +175,43 @@
         </div>
       </div>
     }
+    <!-- Formulario Habilitación Urbana -->
+    @if (activeTab === 'habilitacion') {
+      <div class="animate-in slide-in-from-right-2 duration-300" id="habilitacion-form">
+        <div class="space-y-4">
+          <div>
+            <label for="nombreHabilitacionInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de Habilitación</label>
+            <input id="nombreHabilitacionInput" type="text" [(ngModel)]="nombreHabilitacion" placeholder="Ej: Jardines de San Isidro"
+                   class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="manzanaUrbanaInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Manzana</label>
+              <input id="manzanaUrbanaInput" type="text" [(ngModel)]="manzanaUrbana" placeholder="Ej: A1" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+            </div>
+            <div>
+              <label for="loteUrbanoInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Lote</label>
+              <input id="loteUrbanoInput" type="text" [(ngModel)]="loteUrbano" placeholder="Ej: 20" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+    <!-- Formulario Titular Catastral -->
+    @if (activeTab === 'titular') {
+      <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="titular-form">
+        <div>
+          <label for="titularInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Código de Titular</label>
+          <input type="text" [(ngModel)]="codigoTitular"
+                 placeholder="Ingrese su código"
+                 class="w-full bg-primary/5 border-2 border-primary/10 rounded-2xl p-4 text-2xl font-mono text-center tracking-[0.2em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-black transition-all">
 
+          <p class="mt-3 text-[10px] text-gray-400 text-center italic">
+            Ingrese el código del titular para encontrar sus predios.
+          </p>
+        </div>
+      </div>
+    }
     <!-- Formulario Catastral -->
     @if (activeTab === 'catastral') {
       <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="catastral-form">
@@ -149,6 +290,36 @@
           <i class="bi bi-info-circle-fill text-blue-500 text-base"></i>
           <p class="text-[10px] text-blue-600 leading-normal font-medium">
             {{ searchType === 'dni' ? 'La búsqueda por DNI mostrará todos los predios asociados a este documento.' : 'La búsqueda por nombre puede devolver múltiples resultados si el nombre es común.' }}
+          </p>
+        </div>
+      </div>
+    }
+    <!-- Formulario Denominación del Predio -->
+    @if (activeTab === 'denominacion') {
+      <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="denominacion-form">
+        <div>
+          <label for="denominacionInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Denominación del Predio</label>
+          <input id="denominacionInput" type="text" [(ngModel)]="denominacionPredio"
+                 placeholder="Ej: Centro Comercial Camino Real"
+                 class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+
+          <p class="mt-3 text-[10px] text-gray-400 text-center italic">
+            Ingrese el nombre o denominación del predio.
+          </p>
+        </div>
+      </div>
+    }
+    <!-- Formulario Nombre de Parque -->
+    @if (activeTab === 'parque') {
+      <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="parque-form">
+        <div>
+          <label for="parqueInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre del Parque</label>
+          <input id="parqueInput" type="text" [(ngModel)]="nombreParque"
+                 placeholder="Ej: Parque El Olivar"
+                 class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+
+          <p class="mt-3 text-[10px] text-gray-400 text-center italic">
+            Ingrese el nombre del parque que desea encontrar.
           </p>
         </div>
       </div>

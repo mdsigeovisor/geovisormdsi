@@ -19,7 +19,11 @@ export class Buscar {
   Close = output<void>();
   SearchResult = output<SearchResult>();
   /** Control de pestañas */
-  activeTab: 'direccion' | 'catastral' | 'ciudadano' = 'direccion';
+  activeTab: 'cuc' | 'predial' | 'direccion' | 'habilitacion' | 'titular' | 'catastral' | 'ciudadano' | 'denominacion' | 'parque' = 'cuc';
+  /** Campos para búsqueda por CUC */
+  cuc = '';
+  /** Campos para búsqueda por Código Predial */
+  codigoPredial = '';
   /** Campos para búsqueda por Dirección */
   readonly tiposVia = ["Avenida", "Calle", "Jirón", "Pasaje", "Alameda", "Malecón", "Prolongación", "Plaza", "Parque"];
   tipoVia = '';
@@ -27,6 +31,16 @@ export class Buscar {
   numeroMunicipal = '';
   block = '';
   departamento = '';
+  /** Campos para búsqueda por Habilitación Urbana */
+  nombreHabilitacion = '';
+  manzanaUrbana = '';
+  loteUrbano = '';
+  /** Campos para búsqueda por Titular Catastral */
+  codigoTitular = '';
+  /** Campos para búsqueda por Denominación del Predio */
+  denominacionPredio = '';
+  /** Campos para búsqueda por Nombre de Parque */
+  nombreParque = '';
   /** Campos para búsqueda Catastral */
   codigoCatastral = '';
   /** Estados de la búsqueda */
@@ -84,12 +98,26 @@ export class Buscar {
   handleClear() {
     this.searchError.set(null);
     this.loading.set(false);
-    if (this.activeTab === 'direccion') {
+    if (this.activeTab === 'cuc') {
+      this.cuc = '';
+    } else if (this.activeTab === 'predial') {
+      this.codigoPredial = '';
+    } else if (this.activeTab === 'direccion') {
       this.tipoVia = '';
       this.nombreVia = '';
       this.numeroMunicipal = '';
       this.block = '';
       this.departamento = '';
+    } else if (this.activeTab === 'habilitacion') {
+      this.nombreHabilitacion = '';
+      this.manzanaUrbana = '';
+      this.loteUrbano = '';
+    } else if (this.activeTab === 'titular') {
+      this.codigoTitular = '';
+    } else if (this.activeTab === 'denominacion') {
+      this.denominacionPredio = '';
+    } else if (this.activeTab === 'parque') {
+      this.nombreParque = '';
     } else if (this.activeTab === 'catastral') {
       this.codigoCatastral = '';
     } else {
@@ -101,8 +129,20 @@ export class Buscar {
   /** Valida si el botón de búsqueda debe estar deshabilitado */
   isSearchDisabled(): boolean {
     switch (this.activeTab) {
+      case 'cuc':
+        return this.cuc.trim().length === 0;
+      case 'predial':
+        return this.codigoPredial.trim().length === 0;
       case 'direccion':
         return !this.nombreVia || !this.tipoVia;
+      case 'habilitacion':
+        return this.nombreHabilitacion.trim().length === 0;
+      case 'titular':
+        return this.codigoTitular.trim().length === 0;
+      case 'denominacion':
+        return this.denominacionPredio.trim().length === 0;
+      case 'parque':
+        return this.nombreParque.trim().length === 0;
       case 'catastral':
         return this.codigoCatastral.length < 12; // 10 dígitos + 2 guiones
       case 'ciudadano':
@@ -184,7 +224,6 @@ export class Buscar {
     this.emitResult(property);
     this.showCitizenResults = false;
   }
-
   /** Método privado para emitir el resultado y opcionalmente cerrar el panel */
   private emitResult(result: SearchResult) {
     this.SearchResult.emit(result);

@@ -33,7 +33,8 @@ export class Leyenda {
         const layers = 'layers' in item ? item.layers : (item.type === 'layer' ? [item] : []);
         
         for (const layer of layers) {
-          if (layer.visible && layer.legendUrl) {
+          // La capa debe ser visible, tener URL de leyenda y la propiedad showInLegend no debe ser 'false'
+          if (layer.visible && layer.legendUrl && layer.showInLegend !== false) {
             legends.push({ label: layer.label, url: layer.legendUrl });
           }
         }

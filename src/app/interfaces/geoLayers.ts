@@ -26,6 +26,7 @@ export interface WfsResponse {
 
 /** Configuración para la inicialización de capas WMS */
 export interface LayerItem {
+  showInLegend: boolean;
   type: 'layer';
   id: string;
   label: string;

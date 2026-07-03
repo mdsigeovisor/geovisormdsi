@@ -29,7 +29,9 @@ import {
   ImageWMS,  
   transform,
   transformExtent,
-  GeoJSON
+  GeoJSON,
+  Overlay,
+  getCenter
 } from '../modules/openlayers.module';
 import ImageLayer from 'ol/layer/Image';
 
@@ -240,6 +242,22 @@ export class MapService {
   activeSidebarTools = signal<Set<string>>(new Set());
   /** URL con la información de un lote para mostrar en un modal. */
   loteInfoUrl = signal<string | null>(null);
+  /** Overlay para el marcador de búsqueda */
+  private searchMarkerOverlay: Overlay | undefined;
+  /** Elemento HTML para el marcador de búsqueda, registrado por un componente. */
+  private searchMarkerElement: HTMLElement | undefined;
+
+  /**
+   * Permite que un componente registre el elemento HTML que se usará para el marcador de búsqueda.
+   * @param element El elemento del marcador.
+   */
+  registerSearchMarkerElement(element: HTMLElement) {
+    this.searchMarkerElement = element;
+    if (this.searchMarkerOverlay) {
+      this.searchMarkerOverlay.setElement(this.searchMarkerElement);
+    }
+  }
+
   constructor() {
     this.setupLayerSyncEffect();
   }
@@ -493,6 +511,42 @@ export class MapService {
    */
   clearLoteInfo(): void {
     this.loteInfoUrl.set(null);
+  }
+
+  /**
+   * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.
+   * @param geometry La geometría donde se centrará el marcador.
+   */
+  drawSearchMarker(geometry: GeoJSONGeometry): void {
+    const map = this._map();
+    if (!map || !this.searchMarkerElement) {
+      console.warn('El marcador de búsqueda no se puede dibujar porque el elemento no ha sido registrado en MapService.');
+      return;
+    }
+
+    const format = new GeoJSON();
+    const olGeometry = format.readGeometry(geometry, {
+      dataProjection: 'EPSG:4326',
+      featureProjection: map.getView().getProjection()
+    });
+    const center = getCenter(olGeometry.getExtent());
+
+    if (!this.searchMarkerOverlay) {
+      this.searchMarkerOverlay = new Overlay({
+        element: this.searchMarkerElement,
+        positioning: 'center-center',
+        stopEvent: false,
+      });
+      map.addOverlay(this.searchMarkerOverlay);
+    }
+
+    this.searchMarkerElement.style.display = 'block';
+    this.searchMarkerOverlay.setPosition(center);
+  }
+
+  /** Limpia el marcador de búsqueda del mapa. */
+  clearSearchMarker(): void {
+    this.searchMarkerOverlay?.setPosition(undefined);
   }
   /**
    * Remueve una capa del mapa definitivamente basándose en su ID.

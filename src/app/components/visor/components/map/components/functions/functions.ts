@@ -1,4 +1,4 @@
-import { Component, computed, inject, ElementRef, ViewChild } from '@angular/core';
+import { Component, computed, inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OverviewMapComponent } from '../overViewMap/overview-map';
 
@@ -13,13 +13,14 @@ import { fromLonLat, Overlay, OverlayPositioning, transformExtent } from '../../
   templateUrl: './functions.html',
   styleUrls: ['./functions.css'],
 })
-export class Funciones {
+export class Funciones implements AfterViewInit {
   private readonly mapService = inject(MapService);
   /**
    * Referencias a los elementos del DOM definidos localmente en functions.html
    */
   @ViewChild('userMarker') userMarkerEl!: ElementRef;
   @ViewChild('locationPopup') locationPopupEl!: ElementRef;
+  @ViewChild('searchMarker') searchMarkerEl!: ElementRef<HTMLElement>;
   /** Overlay para mostrar la ubicación actual del usuario */
   private locationOverlay?: Overlay;
   /** Overlay para mostrar un popup con información de la ubicación */
@@ -30,6 +31,11 @@ export class Funciones {
   baseLayerType = this.mapService.baseLayerType;
   /** Signal con las coordenadas actuales obtenidas por GPS */
   userCoords = this.mapService.userCoords;
+
+  ngAfterViewInit(): void {
+    this.mapService.registerSearchMarkerElement(this.searchMarkerEl.nativeElement);
+  }
+
   zoomIn(): void {
     this.adjustZoom(1);
   }

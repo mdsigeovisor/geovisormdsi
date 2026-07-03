@@ -98,6 +98,7 @@ export class Buscar {
   handleClear() {
     this.searchError.set(null);
     this.loading.set(false);
+    this.mapService.clearSearchMarker(); // Limpia el marcador del mapa
     if (this.activeTab === 'cuc') {
       this.cuc = '';
     } else if (this.activeTab === 'predial') {
@@ -153,7 +154,6 @@ export class Buscar {
         return true;
     }
   }
-
   /** Ejecuta la búsqueda según la pestaña activa */
   handleSearch() {
     if (this.activeTab === 'direccion') {
@@ -191,6 +191,7 @@ export class Buscar {
             
             // Navegamos al polígono encontrado automáticamente
             this.mapService.fitToGeometry(feature.geometry);
+            this.mapService.drawSearchMarker(feature.geometry);
             
             this.emitResult(result);
           } else {

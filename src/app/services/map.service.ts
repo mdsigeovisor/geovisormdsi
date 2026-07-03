@@ -357,16 +357,21 @@ export class MapService {
 
     // Configuración de capas catastrales municipales
     const workspacePrefix = environment.geoserver.workspacePrefix;
-    const catastralLayers: WmsLayerConfig[] = [      
+    const catastralLayers: WmsLayerConfig[] = [
+      
+
       { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
-      { id: 'lote', layerName: `${workspacePrefix}vw_tg_lote,vw_tg_lote_puntos`, zIndex: 0, title: 'Lote Catastral' },
-      { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana,vw_tg_manzana_puntos`, zIndex: 0, title: 'Manzana Catastral' },
+      { id: 'lote', layerName: `${workspacePrefix}vw_tg_lote_puntos,vw_tg_lote`, zIndex: 0, title: 'Lote Catastral' },
+      { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana,vw_tg_manzana_puntos`, zIndex: 1, title: 'Manzana Catastral' },
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
       { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec,vw_tg_area_privada`, zIndex: 0, title: 'Área Recreativa' },
-      { id: 'sec_catastrales', layerName: `${workspacePrefix}vw_tg_sec_catastro,vw_tg_sec_catastro_puntos`, zIndex: 0, title: 'Sectores Catastrales'},
+      
       { id: 'sec_vecinal', layerName: `${workspacePrefix}vw_tg_secvecinales,vw_tg_secvecinales_puntos`, zIndex: 1, title: 'Sectores Vecinales'},
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias'},
-      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres`, zIndex: 0, title: 'Manzanas Colindantes'}      
+      
+      
+      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Manzanas Colindantes'},      
+      { id: 'sec_catastrales', layerName: `${workspacePrefix}tg_Sectores`, zIndex: 2, title: 'Sectores Catastrales'},
     ];
 
     // Inicializamos las capas catastrales recorriendo la lista
@@ -535,13 +540,14 @@ export class MapService {
    * previas que no pasan explícitamente lat/lon.
    */
   goToSanIsidro(duration = 1800, onComplete?: (complete: boolean) => void): void {
-    this.removeLayerById('ig_departamento');
-    // SAN_ISIDRO_CENTER almacena [lon, lat]
-    const lon = SAN_ISIDRO_CENTER[0];
-    const lat = SAN_ISIDRO_CENTER[1];
-    // Desplazar 200 metros hacia la derecha (este)
-    const [shiftedLon, shiftedLat] = this.offsetLonLat(lon, lat, 200, 0);
-    this.goToCoordinates(shiftedLat, shiftedLon, SAN_ISIDRO_ZOOM, duration, onComplete);
+    const sanIsidroGeometry: GeoJSONGeometry = {
+      type: 'Point',
+      coordinates: SAN_ISIDRO_CENTER
+    };
+    this.fitToGeometry(sanIsidroGeometry, true, SAN_ISIDRO_ZOOM);
+    if (onComplete) {
+      setTimeout(() => onComplete(true), duration);
+    }
   }
   /**
    * Métodos para actualizar el estado de las secciones desde la UI
@@ -629,23 +635,33 @@ export class MapService {
   /**
    * Ajusta la vista del mapa para encuadrar una geometría GeoJSON (Polygon, MultiPolygon, etc.)
    * @param geometry Objeto de geometría devuelto por el servicio WFS
+   * @param offset Indica si se debe desplazar el centro para compensar el sidebar
+   * @param zoom Nivel de zoom opcional para forzar en geometrías de tipo Point
    */
-  fitToGeometry(geometry: GeoJSONGeometry): void {
+  fitToGeometry(geometry: GeoJSONGeometry, offset = false, zoom?: number): void {
     const map = this._map();
     if (!map || !geometry?.coordinates) return;
     const format = new GeoJSON();
     // Leemos la geometría directamente para evitar la ambigüedad de tipo (Feature vs Feature[])
     const geometryOl = format.readGeometry(geometry);
     if (!geometryOl) return;
+
     const view = map.getView();
     const extent = geometryOl.getExtent();
     // Detectamos proyección: Si el valor de X es grande, asumimos UTM 18S
     const sourceProjection = Math.abs(extent[0]) > 180 ? 'EPSG:32718' : 'EPSG:4326';
     const transformedExtent = transformExtent(extent, sourceProjection, view.getProjection());
-    view.fit(transformedExtent, {
+
+    const options: any = {
       duration: ANIMATION_DURATION,
-      padding: [100, 100, 100, 100] // Margen para no quedar pegado a los bordes
-    });
+      padding: [100, 100, 100, 420] // Aumentamos el padding derecho para compensar el sidebar
+    };
+
+    if (geometry.type === 'Point' && zoom) {
+      options.zoom = zoom;
+    }
+
+    view.fit(transformedExtent, options);
   }
   /**
    * Busca un lote por su código catastral (id_lote) consultando el servicio WFS de GeoServer.

@@ -29,14 +29,13 @@ export class Leyenda {
 
     sections.forEach(section => {
       section.items.forEach(item => {
-        if (item.type === 'subsection') {
-          item.layers.forEach(layer => {
-            if (layer.visible && layer.legendUrl) {
-              legends.push({ label: layer.label, url: layer.legendUrl });
-            }
-          });
-        } else if (item.type === 'layer' && item.visible && item.legendUrl) {
-          legends.push({ label: item.label, url: item.legendUrl });
+        // Usamos 'layers' in item para identificar SubSections
+        const layers = 'layers' in item ? item.layers : (item.type === 'layer' ? [item] : []);
+        
+        for (const layer of layers) {
+          if (layer.visible && layer.legendUrl) {
+            legends.push({ label: layer.label, url: layer.legendUrl });
+          }
         }
       });
     });

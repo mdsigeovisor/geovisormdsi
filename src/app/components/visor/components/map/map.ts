@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect, SecurityContext } from '@angular/core';
+import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect, SecurityContext, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 // Servicios y módulos
@@ -64,6 +64,16 @@ export class MapComponent {
     this.cdr.detectChanges();
   }
 
+  /**
+   * Escucha la tecla 'Escape' a nivel de documento para cerrar el modal.
+   * @param event El evento de teclado.
+   */
+  @HostListener('document:keydown.escape', ['$event'])
+  onKeydownHandler(event: KeyboardEvent) {
+    if (this.mapService.loteInfoUrl()) {
+      this.closeLoteModal();
+    }
+  }
   /**
    * Cierra el modal de información del lote.
    */

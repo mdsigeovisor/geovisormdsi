@@ -112,11 +112,13 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: false,
           layers: [
-            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
-            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
-            { type: 'layer', id: "veredas", label: "VEREDAS", visible: true, opacity: 1 },
             { type: 'layer', id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1 },
+            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1 },
+            { type: 'layer', id: "veredas", label: "VEREDAS", visible: true, opacity: 1 },
+            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1 },
+            
+            
             
           ]
         },
@@ -364,7 +366,7 @@ export class MapService {
       { id: 'lote', layerName: `${workspacePrefix}vw_tg_lote_puntos,vw_tg_lote`, zIndex: 0, title: 'Lote Catastral' },
       { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana,vw_tg_manzana_puntos`, zIndex: 1, title: 'Manzana Catastral' },
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
-      { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec,vw_tg_area_privada`, zIndex: 0, title: 'Área Recreativa' },
+      { id: 'arearecreativa', layerName: `${workspacePrefix}vw_tg_area_rec,vw_tg_area_privada`, zIndex: 1, title: 'Área Recreativa' },
       
       { id: 'sec_vecinal', layerName: `${workspacePrefix}vw_tg_secvecinales,vw_tg_secvecinales_puntos`, zIndex: 1, title: 'Sectores Vecinales'},
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias'},

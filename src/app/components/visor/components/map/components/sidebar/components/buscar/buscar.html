@@ -64,8 +64,8 @@
             class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
       <div class="text-primary/80 text-xl"><i class="bi bi-hash"></i></div>
       <div>
-        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Cód. Catastral</h3>
-        <p class="text-xs text-gray-500 mt-0.5">Búsqueda precisa usando el código de sector, manzana y lote.</p>
+        <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Código Catastral</h3>
+        <p class="text-xs text-gray-500 mt-0.5">Búsqueda precisa usando el código de Sector, Manzana y Lote.</p>
       </div>
     </button>
     <!-- Opción Ciudadano -->
@@ -220,8 +220,8 @@
       @if (activeTab === 'catastral') {
         <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="catastral-form">
           <div>
-            <label for="codigoCatastralInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Código del Predio</label>
-            <input type="text" [(ngModel)]="codigoCatastral" (ngModelChange)="handleCodigoCatastralChange($event)"
+            <label for="codigoCatastralInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Código Catastral</label>
+            <input id="codigoCatastralInput" type="text" [(ngModel)]="codigoCatastral" (ngModelChange)="handleCodigoCatastralChange($event)"
                    placeholder="0000-000-000" maxlength="12"
                    class="w-full bg-primary/5 border-2 border-primary/10 rounded-2xl p-4 text-2xl font-mono text-center tracking-[0.2em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-black transition-all">
             
@@ -231,28 +231,8 @@
                 <span class="text-[10px] font-bold uppercase tracking-tight">{{ searchError() }}</span>
               </div>
             }
-
             <p class="mt-3 text-[10px] text-gray-400 text-center italic">Ingresa el código siguiendo el formato: <br>Sector - Manzana - Lote</p>
-          </div>
-
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 border border-gray-100 shadow-inner">
-             <div class="flex items-center justify-center gap-3 font-mono text-lg mb-3">
-               <div class="flex flex-col items-center">
-                  <span class="bg-primary text-white w-12 h-10 flex items-center justify-center rounded-lg shadow-md mb-1.5">XXXX</span>
-                  <span class="text-[8px] font-bold text-gray-400 uppercase">Sector</span>
-               </div>
-               <span class="text-gray-300 text-2xl mb-4">-</span>
-               <div class="flex flex-col items-center">
-                  <span class="bg-primary text-white w-12 h-10 flex items-center justify-center rounded-lg shadow-md mb-1.5">XXX</span>
-                  <span class="text-[8px] font-bold text-gray-400 uppercase">Manz.</span>
-               </div>
-               <span class="text-gray-300 text-2xl mb-4">-</span>
-               <div class="flex flex-col items-center">
-                  <span class="bg-primary text-white w-12 h-10 flex items-center justify-center rounded-lg shadow-md mb-1.5">XXX</span>
-                  <span class="text-[8px] font-bold text-gray-400 uppercase">Lote</span>
-               </div>
-             </div>
-          </div>
+          </div>        
         </div>
       }
 

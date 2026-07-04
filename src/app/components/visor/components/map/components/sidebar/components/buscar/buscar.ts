@@ -94,6 +94,7 @@ export class Buscar {
     this.dni = value.replace(/\D/g, "").slice(0, 8);
   }
 
+  
   /** Limpia los campos de la pestaña activa */
   handleClear() {
     this.searchError.set(null);
@@ -156,6 +157,39 @@ export class Buscar {
   }
   /** Ejecuta la búsqueda según la pestaña activa */
   handleSearch() {
+    if (this.activeTab === 'cuc') {
+      this.loading.set(true);
+      this.searchError.set(null);
+      this.mapService.searchLoteByCuc(this.cuc).pipe(take(1)).subscribe({
+        next: (feature) => {
+          this.loading.set(false);
+          if (feature) {
+            const props = feature.properties as any;
+            const result: SearchResult = {
+              codigoCatastral: String(props['id_lote'] || 'N/A').trim(),
+              direccion: props['direccion'] ?? props['ubicacion'] ?? "Ubicación no disponible",
+              propietario: props['propietario'] ?? "Información reservada",
+              area: props['area_lote'] ? `${props['area_lote']} m²` : "No disponible",
+              zonificacion: props['zonificacion'] ?? "No disponible",
+              fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80",
+              numeroPisos: props['pisos'] ?? 1,
+              geometry: feature.geometry
+            };
+            this.mapService.fitToGeometry(feature.geometry);
+            this.mapService.drawSearchMarker(feature.geometry, `CUC encontrado: ${this.cuc}`);
+            this.emitResult(result);
+          } else {
+            this.searchError.set('No se encontró el lote con el CUC ingresado.');
+          }
+        },
+        error: (err) => {
+          console.error('Error en la búsqueda por CUC:', err);
+          this.searchError.set('Error de conexión con el servicio catastral.');
+          this.loading.set(false);
+        }
+      });
+      return;
+    }
     if (this.activeTab === 'direccion') {
       const result: SearchResult = {
         codigoCatastral: "05-012-003",

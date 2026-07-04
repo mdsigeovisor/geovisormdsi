@@ -43,6 +43,7 @@ export class Funciones implements AfterViewInit {
     this.adjustZoom(-1);
   }
   goHome(): void {
+    this.mapService.cambiarMapaBase('blanco');
     const view = this.olMap()?.getView();
     if (view) {      
       const extent32718 = [275224.08, 8660213.79, 281557.72, 8663299.55];

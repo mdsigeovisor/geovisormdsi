@@ -516,8 +516,9 @@ export class MapService {
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.
    * @param geometry La geometría donde se centrará el marcador.
+   * @param text Texto opcional para mostrar en el marcador.
    */
-  drawSearchMarker(geometry: GeoJSONGeometry): void {
+  drawSearchMarker(geometry: GeoJSONGeometry, text?: string): void {
     const map = this._map();
     if (!map || !this.searchMarkerElement) {
       console.warn('El marcador de búsqueda no se puede dibujar porque el elemento no ha sido registrado en MapService.');
@@ -540,8 +541,17 @@ export class MapService {
       map.addOverlay(this.searchMarkerOverlay);
     }
 
+    // Actualizamos el texto si se proporciona
+    const textElement = this.searchMarkerElement.querySelector('.search-marker-text');
+    if (textElement) {
+      textElement.innerHTML = text ?? '';
+      // Hacemos visible el contenedor del texto si hay texto
+      (textElement as HTMLElement).style.display = text ? 'block' : 'none';
+    }
+
     this.searchMarkerElement.style.display = 'block';
     this.searchMarkerOverlay.setPosition(center);
+    this.searchMarkerElement.style.transform = 'scale(2)'; // Duplicamos el tamaño del marcador
   }
 
   /** Limpia el marcador de búsqueda del mapa. */
@@ -748,6 +758,33 @@ export class MapService {
       })
     );
   }
+  /**
+   * Busca un lote por su Código Único Catastral (CUC) consultando el servicio WFS de GeoServer.
+   * @param cuc Código Único Catastral
+   * @returns Observable con el feature encontrado o null
+   */
+  searchLoteByCuc(cuc: string): Observable<GeoJSONFeature | null> {
+    const url = environment.geoserver.owsUrl;
+    const cucLimpio = cuc.trim();
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', 'mdsibde2026:vw_tg_lote')
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:4326')
+      .set('cql_filter', `cuc = '${cucLimpio}'`);
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map((response) => {
+        if (response?.features?.length > 0) {
+          return response.features[0];
+        }
+        return null;
+      })
+    );
+  }
+
   /**
    * Busca y devuelve una capa de OpenLayers por su ID asignado en la configuración.
    * @param id El identificador de la capa.

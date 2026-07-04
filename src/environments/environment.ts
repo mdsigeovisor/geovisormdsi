@@ -9,7 +9,7 @@ export const environment = {
     serverUrl: 'http://192.168.40.58:8081/geoserver',
     serverImpresionLocal: 'http://172.16.16.67:8080/geoserver',
     // Workspace compartido para todas las capas y consultas OGC
-    workspace: 'mdsibde2026',
+    workspace: 'SIDES_GIS',
     get workspacePrefix(): string {
       return `${this.workspace}:`;
     },

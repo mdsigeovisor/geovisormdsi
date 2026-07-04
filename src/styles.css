@@ -24,3 +24,6 @@
 .ol-zoom, .ol-attribution {
   display: none !important;
 }
+.material-icons {
+  translate: no !important;
+}

@@ -41,17 +41,17 @@ export class Sidebar implements OnInit {
 
   // Ítems de navegación vinculados a las herramientas del MapService
   menuItems: { id: string; icon: string; label: string }[] = [
-    { id: 'search', icon: 'search', label: 'Consultas' },
-    { id: 'layers', icon: 'layers', label: 'Capas' },
-    { id: 'legend', icon: 'legend_toggle', label: 'Leyenda' },
-    { id: 'orthophotos', icon: 'satellite_alt', label: 'Ortofotos' },
-    { id: 'normativa', icon: 'gavel', label: 'Normativa' },
-    { id: 'infraestructura', icon: 'engineering', label: 'Infraestructura' },
-    { id: 'thematic', icon: 'palette', label: 'Temática' },    
-    { id: 'downloads', icon: 'download', label: 'Descargas' },
-    { id: 'print', icon: 'print', label: 'Imprimir' },
-    { id: 'settings', icon: 'settings', label: 'Configuración' },
-    { id: 'info', icon: 'info', label: 'Acerca' }
+    { id: 'search', icon: 'bi-search', label: 'Consultas' },
+    { id: 'layers', icon: 'bi-layers', label: 'Capas' },
+    { id: 'legend', icon: 'bi-list', label: 'Leyenda' },
+    { id: 'orthophotos', icon: 'bi-images', label: 'Ortofotos' },
+    { id: 'normativa', icon: 'bi-book', label: 'Normativa' },
+    { id: 'infraestructura', icon: 'bi-cone-striped', label: 'Infraestructura' },
+    { id: 'thematic', icon: 'bi-palette', label: 'Temática' },
+    { id: 'downloads', icon: 'bi-download', label: 'Descargas' },
+    { id: 'print', icon: 'bi-printer', label: 'Imprimir' },
+    { id: 'settings', icon: 'bi-gear', label: 'Configuración' },
+    { id: 'info', icon: 'bi-info-circle', label: 'Acerca' }
   ];
 
   /** Obtiene el ID de la primera herramienta activa del Set */
@@ -81,7 +81,6 @@ export class Sidebar implements OnInit {
       this.setActive(item.id);
     }
   }
-
   setActive(toolId: string) {
     const currentActive = this.activeTab;
 

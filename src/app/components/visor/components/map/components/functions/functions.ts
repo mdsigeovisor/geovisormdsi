@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { OverviewMapComponent } from '../overViewMap/overview-map';
 
 import { MapService, TipoMapaBase } from '@services/map.service';
-import { ANIMATION_DURATION, ZOOM_LEVEL_LOCATION } from '@interfaces/map.constants';
+import { ANIMATION_DURATION } from '@interfaces/map.constants';
 import { fromLonLat, Overlay, OverlayPositioning, transformExtent } from '../../../../../../modules/openlayers.module';
 
 @Component({
@@ -45,7 +45,7 @@ export class Funciones implements AfterViewInit {
   goHome(): void {
     const view = this.olMap()?.getView();
     if (view) {      
-      const extent32718 = [275424.08, 8660213.79, 281757.72, 8663299.55];      
+      const extent32718 = [275224.08, 8660213.79, 281557.72, 8663299.55];
       const transformedExtent = transformExtent(extent32718, 'EPSG:32718', view.getProjection());      
       view.fit(transformedExtent, { duration: ANIMATION_DURATION / 2, padding: [20, 20, 20, 20] });
     }

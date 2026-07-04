@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MapService } from '../../../../../../../../services/map.service';
 import { SearchResult } from '../../../../../../../../interfaces/search';
-import { take } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs';
 
 
 @Component({
@@ -25,13 +25,29 @@ export class Buscar {
   /** Campos para búsqueda por Código Predial */
   codigoPredial = '';
   /** Campos para búsqueda por Dirección */
-  readonly tiposVia = ["Avenida", "Calle", "Jirón", "Pasaje", "Alameda", "Malecón", "Prolongación", "Plaza", "Parque"];
-  tipoVia = '';
+  readonly tiposVia: { id: number, nombre: string }[] = [
+    { id: 1, nombre: 'AVENIDA' },
+    { id: 2, nombre: 'CALLE' },
+    { id: 3, nombre: 'PASAJE' },
+    { id: 4, nombre: 'ALAMEDA' },
+    { id: 5, nombre: 'JIRON' },
+    { id: 6, nombre: 'VIA EXPRESA' },
+    { id: 7, nombre: 'AUTOPISTA' },
+    { id: 8, nombre: 'OTROS' },
+    { id: 9, nombre: 'PARQUE' },
+    { id: 10, nombre: 'MALECON' },
+    { id: 11, nombre: 'PLAZA' }
+  ];
+  tipoVia: number = 0; // Usamos el ID numérico
   nombreVia = '';
-  numeroMunicipal = '';
-  block = '';
-  departamento = '';
+  numeroMunicipal = ''; // Mantenido por si se usa en el futuro
+  numeroCuadra = '';
   /** Campos para búsqueda por Habilitación Urbana */
+  // --- Lógica para autocompletado de vías ---
+  private nombreViaSubject = new Subject<string>();
+  viaSuggestions: string[] = [];
+  showViaSuggestions = false;
+  // -----------------------------------------
   nombreHabilitacion = '';
   manzanaUrbana = '';
   loteUrbano = '';
@@ -79,6 +95,21 @@ export class Buscar {
     }
   ];
 
+  constructor() {
+    this.nombreViaSubject.pipe(
+      debounceTime(300), // Espera 300ms después de la última pulsación
+      distinctUntilChanged(), // Solo emite si el valor ha cambiado
+      switchMap(partialName => this.mapService.getUniqueVias(partialName))
+    ).subscribe(suggestions => {
+      this.viaSuggestions = suggestions;
+      this.showViaSuggestions = suggestions.length > 0;
+    });
+  }
+
+  onNombreViaInput(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.nombreViaSubject.next(value);
+  }
   /** Formatea el código catastral mientras el usuario escribe (XXXX-XXX-XXX) */
   handleCodigoCatastralChange(value: string) {
     const numbers = value.replace(/\D/g, "");
@@ -105,11 +136,12 @@ export class Buscar {
     } else if (this.activeTab === 'predial') {
       this.codigoPredial = '';
     } else if (this.activeTab === 'direccion') {
-      this.tipoVia = '';
+      this.tipoVia = 0;
       this.nombreVia = '';
       this.numeroMunicipal = '';
-      this.block = '';
-      this.departamento = '';
+      this.numeroCuadra = '';
+      this.viaSuggestions = [];
+      this.showViaSuggestions = false;
     } else if (this.activeTab === 'habilitacion') {
       this.nombreHabilitacion = '';
       this.manzanaUrbana = '';
@@ -136,7 +168,7 @@ export class Buscar {
       case 'predial':
         return this.codigoPredial.trim().length === 0;
       case 'direccion':
-        return !this.nombreVia || !this.tipoVia;
+        return !this.nombreVia.trim() || this.tipoVia === 0;
       case 'habilitacion':
         return this.nombreHabilitacion.trim().length === 0;
       case 'titular':
@@ -156,6 +188,30 @@ export class Buscar {
     }
   }
   /** Ejecuta la búsqueda según la pestaña activa */
+  selectViaSuggestion(suggestion: string) {
+    this.nombreVia = suggestion;
+    this.showViaSuggestions = false;
+    this.viaSuggestions = [];
+
+    // Ahora, buscamos el tipo de vía para la nomenclatura seleccionada
+    this.mapService.searchViasByDireccion(0, this.nombreVia, '').pipe(take(1)).subscribe(features => {
+      if (features && features.length > 0) {
+        // Si hay múltiples tipos de vía para el mismo nombre, tomamos el primero.
+        // Una mejora sería permitir al usuario elegir si hay ambigüedad.
+        const firstFeature = features[0];
+        const tipoViaId = firstFeature.properties['tipo_via'];
+        if (tipoViaId) {
+          this.tipoVia = tipoViaId;
+        }
+      }
+    });
+  }
+
+  onNombreViaBlur() {
+    // Ocultamos las sugerencias con un pequeño retardo para permitir el clic
+    setTimeout(() => this.showViaSuggestions = false, 200);
+  }
+
   handleSearch() {
     if (this.activeTab === 'cuc') {
       this.loading.set(true);
@@ -190,19 +246,36 @@ export class Buscar {
       });
       return;
     }
-    if (this.activeTab === 'direccion') {
-      const result: SearchResult = {
-        codigoCatastral: "05-012-003",
-        direccion: `${this.tipoVia} ${this.nombreVia} ${this.numeroMunicipal}${this.block ? `, Block ${this.block}` : ""}${this.departamento ? `, Dpto. ${this.departamento}` : ""}, Miraflores`,
-        propietario: "Juan Carlos Mendoza López",
-        area: "120.50 m²",
-        zonificacion: "RDM (Residencial)",
-        fotoFrontis: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&q=80",
-        numeroPisos: 5,
-        materialPredominante: "Ladrillo",
-        estadoConservacion: "Muy Bueno",
-      };
-      this.emitResult(result);
+    if (this.activeTab === 'direccion') {      
+      this.loading.set(true);
+      this.searchError.set(null);
+      this.mapService.searchViasByDireccion(this.tipoVia, this.nombreVia, this.numeroCuadra)
+        .pipe(take(1))
+        .subscribe({
+          next: (features) => {
+            this.loading.set(false);
+            if (features && features.length > 0) {
+              // Por ahora, solo tomamos la primera vía encontrada
+              const feature = features[0];
+              const props = feature.properties as any;
+              const tipoViaNombre = this.tiposVia.find(t => t.id === props['tipo_via'])?.nombre || 'Vía';
+              const direccion = `${tipoViaNombre} ${props['nomenclatura']}, Cuadra ${props['num_cuadr']}`;
+
+              this.mapService.fitToGeometry(feature.geometry, true);
+              this.mapService.drawSearchMarker(feature.geometry, direccion);
+              // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
+              // Si se quisiera mostrar info, se podría emitir un resultado parcial.
+              this.Close.emit(); // Cerramos el panel de búsqueda
+            } else {
+              this.searchError.set('No se encontraron vías con los criterios ingresados.');
+            }
+          },
+          error: (err) => {
+            console.error('Error en la búsqueda por dirección:', err);
+            this.searchError.set('Error de conexión con el servicio de vías.');
+            this.loading.set(false);
+          }
+        });
     } else if (this.activeTab === 'catastral') {
       this.loading.set(true);
       this.searchError.set(null);
@@ -239,13 +312,41 @@ export class Buscar {
         }
       });
     } else if (this.activeTab === 'ciudadano') {
-      this.selectedCitizen = this.searchType === 'dni'
-        ? "Carlos Alberto Fernández Silva"
-        : this.nombreCiudadano;
+      this.loading.set(true);
+      this.searchError.set(null);
+      const query = this.searchType === 'dni' ? this.dni : this.nombreCiudadano;
 
-      // Simulamos una carga de datos
-      this.citizenProperties = this.mockCitizenProperties;
-      this.showCitizenResults = true;
+      this.mapService.searchPropertiesByCitizen(this.searchType, query).pipe(take(1)).subscribe({
+        next: (features) => {
+          this.loading.set(false);
+          if (features && features.length > 0) {
+            this.citizenProperties = features.map(feature => {
+              const props = feature.properties as any;
+              return {
+                codigoCatastral: String(props['id_lote'] || 'N/A').trim(),
+                direccion: props['direccion'] ?? props['ubicacion'] ?? "Ubicación no disponible",
+                propietario: props['propietario'] ?? "Información reservada",
+                area: props['area_lote'] ? `${props['area_lote']} m²` : "No disponible",
+                zonificacion: props['zonificacion'] ?? "No disponible",
+                fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80", // Mantener o adaptar
+                numeroPisos: props['pisos'] ?? 1,
+                geometry: feature.geometry
+              };
+            });
+            this.selectedCitizen = this.citizenProperties[0]?.propietario || (this.searchType === 'dni' ? `DNI ${this.dni}`: this.nombreCiudadano);
+            this.showCitizenResults = true;
+          } else {
+            this.searchError.set('No se encontraron propiedades para el ciudadano especificado.');
+            this.showCitizenResults = false;
+            this.citizenProperties = [];
+          }
+        },
+        error: (err) => {
+          console.error('Error en la búsqueda por ciudadano:', err);
+          this.searchError.set('Error de conexión con el servicio de búsqueda.');
+          this.loading.set(false);
+        }
+      });
     }
   }
 

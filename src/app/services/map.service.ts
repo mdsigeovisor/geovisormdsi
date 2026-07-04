@@ -2,12 +2,12 @@ import { Injectable, signal, inject, NgZone, effect } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
-import {   
-  Section, 
-  WmsLayerConfig, 
-  GeoJSONFeature, 
-  WfsResponse, 
-  GeoJSONGeometry 
+import {
+  Section,
+  WmsLayerConfig,
+  GeoJSONFeature,
+  WfsResponse,
+  GeoJSONGeometry
 } from '../interfaces/geoLayers';
 import { Observable, map } from 'rxjs';
 import {
@@ -21,12 +21,11 @@ import {
   SAN_ISIDRO_ZOOM
 } from '../interfaces/map.constants';
 import {
-  fromLonLat,
-  OlMap,
-  TileLayer,  
-  View,  
+  fromLonLat,  OlMap,
+  TileLayer,
+  View,
   XYZ,
-  ImageWMS,  
+  ImageWMS,
   transform,
   transformExtent,
   GeoJSON,
@@ -85,7 +84,7 @@ export class MapService {
   sections = signal<Section[]>([
     {
       id: "catastral",
-      title: "Información Catastral",      
+      title: "Información Catastral",
       expanded: false,
       items: [
         {
@@ -94,7 +93,7 @@ export class MapService {
           title: 'TUSNE',
           expanded: true,
           layers: [
-            
+
           ]
         },
            {
@@ -104,24 +103,25 @@ export class MapService {
           expanded: false,
           layers: [
           { type: 'layer', id: "sec_catastrales", label: "SECTORES CATASTRALES", visible: false, opacity: 1, showInLegend: true },
-          { type: 'layer', id: "sec_vecinal", label: "SECTORES VECINALES", visible: false, opacity: 1, showInLegend: true },
-              
+          { type: 'layer', id: "sec_vecinal", label: "SECTORES VECINALES", visible: false, opacity: 1, showInLegend: true }
+
           ]
-        },  
+        },
         {
           type: 'subsection',
           id: 'limites-areas',
           title: 'Límites y Áreas',
           expanded: false,
           layers: [
+            { type: 'layer', id: "num_cuadra", label: "NÚMERO DE CUADRA", visible: true, opacity: 1, showInLegend: true },
             { type: 'layer', id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1, showInLegend: true },
             { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "veredas", label: "VEREDAS", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1, showInLegend: false },
-            
-            
-            
+
+
+
           ]
         },
         {
@@ -130,14 +130,14 @@ export class MapService {
           title: 'Nomenclatura de Vías',
           expanded: false,
           layers: [
-            { type: 'layer', id: "vias", label: "VÍAS", visible: false, opacity: 1, showInLegend: true } 
+            { type: 'layer', id: "vias", label: "VÍAS", visible: false, opacity: 1, showInLegend: true }
           ]
-        }             
+        }
       ]
-    },     
+    },
     {
       id: "imaAereas",
-      title: "Imagenes Aereas",      
+      title: "Imagenes Aereas",
       expanded: false,
       items: [
         {
@@ -146,14 +146,14 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            
+
           ]
-        }        
+        }
       ]
     },
     {
       id: "normatividadUrbana",
-      title: "Normatividad Urbana",      
+      title: "Normatividad Urbana",
       expanded: false,
       items: [
         {
@@ -162,14 +162,14 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            
+
           ]
-        },        
+        },
       ]
     },
     {
       id: "infraestructuraUrbana",
-      title: "Infraestructura Urbana",      
+      title: "Infraestructura Urbana",
       expanded: false,
       items: [
         {
@@ -178,14 +178,14 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            
+
           ]
-        },        
+        },
       ]
     },
     {
       id: "informacionTematica",
-      title: "Información Temática",      
+      title: "Información Temática",
       expanded: false,
       items: [
         {
@@ -194,14 +194,14 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            
+
           ]
-        },        
+        },
       ]
     },
     {
       id: "utilidades",
-      title: "Utilidades",     
+      title: "Utilidades",
       expanded: false,
       items: [
         {
@@ -210,14 +210,14 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: true,
           layers: [
-            
+
           ]
-        },        
+        },
       ]
     },
     {
       id: "carto_colindantes",
-      title: "Cartografía Colindantes",     
+      title: "Cartografía Colindantes",
       expanded: false,
       items: [
         {
@@ -226,12 +226,12 @@ export class MapService {
           title: 'Manzanas Colindantes',
           expanded: true,
           layers: [
-             { type: 'layer', id: "mz_colindantes", label: "Trama Colindante", visible: true, opacity: 1, showInLegend: false } 
-            
+             { type: 'layer', id: "mz_colindantes", label: "Trama Colindante", visible: true, opacity: 1, showInLegend: false }
+
           ]
-        },        
+        },
       ]
-    }       
+    }
   ]);
 
   /** Indica si el mapa ha sido inicializado y está listo para su uso. */
@@ -290,7 +290,7 @@ export class MapService {
     olMap.getViewport().style.cursor = 'pointer';
     this.setupInitialWmsLayers();
     this.handleMapResizing(olMap);
-    this.handleInitialRender(olMap);    
+    this.handleInitialRender(olMap);
     this.setupMapClickHandler(olMap);
     return olMap;
   }
@@ -316,7 +316,7 @@ export class MapService {
       });
     });
   }
-  /** 
+  /**
    * Configura las capas base de Google y OSM.
    */
   private setupBaseLayers(): void {
@@ -378,19 +378,21 @@ export class MapService {
     // Configuración de capas catastrales municipales
     const workspacePrefix = environment.geoserver.workspacePrefix;
     const catastralLayers: WmsLayerConfig[] = [
-      
+
 
       { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
       { id: 'lote', layerName: `${workspacePrefix}gC_lotesCatastral`, zIndex: 0, title: 'Lote Catastral' },
       { id: 'manzana', layerName: `${workspacePrefix}gC_manzanaCatastral`, zIndex: 0, title: 'Manzana Catastral' },
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
       { id: 'arearecreativa', layerName: `${workspacePrefix}vw_area_rec`, zIndex: 1, title: 'Área Recreativa' },
-      
+
       { id: 'sec_vecinal', layerName: `${workspacePrefix}vw_tg_secvecinales`, zIndex: 1, title: 'Sectores Vecinales'},
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias'},
-      
-      
-      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Manzanas Colindantes'},      
+
+      { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
+
+
+      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Manzanas Colindantes'},
       { id: 'sec_catastrales', layerName: `${workspacePrefix}tg_Sectores`, zIndex: 2, title: 'Sectores Catastrales'},
     ];
 
@@ -735,7 +737,7 @@ export class MapService {
    * @returns Observable con el feature encontrado o null
    */
   searchLoteByCodigo(codigo: string): Observable<GeoJSONFeature | null> {
-    const url = environment.geoserver.owsUrl;    
+    const url = environment.geoserver.owsUrl;
     // Limpiamos guiones y espacios en blanco (ej: '3112065002    ' -> '3112065002')
     const codigoSinGuiones = codigo.replaceAll('-', '').trim();
     // Usamos HttpParams para asegurar la correcta construcción y codificación del cql_filter
@@ -786,6 +788,43 @@ export class MapService {
   }
 
   /**
+   * Busca vías por dirección (tipo, nombre, cuadra) consultando el servicio WFS de GeoServer.
+   * @param tipoViaId ID numérico del tipo de vía.
+   * @param nombreVia Parte del nombre de la vía.
+   * @param numeroCuadra Número de la cuadra.
+   * @returns Observable con un array de features encontrados o null.
+   */
+  searchViasByDireccion(tipoViaId: number, nombreVia: string, numeroCuadra: string): Observable<GeoJSONFeature[] | null> {
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+
+    // Construcción del filtro CQL
+    let cqlParts: string[] = [];
+    if (tipoViaId > 0) {
+      cqlParts.push(`tipo_via = ${tipoViaId}`);
+    }
+    if (nombreVia.trim()) {
+      // Usamos ILIKE para búsqueda insensible a mayúsculas/minúsculas
+      cqlParts.push(`nomenclatura ILIKE '%${nombreVia.trim().toUpperCase()}%'`);
+    }
+    if (numeroCuadra.trim()) {
+      cqlParts.push(`num_cuadr = '${numeroCuadra.trim()}'`);
+    }
+
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_via`)
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:4326')
+      .set('cql_filter', cqlParts.join(' AND '));
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => response?.features?.length > 0 ? response.features : null)
+    );
+  }
+  /**
    * Busca y devuelve una capa de OpenLayers por su ID asignado en la configuración.
    * @param id El identificador de la capa.
    * @returns La instancia de la capa de OpenLayers o `undefined` si no se encuentra.
@@ -801,5 +840,62 @@ export class MapService {
       }
     }
     return undefined;
+  }
+
+  /**
+   * Obtiene una lista de nomenclaturas de vías únicas para autocompletado.
+   * @param partialName Parte del nombre de la vía a buscar.
+   * @returns Un Observable con un array de nomenclaturas de vías únicas.
+   */
+  getUniqueVias(partialName: string): Observable<string[]> {
+    if (!partialName || partialName.trim().length < 3) {
+      return new Observable(subscriber => subscriber.next([])); // Devuelve un array vacío si la entrada es muy corta
+    }
+
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '2.0.0') // Usamos 2.0.0 para soporte de propertyName
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_via`)
+      .set('outputFormat', 'application/json')
+      .set('cql_filter', `nomenclatura ILIKE '%${partialName.trim().toUpperCase()}%'`)
+      .set('propertyName', 'nomenclatura'); // Pedimos solo la nomenclatura
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => {
+        const allNomenclaturas = response?.features?.map(f => f.properties['nomenclatura']) ?? [];
+        return [...new Set(allNomenclaturas)]; // Devolvemos solo valores únicos
+      })
+    );
+  }
+
+  /**
+   * Busca propiedades por DNI o nombre del ciudadano consultando un servicio WFS.
+   * @param searchType Si la búsqueda es por 'dni' o 'nombre'.
+   * @param query El valor del DNI o el nombre a buscar.
+   * @returns Un Observable con un array de features encontrados.
+   */
+  searchPropertiesByCitizen(searchType: 'dni' | 'nombre', query: string): Observable<GeoJSONFeature[] | null> {
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+
+    // El typeName y el cql_filter deben ajustarse al servicio real que se implemente en GeoServer.
+    // Este es un ejemplo hipotético.
+    const filterProperty = searchType === 'dni' ? 'numero_documento' : 'nombre_propietario';
+    const cqlFilter = `${filterProperty} ILIKE '%${query.trim()}%'`;
+
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_lote_propietarios`) // Vista hipotética que une lotes y propietarios
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:4326')
+      .set('cql_filter', cqlFilter);
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(map(response => response?.features ?? null));
   }
 }

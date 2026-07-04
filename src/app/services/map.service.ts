@@ -113,8 +113,8 @@ export class MapService {
           title: 'Límites y Áreas',
           expanded: false,
           layers: [
-            { type: 'layer', id: "num_cuadra", label: "NÚMERO DE CUADRA", visible: true, opacity: 1, showInLegend: true },
-            { type: 'layer', id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1, showInLegend: true },
+            { type: 'layer', id: "num_cuadra", label: "NÚMERO DE CUADRA", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "veredas", label: "VEREDAS", visible: true, opacity: 1, showInLegend: false },

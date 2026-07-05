@@ -85,40 +85,34 @@ export class MapService {
     {
       id: "catastral",
       title: "Información Catastral",
+      subtitle: "INFORMACIÓN GPUC",
       expanded: false,
-      items: [
-        {
-          type: 'subsection',
-          id: 'tusne',
-          title: 'TUSNE',
-          expanded: true,
-          layers: [
-
-          ]
-        },
+      items: [       
            {
           type: 'subsection',
           id: 'sectores',
-          title: 'SECTORES',
+          title: 'SECTORIZACIÓN',
           expanded: false,
           layers: [
-          { type: 'layer', id: "sec_catastrales", label: "SECTORES CATASTRALES", visible: false, opacity: 1, showInLegend: true },
-          { type: 'layer', id: "sec_vecinal", label: "SECTORES VECINALES", visible: false, opacity: 1, showInLegend: true }
+          { type: 'layer', id: "hab_urbana", label: "Habilitación Urbana", visible: false, opacity: 1, showInLegend: false },
+          { type: 'layer', id: "sec_catastrales", label: "Sectores Catastrales", visible: false, opacity: 1, showInLegend: false },
+          { type: 'layer', id: "sec_vecinal", label: "Sectores Vecinales", visible: false, opacity: 1, showInLegend: false },
+          { type: 'layer', id: "sec_subvecinal", label: "Sub Sectores - Junta Vecinal", visible: false, opacity: 1, showInLegend: false }
 
           ]
         },
         {
           type: 'subsection',
-          id: 'limites-areas',
-          title: 'Límites y Áreas',
+          id: 'catastro',
+          title: 'CARTOGRAFIA CATASTRAL',
           expanded: false,
           layers: [
-            { type: 'layer', id: "num_cuadra", label: "NÚMERO DE CUADRA", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "construcciones", label: "CONSTRUCCIONES", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "lote", label: "LOTE CATASTRAL", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "manzana", label: "MANZANA CATASTRAL", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "veredas", label: "VEREDAS", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "arearecreativa", label: "ÁREA RECREATIVA", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "num_cuadra", label: "Cuadra", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "construcciones", label: "Construcciones", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "lote", label: "Lote", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "manzana", label: "Manzana", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "veredas", label: "Veredas", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "arearecreativa", label: "Área Recreativa", visible: true, opacity: 1, showInLegend: false },
 
 
 
@@ -127,26 +121,26 @@ export class MapService {
         {
           type: 'subsection',
           id: 'nom_vias',
-          title: 'Nomenclatura de Vías',
+          title: 'VIAS',
           expanded: false,
           layers: [
-            { type: 'layer', id: "vias", label: "VÍAS", visible: false, opacity: 1, showInLegend: true }
+            { type: 'layer', id: "vias", label: "Nomenclatura de Vías", visible: true, opacity: 1, showInLegend: false }
           ]
         }
       ]
     },
     {
       id: "imaAereas",
-      title: "Imagenes Aereas",
+      title: "Fotográfias Áereas",
       expanded: false,
       items: [
         {
           type: 'subsection',
-          id: 'limites-areas',
-          title: 'Límites y Áreas',
+          id: 'fotos-areas',
+          title: 'Fotos sin Procesar',
           expanded: true,
           layers: [
-
+              { type: 'layer', id: "fotos_sin_2018", label: "Fotos sin Procesar - 2018", visible: false, opacity: 1, showInLegend: false }
           ]
         }
       ]
@@ -386,14 +380,21 @@ export class MapService {
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
       { id: 'arearecreativa', layerName: `${workspacePrefix}vw_area_rec`, zIndex: 1, title: 'Área Recreativa' },
 
-      { id: 'sec_vecinal', layerName: `${workspacePrefix}vw_tg_secvecinales`, zIndex: 1, title: 'Sectores Vecinales'},
-      { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias'},
+      
+      { id: 'hab_urbana', layerName: `${workspacePrefix}gC_HabilitacionUrbana`, zIndex: 2, title: 'Habilitación Urbana'},
+      { id: 'sec_subvecinal', layerName: `${workspacePrefix}gC_SubSectorVecinal`, zIndex: 2, title: 'Subsectores Vecinales'},
+      { id: 'sec_vecinal', layerName: `${workspacePrefix}gC_SectoresVecinales`, zIndex: 2, title: 'Sectores Vecinales'},
+      { id: 'sec_catastrales', layerName: `${workspacePrefix}gC_SectoresCatastrales`, zIndex: 2, title: 'Sectores Catastrales'},
+
+      { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 2, title: 'Vias'},
 
       { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
 
 
+      { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 1, title: 'Fotos sin Procesar - 2018'},
+
       { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Manzanas Colindantes'},
-      { id: 'sec_catastrales', layerName: `${workspacePrefix}tg_Sectores`, zIndex: 2, title: 'Sectores Catastrales'},
+      
     ];
 
     // Inicializamos las capas catastrales recorriendo la lista

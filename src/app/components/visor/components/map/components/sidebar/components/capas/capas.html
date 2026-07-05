@@ -14,11 +14,11 @@
               </div>
               <!-- Título, Subtítulo y Acciones -->
               <div class="flex-1 min-w-0">
-                  <span class="text-sm font-bold text-gray-800 leading-tight block truncate">
+                  <span class="text-[15px] font-bold text-gray-800 leading-tight block truncate">
                       {{ section.title }}
                   </span>
                   @if (section.subtitle) {
-                  <p class="text-xs text-gray-400 mt-0.5 truncate">{{ section.subtitle }}</p>
+                  <p class="text-[13px] text-gray-400 mt-0.5 truncate">{{ section.subtitle }}</p>
                   }
                   <!-- Botones de acción -->
                   <div class="flex items-center gap-1 mt-2">
@@ -48,13 +48,13 @@
               <button type="button" class="w-full text-left flex items-center gap-2 px-4 py-2.5 bg-gray-100/50 cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 (click)="toggleSubSectionExpanded(section.id, item.id)" [attr.aria-expanded]="item.expanded">
                 <i class="bi text-primary text-xs" [class.bi-chevron-down]="!item.expanded" [class.bi-chevron-up]="item.expanded"></i>
-                <span class="text-[10px] font-bold text-gray-600 uppercase">{{ item.title }}</span>
+                <span class="text-[12px] font-bold text-gray-600 uppercase">{{ item.title }}</span>
               </button>
               @if(item.expanded) {
                 <div class="divide-y divide-gray-50">
                   @for(layer of item.layers; track layer.id) {
                   <div class="flex flex-col gap-2 pl-8 pr-4 py-3 transition-colors hover:bg-white group/item">
-                    <app-layer-item [layer]="layer" [sectionId]="section.id" size="small" (toggleVisibility)="toggleLayerVisibility(section.id, layer.id)" (opacityChange)="onOpacityChange(section.id, layer.id, $event)"></app-layer-item>
+                    <app-layer-item [layer]="layer" [sectionId]="section.id" (toggleVisibility)="toggleLayerVisibility(section.id, layer.id)" (opacityChange)="onOpacityChange(section.id, layer.id, $event)"></app-layer-item>
                   </div>
                   }
                 </div>

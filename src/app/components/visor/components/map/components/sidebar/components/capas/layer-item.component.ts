@@ -16,7 +16,7 @@ import { LayerItem } from '../../../../../../../../interfaces/geoLayers';
       </div>
       <label [for]="sectionId() + '-' + layer().id"
         class="flex-1 cursor-pointer font-bold text-gray-600 group-hover/item:text-primary transition-colors leading-tight"
-        [class.text-[11px]]="size() === 'normal'" [class.text-[10px]]="size() === 'small'">
+        [class.text-[12px]]="size() === 'normal'" [class.text-[10px]]="size() === 'small'">
         {{ layer().label }}
       </label>
     </div>
@@ -26,7 +26,7 @@ import { LayerItem } from '../../../../../../../../interfaces/geoLayers';
         (input)="opacityChange.emit($event)"
         class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
         [disabled]="!layer().visible" title="Opacidad" />
-      <span class="font-mono font-bold text-primary w-6" [class.text-[9px]]="size() === 'normal'" [class.text-[10px]]="size() === 'small'">{{ (layer().opacity * 100) | number:'1.0-0' }}%</span>
+      <span class="font-mono font-bold text-primary w-6" [class.text-[12px]]="size() === 'normal'" [class.text-[10px]]="size() === 'small'">{{ (layer().opacity * 100) | number:'1.0-0' }}%</span>
     </div>
     </div>
   `

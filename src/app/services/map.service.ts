@@ -140,7 +140,8 @@ export class MapService {
           title: 'Fotos sin Procesar',
           expanded: true,
           layers: [
-              { type: 'layer', id: "fotos_sin_2018", label: "Fotos sin Procesar - 2018", visible: false, opacity: 1, showInLegend: false }
+              { type: 'layer', id: "fotos_sin_2018", label: "Fotos sin Procesar - 2018", visible: false, opacity: 1, showInLegend: false },
+              { type: 'layer', id: "fotos_sin_2024", label: "Fotos sin Procesar - 2024", visible: false, opacity: 1, showInLegend: false }
           ]
         }
       ]
@@ -236,6 +237,10 @@ export class MapService {
   activeSidebarTools = signal<Set<string>>(new Set());
   /** URL con la información de un lote para mostrar en un modal. */
   loteInfoUrl = signal<string | null>(null);
+  /** URL con la información de la foto de dron 2018 para mostrar en un modal. */
+  fotoDroneUrl2018 = signal<string | null>(null);
+  /** URL con la información de la foto de dron 2024 para mostrar en un modal. */
+  fotoDroneUrl2024 = signal<string | null>(null);
   /** Overlay para el marcador de búsqueda */
   private searchMarkerOverlay: Overlay | undefined;
   /** Elemento HTML para el marcador de búsqueda, registrado por un componente. */
@@ -390,8 +395,8 @@ export class MapService {
 
       { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
 
-
       { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 1, title: 'Fotos sin Procesar - 2018'},
+      { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 1, title: 'Fotos sin Procesar - 2024'},
 
       { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Manzanas Colindantes'},
       
@@ -484,29 +489,80 @@ export class MapService {
    * @param olMap Instancia del mapa de OpenLayers.
    */
   private setupMapClickHandler(olMap: OlMap): void {
+    // Definimos las capas que queremos consultar en un clic y la lógica para cada una.
+    const clickableLayersConfig = [
+      {
+        layerId: 'lote',
+        getLayer: () => this.getLayerById('lote'),
+        handler: (feature: GeoJSONFeature) => {
+          const codigoLote = feature.properties['id_lote'];
+          if (codigoLote) {
+            const infoUrl = `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigoLote}`;
+            this.loteInfoUrl.set(infoUrl);
+          }
+        }
+      },
+      {
+        layerId: 'fotos_sin_2018',
+        getLayer: () => this.getLayerById('fotos_sin_2018'),
+        handler: (feature: GeoJSONFeature) => {
+          const fotoId = feature.properties['id'];
+          if (fotoId) {
+            const droneUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/2018Drone.asp?codigo_i=${fotoId}`;
+            this.fotoDroneUrl2018.set(droneUrl);
+          }
+        }
+      },
+      {
+        layerId: 'fotos_sin_2024',
+        getLayer: () => this.getLayerById('fotos_sin_2024'),
+        handler: (feature: GeoJSONFeature) => {
+          const fotoId = feature.properties['id'];
+          if (fotoId) {
+            const droneUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/2024Drone.asp?codigo_i=${fotoId}`;
+            this.fotoDroneUrl2024.set(droneUrl);
+          }
+        }
+      }
+    ];
+
     olMap.on('singleclick', (evt) => {
       const view = olMap.getView();
       const viewResolution = view.getResolution()!;
-      const source = this.getLayerById('lote')?.getSource();
-      if (!source) return;
-      const url = source.getFeatureInfoUrl(
-        evt.coordinate,
-        viewResolution,
-        view.getProjection(),
-        { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': '1' }
-      );
-      if (url) {
-        this.http.get<WfsResponse>(url).subscribe(response => {
-          if (response && response.features && response.features.length > 0) {
-            const feature = response.features[0];
-            const codigoLote = feature.properties['id_lote'];
-            if (codigoLote) {
-              const infoUrl = `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigoLote}`;
-              this.loteInfoUrl.set(infoUrl);
+      const projection = view.getProjection();
+
+      // Priorizamos la capa visible con el zIndex más alto.
+      const visibleClickableLayers = clickableLayersConfig
+        .map(config => ({ config, layer: config.getLayer() }))
+        .filter(item => item.layer && item.layer.getVisible())
+        .sort((a, b) => (b.layer?.getZIndex() ?? 0) - (a.layer?.getZIndex() ?? 0));
+
+      const queryNextLayer = (layers: typeof visibleClickableLayers) => {
+        if (layers.length === 0) return;
+
+        const { config, layer } = layers[0];
+        const source = layer?.getSource();
+        if (!source) {
+          queryNextLayer(layers.slice(1)); // Intenta con la siguiente
+          return;
+        };
+
+        const url = source.getFeatureInfoUrl(evt.coordinate, viewResolution, projection, { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': '1' });
+
+        if (url) {
+          this.http.get<WfsResponse>(url).subscribe(response => {
+            if (response?.features?.length > 0) {
+              config.handler(response.features[0]); // Si encontramos algo, lo manejamos y paramos.
+            } else {
+              queryNextLayer(layers.slice(1)); // Si no, intentamos con la siguiente capa en la lista.
             }
-          }
-        });
-      }
+          });
+        } else {
+          queryNextLayer(layers.slice(1));
+        }
+      };
+
+      queryNextLayer(visibleClickableLayers);
     });
   }
   /**
@@ -514,6 +570,20 @@ export class MapService {
    */
   clearLoteInfo(): void {
     this.loteInfoUrl.set(null);
+  }
+
+  /**
+   * Limpia la URL de la foto de dron de 2018, para cerrar el modal.
+   */
+  clearFotoDroneUrl2018(): void {
+    this.fotoDroneUrl2018.set(null);
+  }
+
+  /**
+   * Limpia la URL de la foto de dron de 2024, para cerrar el modal.
+   */
+  clearFotoDroneUrl2024(): void {
+    this.fotoDroneUrl2024.set(null);
   }
 
   /**

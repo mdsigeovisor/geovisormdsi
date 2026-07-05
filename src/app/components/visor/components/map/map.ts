@@ -73,12 +73,32 @@ export class MapComponent {
     if (this.mapService.loteInfoUrl()) {
       this.closeLoteModal();
     }
+    if (this.mapService.fotoDroneUrl2018()) {
+      this.closeFotoDroneModal2018();
+    }
+    if (this.mapService.fotoDroneUrl2024()) {
+      this.closeFotoDroneModal2024();
+    }
   }
   /**
    * Cierra el modal de información del lote.
    */
   closeLoteModal(): void {
     this.mapService.clearLoteInfo();
+  }
+
+  /**
+   * Cierra el modal de la foto del dron de 2018.
+   */
+  closeFotoDroneModal2018(): void {
+    this.mapService.clearFotoDroneUrl2018();
+  }
+
+  /**
+   * Cierra el modal de la foto del dron de 2024.
+   */
+  closeFotoDroneModal2024(): void {
+    this.mapService.clearFotoDroneUrl2024();
   }
 
   /**

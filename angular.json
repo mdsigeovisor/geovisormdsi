@@ -57,7 +57,8 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "buildTarget": "visor-mdsi:build"
+            "buildTarget": "visor-mdsi:build",
+            "proxyConfig": "proxy.conf.json"
           },
           "configurations": {
             "production": {

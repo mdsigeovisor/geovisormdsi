@@ -125,38 +125,41 @@ export class Buscar {
     this.dni = value.replace(/\D/g, "").slice(0, 8);
   }
 
-  
+
   /** Limpia los campos de la pestaña activa */
   handleClear() {
     this.searchError.set(null);
     this.loading.set(false);
     this.mapService.clearSearchMarker(); // Limpia el marcador del mapa
-    if (this.activeTab === 'cuc') {
-      this.cuc = '';
-    } else if (this.activeTab === 'predial') {
-      this.codigoPredial = '';
-    } else if (this.activeTab === 'direccion') {
-      this.tipoVia = 0;
-      this.nombreVia = '';
-      this.numeroMunicipal = '';
-      this.numeroCuadra = '';
-      this.viaSuggestions = [];
-      this.showViaSuggestions = false;
-    } else if (this.activeTab === 'habilitacion') {
-      this.nombreHabilitacion = '';
-      this.manzanaUrbana = '';
-      this.loteUrbano = '';
-    } else if (this.activeTab === 'titular') {
-      this.codigoTitular = '';
-    } else if (this.activeTab === 'denominacion') {
-      this.denominacionPredio = '';
-    } else if (this.activeTab === 'parque') {
-      this.nombreParque = '';
-    } else if (this.activeTab === 'catastral') {
-      this.codigoCatastral = '';
-    } else {
-      this.dni = '';
-      this.nombreCiudadano = '';
+
+    const clearActions: Record<typeof this.activeTab, () => void> = {
+      cuc: () => this.cuc = '',
+      predial: () => this.codigoPredial = '',
+      direccion: () => {
+        this.tipoVia = 0;
+        this.nombreVia = '';
+        this.numeroMunicipal = '';
+        this.numeroCuadra = '';
+        this.viaSuggestions = [];
+        this.showViaSuggestions = false;
+      },
+      habilitacion: () => {
+        this.nombreHabilitacion = '';
+        this.manzanaUrbana = '';
+        this.loteUrbano = '';
+      },
+      titular: () => this.codigoTitular = '',
+      denominacion: () => this.denominacionPredio = '',
+      parque: () => this.nombreParque = '',
+      catastral: () => this.codigoCatastral = '',
+      ciudadano: () => {
+        this.dni = '';
+        this.nombreCiudadano = '';
+      }
+    };
+
+    if (clearActions[this.activeTab]) {
+      clearActions[this.activeTab]();
     }
   }
 

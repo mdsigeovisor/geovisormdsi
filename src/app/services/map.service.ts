@@ -377,28 +377,31 @@ export class MapService {
     // Configuración de capas catastrales municipales
     const workspacePrefix = environment.geoserver.workspacePrefix;
     const catastralLayers: WmsLayerConfig[] = [
+      //* Trama Externa
+      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Cartografia Colindante'},
 
-
-      { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
-      { id: 'lote', layerName: `${workspacePrefix}gC_lotesCatastral`, zIndex: 0, title: 'Lote Catastral' },
-      { id: 'manzana', layerName: `${workspacePrefix}gC_manzanaCatastral`, zIndex: 0, title: 'Manzana Catastral' },
-      { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
-      { id: 'arearecreativa', layerName: `${workspacePrefix}vw_area_rec`, zIndex: 1, title: 'Área Recreativa' },
-
-      
+      //* Sectores
       { id: 'hab_urbana', layerName: `${workspacePrefix}gC_HabilitacionUrbana`, zIndex: 2, title: 'Habilitación Urbana'},
       { id: 'sec_subvecinal', layerName: `${workspacePrefix}gC_SubSectorVecinal`, zIndex: 2, title: 'Subsectores Vecinales'},
       { id: 'sec_vecinal', layerName: `${workspacePrefix}gC_SectoresVecinales`, zIndex: 2, title: 'Sectores Vecinales'},
       { id: 'sec_catastrales', layerName: `${workspacePrefix}gC_SectoresCatastrales`, zIndex: 2, title: 'Sectores Catastrales'},
 
+      //* Capas Catastrales
+      { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
+      { id: 'lote', layerName: `${workspacePrefix}gC_lotesCatastral`, zIndex: 0, title: 'Lote Catastral' },
+      { id: 'manzana', layerName: `${workspacePrefix}gC_manzanaCatastral`, zIndex: 0, title: 'Manzana Catastral' },
+      { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
+      { id: 'arearecreativa', layerName: `${workspacePrefix}vw_area_rec`, zIndex: 1, title: 'Área Recreativa' },    
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 2, title: 'Vias'},
-
       { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
 
+
+      //* Vuelos
       { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 1, title: 'Fotos sin Procesar - 2018'},
       { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 1, title: 'Fotos sin Procesar - 2024'},
 
-      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Manzanas Colindantes'},
+
+      
       
     ];
 

@@ -218,7 +218,7 @@ export class MapService {
         {
           type: 'subsection',
           id: 'manzanas',
-          title: 'Manzanas Colindantes',
+          title: 'Cartografía otros distritos',
           expanded: true,
           layers: [
              { type: 'layer', id: "mz_colindantes", label: "Trama Colindante", visible: true, opacity: 1, showInLegend: false }
@@ -366,32 +366,32 @@ export class MapService {
   private setupInitialWmsLayers(): void {
     // Inicialización de la capa WMS de departamentos de INEI
     this.addWmsLayer({
-      id: 'ig_departamento',
+      id: 'tg_departamentos',
       url: TRAMA_WMS_URL,
-      layerName: 'Interoperabilidad:ig_departamento',
+      layerName: 'SIDES_GIS:tg_departamentos',
       version: '1.1.0',
       zIndex: 5, // zIndex para posicionarse sobre el mapa base
-      title: 'IG Departamento'
+      title: 'Departamento del Perú',
     });
 
     // Configuración de capas catastrales municipales
     const workspacePrefix = environment.geoserver.workspacePrefix;
     const catastralLayers: WmsLayerConfig[] = [
       //* Trama Externa
-      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Cartografia Colindante'},
+      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Cartografia otros distritos'},
 
       //* Sectores
-      { id: 'hab_urbana', layerName: `${workspacePrefix}gC_HabilitacionUrbana`, zIndex: 2, title: 'Habilitación Urbana'},
-      { id: 'sec_subvecinal', layerName: `${workspacePrefix}gC_SubSectorVecinal`, zIndex: 2, title: 'Subsectores Vecinales'},
-      { id: 'sec_vecinal', layerName: `${workspacePrefix}gC_SectoresVecinales`, zIndex: 2, title: 'Sectores Vecinales'},
-      { id: 'sec_catastrales', layerName: `${workspacePrefix}gC_SectoresCatastrales`, zIndex: 2, title: 'Sectores Catastrales'},
+      { id: 'hab_urbana', layerName: `${workspacePrefix}gc_habilitacion_urbana`, zIndex: 2, title: 'Habilitación Urbana'},
+      { id: 'sec_subvecinal', layerName: `${workspacePrefix}gc_subsector_vecinal`, zIndex: 2, title: 'Subsectores Vecinales'},
+      { id: 'sec_vecinal', layerName: `${workspacePrefix}gc_sector_vecinal`, zIndex: 2, title: 'Sectores Vecinales'},
+      { id: 'sec_catastrales', layerName: `${workspacePrefix}gc_sector_catastral`, zIndex: 2, title: 'Sectores Catastrales'},
 
       //* Capas Catastrales
       { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
-      { id: 'lote', layerName: `${workspacePrefix}gC_lotesCatastral`, zIndex: 0, title: 'Lote Catastral' },
-      { id: 'manzana', layerName: `${workspacePrefix}gC_manzanaCatastral`, zIndex: 0, title: 'Manzana Catastral' },
+      { id: 'lote', layerName: `${workspacePrefix}gc_lote_catastral`, zIndex: 0, title: 'Lote Catastral' },
+      { id: 'manzana', layerName: `${workspacePrefix}gc_manzana_catastral`, zIndex: 0, title: 'Manzana Catastral' },
       { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
-      { id: 'arearecreativa', layerName: `${workspacePrefix}vw_area_rec`, zIndex: 1, title: 'Área Recreativa' },    
+      { id: 'arearecreativa', layerName: `${workspacePrefix}gc_area_verde`, zIndex: 1, title: 'Área Recreativa' },    
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 2, title: 'Vias'},
       { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
 

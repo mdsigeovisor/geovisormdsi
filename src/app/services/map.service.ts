@@ -30,7 +30,13 @@ import {
   transformExtent,
   GeoJSON,
   Overlay,
-  getCenter
+  Feature,
+  getCenter,
+  VectorLayer,
+  VectorSource,
+  Style,
+  Fill,
+  Stroke
 } from '../modules/openlayers.module';
 import ImageLayer from 'ol/layer/Image';
 
@@ -78,6 +84,8 @@ export class MapService {
   public satelliteLayer?: TileLayer;
   /** Capa de calles (OSM) */
   public streetsLayer?: TileLayer;
+  /** Capa para resaltar geometrías de búsqueda */
+  private highlightLayer: VectorLayer<any> | undefined;
   /**
    * Signal que gestiona las secciones y capas del visor.
    */
@@ -289,6 +297,7 @@ export class MapService {
     olMap.getViewport().style.cursor = 'pointer';
     this.setupInitialWmsLayers();
     this.handleMapResizing(olMap);
+    this.setupHighlightLayer();
     this.handleInitialRender(olMap);
     this.setupMapClickHandler(olMap);
     return olMap;
@@ -595,18 +604,27 @@ export class MapService {
    * @param text Texto opcional para mostrar en el marcador.
    */
   drawSearchMarker(geometry: GeoJSONGeometry, text?: string): void {
+    // Limpiamos resaltados anteriores
+    this.highlightLayer?.getSource()?.clear();
+
     const map = this._map();
     if (!map || !this.searchMarkerElement) {
       console.warn('El marcador de búsqueda no se puede dibujar porque el elemento no ha sido registrado en MapService.');
       return;
     }
 
+    const view = map.getView();
     const format = new GeoJSON();
+    // Le indicamos a OL que la data viene en 32718 y la transforme a la proyección del mapa
     const olGeometry = format.readGeometry(geometry, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: map.getView().getProjection()
+      dataProjection: 'EPSG:32718',
+      featureProjection: view.getProjection()
     });
     const center = getCenter(olGeometry.getExtent());
+
+    // Añadimos la geometría a la capa de resaltado
+    const feature = new Feature({ geometry: olGeometry });
+    this.highlightLayer?.getSource()?.addFeature(feature);
 
     if (!this.searchMarkerOverlay) {
       this.searchMarkerOverlay = new Overlay({
@@ -633,6 +651,7 @@ export class MapService {
   /** Limpia el marcador de búsqueda del mapa. */
   clearSearchMarker(): void {
     this.searchMarkerOverlay?.setPosition(undefined);
+    this.highlightLayer?.getSource()?.clear();
   }
   /**
    * Remueve una capa del mapa definitivamente basándose en su ID.
@@ -784,15 +803,18 @@ export class MapService {
     const map = this._map();
     if (!map || !geometry?.coordinates) return;
     const format = new GeoJSON();
+    const view = map.getView();
+
     // Leemos la geometría directamente para evitar la ambigüedad de tipo (Feature vs Feature[])
-    const geometryOl = format.readGeometry(geometry);
+    // Le indicamos a OL que la data viene en 32718 y la transforme a la proyección del mapa
+    const geometryOl = format.readGeometry(geometry, {
+      dataProjection: 'EPSG:32718',
+      featureProjection: view.getProjection()
+    });
     if (!geometryOl) return;
 
-    const view = map.getView();
     const extent = geometryOl.getExtent();
-    // Detectamos proyección: Si el valor de X es grande, asumimos UTM 18S
-    const sourceProjection = Math.abs(extent[0]) > 180 ? 'EPSG:32718' : 'EPSG:4326';
-    const transformedExtent = transformExtent(extent, sourceProjection, view.getProjection());
+    const transformedExtent = extent; // La geometría ya está transformada, usamos su extent directamente
 
     const options: any = {
       duration: ANIMATION_DURATION,
@@ -821,8 +843,8 @@ export class MapService {
       .set('request', 'GetFeature')
       .set('typeName', 'mdsibde2026:vw_tg_lote')
       .set('outputFormat', 'application/json')
-      // Forzamos a GeoServer a entregar coordenadas en grados decimales
-      .set('srsName', 'EPSG:4326')
+      // Solicitamos las coordenadas en la misma proyección del mapa
+      .set('srsName', 'EPSG:32718')
       .set('cql_filter', `id_lote = '${codigoSinGuiones}'`);
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map((response) => {
@@ -848,7 +870,7 @@ export class MapService {
       .set('request', 'GetFeature')
       .set('typeName', 'mdsibde2026:vw_tg_lote')
       .set('outputFormat', 'application/json')
-      .set('srsName', 'EPSG:4326')
+      .set('srsName', 'EPSG:32718')
       .set('cql_filter', `cuc = '${cucLimpio}'`);
 
     return this.http.get<WfsResponse>(url, { params }).pipe(
@@ -971,5 +993,29 @@ export class MapService {
       .set('cql_filter', cqlFilter);
 
     return this.http.get<WfsResponse>(url, { params }).pipe(map(response => response?.features ?? null));
+  }
+
+  /**
+   * Configura la capa de resaltado para las geometrías encontradas.
+   */
+  private setupHighlightLayer(): void {
+    const map = this._map();
+    if (!map) return;
+
+    this.highlightLayer = new VectorLayer({
+      source: new VectorSource(),
+      style: new Style({
+        stroke: new Stroke({
+          color: 'rgba(0, 123, 255, 1)', // Borde azul brillante
+          width: 3,
+        }),
+        fill: new Fill({
+          color: 'rgba(0, 123, 255, 0.2)', // Relleno celeste semi-transparente
+        }),
+      }),
+      zIndex: 1000, // Asegura que esté por encima de otras capas
+    });
+
+    map.addLayer(this.highlightLayer);
   }
 }

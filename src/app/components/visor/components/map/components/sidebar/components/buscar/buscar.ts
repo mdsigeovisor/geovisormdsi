@@ -370,3 +370,4 @@ export class Buscar {
     // this.onClose.emit();
   }
 }
+

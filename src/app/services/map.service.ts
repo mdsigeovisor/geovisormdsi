@@ -28,6 +28,8 @@ import {
   ImageWMS,
   transform,
   GeoJSON,
+  transformExtent,
+  getDistance,
   Overlay,
   Feature,
   getCenter,
@@ -117,7 +119,7 @@ export class MapService {
             { type: 'layer', id: "construcciones", label: "Construcciones", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "lote", label: "Lote", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "manzana", label: "Manzana", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "veredas", label: "Veredas", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "veredas", label: "Veredas", visible: true, opacity: 1, showInLegend: false },            
             { type: 'layer', id: "arearecreativa", label: "Área Recreativa", visible: true, opacity: 1, showInLegend: false },
             
           ]
@@ -244,6 +246,8 @@ export class MapService {
   fotoDroneUrl2018 = signal<string | null>(null);
   /** URL con la información de la foto de dron 2024 para mostrar en un modal. */
   fotoDroneUrl2024 = signal<string | null>(null);
+  /** Indica si el mapa está en medio de una animación de navegación programática. */
+  isNavigating = signal(false);
   /** Overlay para el marcador de búsqueda */
   private searchMarkerOverlay: Overlay | undefined;
   /** Elemento HTML para el marcador de búsqueda, registrado por un componente. */
@@ -382,8 +386,9 @@ export class MapService {
       { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
       { id: 'lote', layerName: `${workspacePrefix}gc_lote_catastral`, zIndex: 0, title: 'Lote Catastral' },
       { id: 'manzana', layerName: `${workspacePrefix}gc_manzana_catastral`, zIndex: 0, title: 'Manzana Catastral' },
-      { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
-      { id: 'arearecreativa', layerName: `${workspacePrefix}gc_area_verde`, zIndex: 1, title: 'Área Recreativa' },    
+      { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },      
+      { id: 'arearecreativa', layerName: `${workspacePrefix}gc_area_verde`, zIndex: 1, title: 'Área Recreativa' },
+      
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 2, title: 'Vias'},
       { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
       { id: 'puertas', layerName: `${workspacePrefix}vw_tg_puertas`, zIndex: 1, title: 'Puertas'},
@@ -630,23 +635,42 @@ export class MapService {
   /**
    * Centra y acerca el mapa al distrito de San Isidro con un vuelo animado.
    */
-  goToCoordinates(lat: number, lon: number, zoom = SAN_ISIDRO_ZOOM, duration = 1800, onComplete?: (complete: boolean) => void): void {
+  goToCoordinates(lat: number, lon: number, zoom = SAN_ISIDRO_ZOOM, duration = 2200, onComplete?: (complete: boolean) => void): void {
     const map = this._map();
     if (!map) return;
+
+    this.isNavigating.set(true);
+
     const view = map.getView();
     const currentZoom = view.getZoom() ?? INITIAL_ZOOM;
-    view.animate({
-      zoom: Math.max(currentZoom - 1, 4),
-      duration: 500,
-      easing: easeOut
-    }, {
-      center: fromLonLat([lon, lat]),
-      zoom,
-      duration,
-      easing: easeOut
-    }, (complete) => {
-      if (complete && onComplete) onComplete(complete);
-    });
+    const currentCenter = view.getCenter()!;
+    const destination = fromLonLat([lon, lat]);
+
+    // Calculamos la distancia para decidir si hacer un "zoom out" drástico o no.
+    // Una distancia mayor a 500km (500000m) justifica el zoom out.
+    const distance = getDistance(currentCenter, destination);
+
+    const completeCallback = (complete: boolean) => {
+      this.isNavigating.set(false);
+      if (complete && onComplete) {
+        onComplete(complete);
+      }
+    };
+
+    if (distance > 500000) { // Si estamos lejos, hacemos un zoom out primero
+      view.animate({
+        zoom: 4, // Zoom a nivel continental
+        duration: duration / 3,
+        easing: easeOut
+      }, {
+        center: destination,
+        zoom,
+        duration: duration * 2 / 3,
+        easing: easeOut
+      }, completeCallback);
+    } else { // Si estamos cerca, solo nos movemos
+      view.animate({ center: destination, zoom, duration, easing: easeOut }, completeCallback);
+    }
   }
   /**
    * Desplaza un punto (lon, lat) en metros en coordenadas proyectadas (EPSG:3857)
@@ -665,14 +689,22 @@ export class MapService {
    * previas que no pasan explícitamente lat/lon.
    */
   goToSanIsidro(duration = 1800, onComplete?: (complete: boolean) => void): void {
-    const sanIsidroGeometry: GeoJSONGeometry = {
-      type: 'Point',
-      coordinates: SAN_ISIDRO_CENTER
-    };
-    this.fitToGeometry(sanIsidroGeometry, 'EPSG:4326', SAN_ISIDRO_ZOOM, true);
-    if (onComplete) {
-      setTimeout(() => onComplete(true), duration);
-    }
+    // Usamos goToCoordinates para una animación de "vuelo" más suave.
+    this.goToCoordinates(SAN_ISIDRO_CENTER[1], SAN_ISIDRO_CENTER[0], SAN_ISIDRO_ZOOM, duration, onComplete);
+  }
+  /**
+   * Centra el mapa en la extensión inicial del distrito sin activar el resaltado.
+   * Ideal para el botón "home" o vistas iniciales.
+   */
+  goToDistrito(duration = ANIMATION_DURATION / 2): void {
+    const map = this._map();
+    if (!map) return;
+
+    const view = map.getView();
+    const extent32718 = [275224.08, 8660213.79, 281557.72, 8663299.55];
+    const transformedExtent = transformExtent(extent32718, 'EPSG:32718', view.getProjection());
+
+    view.fit(transformedExtent, { duration, padding: [20, 20, 20, 20] });
   }
   /**
    * Métodos para actualizar el estado de las secciones desde la UI

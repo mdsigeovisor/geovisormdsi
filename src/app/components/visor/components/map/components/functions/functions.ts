@@ -44,12 +44,7 @@ export class Funciones implements AfterViewInit {
   }
   goHome(): void {
     this.mapService.cambiarMapaBase('blanco');
-    const view = this.olMap()?.getView();
-    if (view) {      
-      const extent32718 = [275224.08, 8660213.79, 281557.72, 8663299.55];
-      const transformedExtent = transformExtent(extent32718, 'EPSG:32718', view.getProjection());      
-      view.fit(transformedExtent, { duration: ANIMATION_DURATION / 2, padding: [20, 20, 20, 20] });
-    }
+    this.mapService.goToDistrito();
   }
   /**
    * Realiza una animación de cambio de zoom relativa al valor actual.

@@ -19,7 +19,7 @@ export class Consultas {
   Close = output<void>();
   SearchResult = output<SearchResult>();
   /** Control de pestañas */
-  activeTab: 'cuc' | 'predial' | 'direccion' | 'habilitacion' | 'titular' | 'catastral' | 'ciudadano' | 'denominacion' | 'parque' = 'cuc';
+  activeTab: 'catastral' | 'predial' | 'direccion' | 'habilitacion' | 'titular' | 'cuc' | 'ciudadano' | 'denominacion' | 'parque' = 'catastral';
   /** Campos para búsqueda por CUC */
   cuc = '';
   /** Campos para búsqueda por Código Predial */
@@ -44,7 +44,7 @@ export class Consultas {
   numeroCuadra = '';
   /** Campos para búsqueda por Habilitación Urbana */
   // --- Lógica para autocompletado de vías ---
-  private nombreViaSubject = new Subject<string>();
+  private readonly nombreViaSubject = new Subject<string>();
   viaSuggestions: string[] = [];
   showViaSuggestions = false;
   // -----------------------------------------
@@ -70,31 +70,7 @@ export class Consultas {
   selectedCitizen = '';
   citizenProperties: SearchResult[] = [];
   /** Datos simulados para la demostración */
-  private readonly mockCitizenProperties: SearchResult[] = [
-    {
-      codigoCatastral: "05-012-003",
-      direccion: "Av. La Marina 2450, San Miguel",
-      propietario: "Carlos Alberto Fernández Silva",
-      area: "120.50 m²",
-      zonificacion: "RDM",
-      fotoFrontis: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&q=80",
-      numeroPisos: 3,
-      materialPredominante: "Ladrillo",
-      estadoConservacion: "Bueno",
-    },
-    {
-      codigoCatastral: "05-018-007",
-      direccion: "Jr. Federico Gallese 890, San Miguel",
-      propietario: "Carlos Alberto Fernández Silva",
-      area: "95.00 m²",
-      zonificacion: "RDA",
-      fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80",
-      numeroPisos: 5,
-      materialPredominante: "Ladrillo",
-      estadoConservacion: "Muy Bueno",
-    }
-  ];
-
+ 
   constructor() {
     this.nombreViaSubject.pipe(
       debounceTime(300), // Espera 300ms después de la última pulsación

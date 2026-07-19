@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MapService } from '../../../../../../../../services/map.service';
 import { SearchResult } from '../../../../../../../../interfaces/search';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
-
+import { GeoJSONGeometry } from '../../../../../../../../interfaces/geoLayers';
 
 @Component({
   selector: 'app-consultas',
@@ -200,7 +200,7 @@ export class Consultas {
             };
             
             // Navegamos al polígono encontrado automáticamente
-            this.mapService.fitToGeometry(feature.geometry);
+            this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
             this.mapService.drawSearchMarker(feature.geometry);
             
             this.emitResult(result);
@@ -232,7 +232,7 @@ export class Consultas {
               numeroPisos: props['pisos'] ?? 1,
               geometry: feature.geometry
             };
-            this.mapService.fitToGeometry(feature.geometry);
+            this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
             this.mapService.drawSearchMarker(feature.geometry, `CUC encontrado: ${this.cuc}`);
             this.emitResult(result);
           } else {
@@ -254,13 +254,16 @@ export class Consultas {
           next: (features) => {
             this.loading.set(false);
             if (features && features.length > 0) {
-              // Tomamos la primera vía encontrada para centrar el mapa
+              // Tomamos solo el primer segmento de la vía encontrada.
               const feature = features[0];
-              const props = feature.properties as any;
-              const direccion = props['etiquetado_ext'] || 'Vía sin nombre';
+              const direccion = feature.properties['etiquetado_ext'] || 'Vía sin nombre';
               
-              this.mapService.fitToGeometry(feature.geometry, true);
+              // Pasamos la geometría del primer segmento para que el mapa se ajuste a él.
+              this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
+              
+              // Dibujamos el marcador en el centro del primer segmento.
               this.mapService.drawSearchMarker(feature.geometry, direccion);
+
               // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
               // Si se quisiera mostrar info, se podría emitir un resultado parcial.
               this.Close.emit(); // Cerramos el panel de búsqueda
@@ -317,7 +320,7 @@ export class Consultas {
   handleSelectProperty(property: SearchResult) {
     // Si el predio tiene geometría, centramos el mapa antes de emitir
     if (property.geometry) {
-      this.mapService.fitToGeometry(property.geometry);
+      this.mapService.fitToGeometry(property.geometry, 'EPSG:32718', undefined, true);
     }
     
     this.emitResult(property);

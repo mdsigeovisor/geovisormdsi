@@ -25,4 +25,5 @@ export { Point, LineString, Polygon } from 'ol/geom';
 export { default as TileWMS } from 'ol/source/TileWMS';
 export { default as GeoJSON } from 'ol/format/GeoJSON';
 export { default as ImageWMS } from 'ol/source/ImageWMS';
+export { default as WKT } from 'ol/format/WKT';
 export { getCenter } from 'ol/extent';

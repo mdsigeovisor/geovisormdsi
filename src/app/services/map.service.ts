@@ -35,7 +35,8 @@ import {
   VectorSource,
   Style,
   Fill,
-  Stroke
+  Stroke,
+  WKT
 } from '../modules/openlayers.module';
 import ImageLayer from 'ol/layer/Image';
 export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
@@ -118,6 +119,7 @@ export class MapService {
             { type: 'layer', id: "manzana", label: "Manzana", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "veredas", label: "Veredas", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "arearecreativa", label: "Área Recreativa", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "puertas", label: "Puertas", visible: true, opacity: 1, showInLegend: true }
           ]
         },
         {
@@ -383,6 +385,7 @@ export class MapService {
       { id: 'arearecreativa', layerName: `${workspacePrefix}gc_area_verde`, zIndex: 1, title: 'Área Recreativa' },    
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 2, title: 'Vias'},
       { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
+      { id: 'puertas', layerName: `${workspacePrefix}vw_tg_puertas`, zIndex: 1, title: 'Puertas'},
       //* Vuelos
       { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 1, title: 'Fotos sin Procesar - 2018'},
       { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 1, title: 'Fotos sin Procesar - 2024'},      
@@ -660,7 +663,7 @@ export class MapService {
       type: 'Point',
       coordinates: SAN_ISIDRO_CENTER
     };
-    this.fitToGeometry(sanIsidroGeometry, true, SAN_ISIDRO_ZOOM);
+    this.fitToGeometry(sanIsidroGeometry, 'EPSG:4326', SAN_ISIDRO_ZOOM, true);
     if (onComplete) {
       setTimeout(() => onComplete(true), duration);
     }
@@ -750,28 +753,30 @@ export class MapService {
    * @param offset Indica si se debe desplazar el centro para compensar el sidebar
    * @param zoom Nivel de zoom opcional para forzar en geometrías de tipo Point
    */
-  fitToGeometry(geometry: GeoJSONGeometry, offset = false, zoom?: number): void {
+  fitToGeometry(geometry: GeoJSONGeometry, sourceProjection: 'EPSG:4326' | 'EPSG:32718' = 'EPSG:32718', zoom?: number, offset = false): void {
     const map = this._map();
-    if (!map || !geometry?.coordinates) return;
+    // La guarda debe ser más flexible: una geometría es válida si existe y tiene 'coordinates' (para geometrías simples)
+    // o 'geometries' (para GeometryCollection).
+    if (!map || !geometry || (!geometry.coordinates && !geometry.geometries)) return;
     const format = new GeoJSON();
     const view = map.getView();
     // Leemos la geometría directamente para evitar la ambigüedad de tipo (Feature vs Feature[])
     // Le indicamos a OL que la data viene en 32718 y la transforme a la proyección del mapa
     const geometryOl = format.readGeometry(geometry, {
-      dataProjection: 'EPSG:32718',
+      dataProjection: sourceProjection,
       featureProjection: view.getProjection()
     });
     if (!geometryOl) return;
     const extent = geometryOl.getExtent();
-    const transformedExtent = extent; // La geometría ya está transformada, usamos su extent directamente
     const options: any = {
       duration: ANIMATION_DURATION,
-      padding: [100, 100, 100, 420] // Aumentamos el padding derecho para compensar el sidebar
+      // Aplicamos el padding solo si 'offset' es true, para no afectar otras llamadas
+      padding: offset ? [100, 100, 100, 420] : [50, 50, 50, 50]
     };
     if (geometry.type === 'Point' && zoom) {
       options.zoom = zoom;
     }
-    view.fit(transformedExtent, options);
+    view.fit(extent, options);
   }
   /**
    * Busca un lote por su código catastral (id_lote) consultando el servicio WFS de GeoServer.
@@ -917,6 +922,38 @@ export class MapService {
 
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => response?.features?.length > 0 ? response.features : null)
+    );
+  }
+
+  /**
+   * ENFOQUE A: Busca vías que intersectan una geometría usando un filtro WFS en el servidor.
+   * @param geometry La geometría GeoJSON (en EPSG:32718) con la que se buscará la intersección.
+   * @returns Un Observable con la colección de features GeoJSON encontradas.
+   */
+  findIntersectingViasWFS(geometry: GeoJSONGeometry): Observable<WfsResponse | null> {
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+
+    // Convertimos la geometría GeoJSON a formato WKT para usarla en el filtro CQL
+    const format = new GeoJSON();
+    const olGeometry = format.readGeometry(geometry);
+    const wktWriter = new WKT();
+    const wktGeometry = wktWriter.writeGeometry(olGeometry);
+
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}:vw_tg_via`) // Usamos la capa de vías
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:32718') // Pedimos los resultados en la misma proyección de los datos
+      .set('cql_filter', `INTERSECTS(geometry, ${wktGeometry})`); // El filtro espacial
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => {
+        // Devuelve la colección completa o null si no hay resultados
+        return response?.features?.length > 0 ? response : null;
+      })
     );
   }
 

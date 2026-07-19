@@ -4,10 +4,11 @@ import {
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
 
-/** Estructura básica de una geometría GeoJSON */
+/** Estructura básica de una geometría GeoJSON, incluyendo GeometryCollection */
 export interface GeoJSONGeometry {
-  type: 'Point' | 'LineString' | 'Polygon' | 'MultiPolygon' | 'MultiLineString';
-  coordinates: any[];
+  type: 'Point' | 'LineString' | 'Polygon' | 'MultiPolygon' | 'MultiLineString' | 'GeometryCollection';
+  coordinates?: any[]; // Coordenadas para geometrías simples
+  geometries?: GeoJSONGeometry[]; // Array de geometrías para GeometryCollection
 }
 
 /** Estructura de un Feature devuelto por GeoServer */

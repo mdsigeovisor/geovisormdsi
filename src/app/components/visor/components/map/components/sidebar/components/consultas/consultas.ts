@@ -89,10 +89,9 @@ export class Consultas {
   /** Formatea el código catastral mientras el usuario escribe (XXXX-XXX-XXX) */
   handleCodigoCatastralChange(value: string) {
     const numbers = value.replace(/\D/g, "");
-    let formatted = "";
-    if (numbers.length > 0) formatted = numbers.slice(0, 4);
-    if (numbers.length > 4) formatted += "-" + numbers.slice(4, 7);
-    if (numbers.length > 7) formatted += "-" + numbers.slice(7, 10);
+    let formatted = numbers.slice(0, 2); // Sector
+    if (numbers.length > 2) formatted += "-" + numbers.slice(2, 5); // Manzana
+    if (numbers.length > 5) formatted += "-" + numbers.slice(5, 8); // Lote
     this.codigoCatastral = formatted;
   }
 
@@ -157,7 +156,7 @@ export class Consultas {
       case 'parque':
         return this.nombreParque.trim().length === 0;
       case 'catastral':
-        return this.codigoCatastral.length < 12; // 10 dígitos + 2 guiones
+        return this.codigoCatastral.length < 10; // 8 dígitos + 2 guiones
       case 'ciudadano':
         return this.searchType === 'dni'
           ? this.dni.length < 8
@@ -259,7 +258,7 @@ export class Consultas {
       this.loading.set(true);
       this.searchError.set(null);
 
-      this.mapService.searchLoteByCodigo(this.codigoCatastral).pipe(take(1)).subscribe({
+      this.mapService.searchLoteByCodigo(`31${this.codigoCatastral}`).pipe(take(1)).subscribe({
         next: (feature) => {
           this.loading.set(false);
           if (feature) {

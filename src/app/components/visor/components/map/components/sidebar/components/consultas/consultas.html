@@ -107,10 +107,13 @@
         <div>
           <label for="codigoCatastralInput"
             class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Código
-            Catastral</label>
-          <input id="codigoCatastralInput" type="text" [(ngModel)]="codigoCatastral"
-            (ngModelChange)="handleCodigoCatastralChange($event)" placeholder="00-000-000" maxlength="12"
-            class="w-full bg-primary/5 border-2 border-primary/10 rounded-2xl p-4 text-2xl font-mono text-center tracking-[0.2em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-black transition-all">
+            Catastral</label>          
+          <div class="flex items-center bg-primary/5 border-2 border-primary/10 rounded-2xl focus-within:ring-4 focus-within:ring-primary/10 focus-within:border-primary transition-all">
+            <span class="px-4 text-2xl font-mono text-primary/40 font-black tracking-[0.2em]">31</span>
+            <input id="codigoCatastralInput" type="text" [(ngModel)]="codigoCatastral"
+              (ngModelChange)="handleCodigoCatastralChange($event)" placeholder="00-000-000" maxlength="10"
+              class="w-full bg-transparent p-4 text-2xl font-mono text-center tracking-[0.2em] outline-none text-primary font-black">
+          </div>
           @if (searchError()) {
           <div
             class="mt-2 p-2 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-red-600 animate-in fade-in zoom-in duration-200">

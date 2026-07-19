@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MapService } from '../../../../../../../../services/map.service';
 import { SearchResult } from '../../../../../../../../interfaces/search';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
-import { GeoJSONGeometry } from '../../../../../../../../interfaces/geoLayers';
+import { GeoJSONFeature, GeoJSONGeometry } from '../../../../../../../../interfaces/geoLayers';
 
 @Component({
   selector: 'app-consultas',
@@ -32,6 +32,11 @@ export class Consultas {
   private readonly nombreViaSubject = new Subject<string>();
   viaSuggestions: string[] = [];
   showViaSuggestions = false;
+  // --- Lógica para autocompletado de parques ---
+  private readonly nombreParqueSubject = new Subject<string>();
+  parqueSuggestions: GeoJSONFeature[] = [];
+  showParqueSuggestions = false;
+
   // -----------------------------------------
   nombreHabilitacion = '';
   manzanaUrbana = '';
@@ -62,14 +67,28 @@ export class Consultas {
       distinctUntilChanged(), // Solo emite si el valor ha cambiado
       switchMap(partialName => this.mapService.getUniqueVias(partialName))
     ).subscribe(suggestions => {
-      this.viaSuggestions = suggestions;
-      this.showViaSuggestions = suggestions.length > 0;
+      this.viaSuggestions = suggestions || [];
+      this.showViaSuggestions = (suggestions?.length ?? 0) > 0;
+    });
+
+    this.nombreParqueSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(partialName => this.mapService.searchParquesByDenominacion(partialName))
+    ).subscribe(suggestions => {
+      this.parqueSuggestions = suggestions || [];
+      this.showParqueSuggestions = (suggestions?.length ?? 0) > 0;
     });
   }
 
   onNombreViaInput(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.nombreViaSubject.next(value);
+  }
+
+  onNombreParqueInput(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.nombreParqueSubject.next(value);
   }
 
   /** Formatea el código catastral mientras el usuario escribe (XXXX-XXX-XXX) */
@@ -154,7 +173,7 @@ export class Consultas {
     this.nombreVia = suggestion.trim(); // Limpiamos espacios en blanco al seleccionar
     this.showViaSuggestions = false;
     this.viaSuggestions = [];
-    this.handleSearchByAddress(); // Ejecutamos la búsqueda de dirección automáticamente
+    this.handleBuscarByDireccion(); // Ejecutamos la búsqueda de dirección automáticamente
   }
 
   onNombreViaBlur() {
@@ -162,15 +181,20 @@ export class Consultas {
     setTimeout(() => this.showViaSuggestions = false, 200);
   }
 
+  onNombreParqueBlur() {
+    setTimeout(() => {
+      this.showParqueSuggestions = false;
+    }, 200);
+  }
+
   /**
    * Maneja específicamente la búsqueda por dirección, que tiene una lógica diferente
    * al resto de búsquedas (no emite un SearchResult, solo navega).
    */
-  private handleSearchByAddress() {
+  private handleBuscarByDireccion() {
     if (this.isSearchDisabled() || this.loading()) {
       return;
     }
-
     this.loading.set(true);
     this.searchError.set(null);
     this.mapService.searchViasByEtiquetado(this.nombreVia)
@@ -184,11 +208,9 @@ export class Consultas {
               type: 'GeometryCollection',
               geometries: features.map(f => f.geometry)
             };
-
             // Ajustamos el mapa para que todas las geometrías de la vía sean visibles.
             // La capa de resaltado se encargará de dibujar todos los segmentos.
             this.mapService.fitToGeometry(geometryCollection, 'EPSG:32718', undefined, true);
-
             // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
             this.Close.emit(); // Cerramos el panel de búsqueda
           } else {
@@ -203,17 +225,55 @@ export class Consultas {
       });
   }
 
+  private handleBuscarByParque() {
+    if (this.isSearchDisabled() || this.loading()) {
+      return;
+    }
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.mapService.searchParquesByDenominacion(this.nombreParque)
+      .pipe(take(1))
+      .subscribe({
+        next: (features) => {
+          this.loading.set(false);
+          if (features && features.length > 0) {
+            // Creamos una GeometryCollection para que fitToGeometry se ajuste a todas las geometrías.
+            const geometryCollection: GeoJSONGeometry = {
+              type: 'GeometryCollection',
+              geometries: features.map(f => f.geometry)
+            };
+            // Ajustamos el mapa para que todas las geometrías de la vía sean visibles.
+            // La capa de resaltado se encargará de dibujar todos los segmentos.
+            this.mapService.fitToGeometry(geometryCollection, 'EPSG:32718', undefined, true);
+            // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
+            this.Close.emit(); // Cerramos el panel de búsqueda
+          } else {
+            this.searchError.set('No se encontraron parques con los criterios ingresados.');
+          }
+        },
+        error: (err) => {
+          console.error('Error en la búsqueda por parque:', err);
+          this.searchError.set('Error de conexión con el servicio de parques.');
+          this.loading.set(false);
+        }
+      });
+  }
+
   handleSearch() {
     if (this.isSearchDisabled() || this.loading()) {
       return; // No hacer nada si la búsqueda está deshabilitada o ya está cargando
     }
-
-    // La búsqueda por dirección ahora tiene su propio manejador
-    if (this.activeTab === 'direccion') {
-      this.handleSearchByAddress();
+    // La búsqueda de parques se gestiona exclusivamente por el autocompletado,
+    // por lo que el botón "Consultar" no debe hacer nada en esta pestaña.
+    if (this.activeTab === 'parque') {
+      this.handleBuscarByParque();
       return;
     }
-
+    // La búsqueda por dirección ahora tiene su propio manejador
+    if (this.activeTab === 'direccion') {
+      this.handleBuscarByDireccion();
+      return;
+    }
     if (this.activeTab === 'catastral') {
       this.loading.set(true);
       this.searchError.set(null);
@@ -231,12 +291,10 @@ export class Consultas {
               fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80",
               numeroPisos: props['pisos'] ?? 1,
               geometry: feature.geometry
-            };
-            
+            };            
             // Navegamos al polígono encontrado automáticamente
             this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
-            this.mapService.drawSearchMarker(feature.geometry);
-            
+            this.mapService.drawSearchMarker(feature.geometry);            
             this.emitResult(result);
           } else {
             this.searchError.set('No se encontró el lote con el código ingresado.');
@@ -318,20 +376,22 @@ export class Consultas {
     }
   }
 
+  selectParqueSuggestion(parque: GeoJSONFeature) {
+    this.nombreParque = parque.properties['denominaci'];
+    this.showParqueSuggestions = false;
+    this.parqueSuggestions = [];
+  }
+
   /** Selecciona un predio de la lista del ciudadano */
   handleSelectProperty(property: SearchResult) {
-    // Si el predio tiene geometría, centramos el mapa antes de emitir
     if (property.geometry) {
       this.mapService.fitToGeometry(property.geometry, 'EPSG:32718', undefined, true);
     }
-    
     this.emitResult(property);
     this.showCitizenResults = false;
   }
-  /** Método privado para emitir el resultado y opcionalmente cerrar el panel */
+
   private emitResult(result: SearchResult) {
     this.SearchResult.emit(result);
-    // Si deseas que el panel de búsqueda se cierre automáticamente al encontrar algo:
-    // this.onClose.emit();
   }
 }

@@ -393,6 +393,7 @@ export class MapService {
       { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
       { id: 'puertas', layerName: `${workspacePrefix}vw_tg_puertas`, zIndex: 1, title: 'Puertas'},
       //* Vuelos
+      { id: 'parques', layerName: `${workspacePrefix}vw_tg_area_rec_nombres`, zIndex: 1, title: 'Parques'},
       { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 1, title: 'Fotos sin Procesar - 2018'},
       { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 1, title: 'Fotos sin Procesar - 2024'},      
     ];
@@ -575,8 +576,6 @@ export class MapService {
    * @param text Texto opcional para mostrar en el marcador.
    */
   drawSearchMarker(geometry: GeoJSONGeometry, text?: string): void {
-    // Limpiamos resaltados anteriores
-    this.highlightLayer?.getSource()?.clear();
     const map = this._map();
     if (!map || !this.searchMarkerElement) {
       console.warn('El marcador de búsqueda no se puede dibujar porque el elemento no ha sido registrado en MapService.');
@@ -590,9 +589,7 @@ export class MapService {
       featureProjection: view.getProjection()
     });
     const center = getCenter(olGeometry.getExtent());
-    // Añadimos la geometría a la capa de resaltado
-    const feature = new Feature({ geometry: olGeometry });
-    this.highlightLayer?.getSource()?.addFeature(feature);
+
     if (!this.searchMarkerOverlay) {
       this.searchMarkerOverlay = new Overlay({
         element: this.searchMarkerElement,
@@ -857,6 +854,45 @@ export class MapService {
     );
   }
   /**
+   * Busca un parque por su nombre consultando el servicio WFS de GeoServer.
+   * @param nombre_parque Nombre del parque a buscar.
+   * @returns Un Observable con un array de features encontrados o null.
+   */
+  searchParquesByDenominacion(denominacion: string): Observable<GeoJSONFeature[] | null> {
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_area_rec_nombres`)
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:32718')
+      .set('cql_filter', `denominaci ILIKE '%${denominacion.trim().toUpperCase()}%'`);
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map((response) => {
+        if (response?.features?.length > 0) {
+          return response.features;
+        }
+        return null;
+      })
+    );
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /**
    * Busca un lote por su Código Único Catastral (CUC) consultando el servicio WFS de GeoServer.
    * @param cuc Código Único Catastral
    * @returns Observable con el feature encontrado o null
@@ -881,13 +917,7 @@ export class MapService {
       })
     );
   }
-  /**
-   * Busca vías por dirección (tipo, nombre, cuadra) consultando el servicio WFS de GeoServer.
-   * @param tipoViaId ID numérico del tipo de vía.
-   * @param nombreVia Parte del nombre de la vía.
-   * @param numeroCuadra Número de la cuadra.
-   * @returns Observable con un array de features encontrados o null.
-   */
+ 
   
   /**
    * Busca y devuelve una capa de OpenLayers por su ID asignado en la configuración.
@@ -972,6 +1002,7 @@ export class MapService {
       map(response => response?.features?.length > 0 ? response.features : null)
     );
   }
+
 
   /**
    * ENFOQUE A: Busca vías que intersectan una geometría usando un filtro WFS en el servidor.

@@ -119,7 +119,7 @@ export class MapService {
             { type: 'layer', id: "manzana", label: "Manzana", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "veredas", label: "Veredas", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "arearecreativa", label: "Área Recreativa", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "puertas", label: "Puertas", visible: true, opacity: 1, showInLegend: true }
+            { type: 'layer', id: "puertas", label: "Puertas", visible: false, opacity: 1, showInLegend: true }
           ]
         },
         {

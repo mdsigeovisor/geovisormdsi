@@ -119,7 +119,7 @@ export class MapService {
             { type: 'layer', id: "manzana", label: "Manzana", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "veredas", label: "Veredas", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "arearecreativa", label: "Área Recreativa", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "puertas", label: "Puertas", visible: false, opacity: 1, showInLegend: true }
+            
           ]
         },
         {
@@ -128,7 +128,8 @@ export class MapService {
           title: 'VIAS',
           expanded: false,
           layers: [
-            { type: 'layer', id: "vias", label: "Nomenclatura de Vías", visible: true, opacity: 1, showInLegend: false }
+            { type: 'layer', id: "vias", label: "Nomenclatura de Vías", visible: true, opacity: 1, showInLegend: false },
+            { type: 'layer', id: "puertas", label: "Puertas", visible: false, opacity: 1, showInLegend: true }
           ]
         }
       ]
@@ -611,6 +612,11 @@ export class MapService {
     this.searchMarkerOverlay?.setPosition(undefined);
     this.highlightLayer?.getSource()?.clear();
   }
+  /** Limpia solo la capa de resaltado de geometrías. */
+  clearHighlightLayer(): void {
+    this.highlightLayer?.getSource()?.clear();
+  }
+
   /**
    * Remueve una capa del mapa definitivamente basándose en su ID.
    */
@@ -758,10 +764,15 @@ export class MapService {
     // La guarda debe ser más flexible: una geometría es válida si existe y tiene 'coordinates' (para geometrías simples)
     // o 'geometries' (para GeometryCollection).
     if (!map || !geometry || (!geometry.coordinates && !geometry.geometries)) return;
+    
+    // Limpiamos cualquier resaltado anterior para evitar confusiones
+    this.clearHighlightLayer();
+
     const format = new GeoJSON();
     const view = map.getView();
     // Leemos la geometría directamente para evitar la ambigüedad de tipo (Feature vs Feature[])
     // Le indicamos a OL que la data viene en 32718 y la transforme a la proyección del mapa
+
     const geometryOl = format.readGeometry(geometry, {
       dataProjection: sourceProjection,
       featureProjection: view.getProjection()
@@ -777,6 +788,11 @@ export class MapService {
       options.zoom = zoom;
     }
     view.fit(extent, options);
+
+    // Resaltamos la nueva geometría en el mapa
+    const featureToHighlight = new Feature({ geometry: geometryOl });
+    this.highlightLayer?.getSource()?.addFeature(featureToHighlight);
+
   }
   /**
    * Busca un lote por su código catastral (id_lote) consultando el servicio WFS de GeoServer.

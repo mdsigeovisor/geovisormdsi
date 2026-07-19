@@ -25,20 +25,6 @@ export class Consultas {
   /** Campos para búsqueda por Código Predial */
   codigoPredial = '';
   /** Campos para búsqueda por Dirección */
-  readonly tiposVia: { id: number, nombre: string }[] = [
-    { id: 1, nombre: 'AVENIDA' },
-    { id: 2, nombre: 'CALLE' },
-    { id: 3, nombre: 'PASAJE' },
-    { id: 4, nombre: 'ALAMEDA' },
-    { id: 5, nombre: 'JIRON' },
-    { id: 6, nombre: 'VIA EXPRESA' },
-    { id: 7, nombre: 'AUTOPISTA' },
-    { id: 8, nombre: 'OTROS' },
-    { id: 9, nombre: 'PARQUE' },
-    { id: 10, nombre: 'MALECON' },
-    { id: 11, nombre: 'PLAZA' }
-  ];
-  tipoVia: number = 0; // Usamos el ID numérico
   nombreVia = '';
   numeroMunicipal = ''; // Mantenido por si se usa en el futuro
   numeroCuadra = '';
@@ -105,6 +91,7 @@ export class Consultas {
   handleClear() {
     this.searchError.set(null);
     this.loading.set(false);
+    this.mapService.clearHighlightLayer(); // Limpia cualquier resaltado de búsqueda anterior
     this.mapService.clearSearchMarker(); // Limpia el marcador del mapa
 
     const clearActions: Record<typeof this.activeTab, () => void> = {
@@ -167,7 +154,7 @@ export class Consultas {
     this.nombreVia = suggestion.trim(); // Limpiamos espacios en blanco al seleccionar
     this.showViaSuggestions = false;
     this.viaSuggestions = [];
-    this.handleSearch(); // Ejecutamos la búsqueda automáticamente
+    this.handleSearchByAddress(); // Ejecutamos la búsqueda de dirección automáticamente
   }
 
   onNombreViaBlur() {
@@ -175,9 +162,56 @@ export class Consultas {
     setTimeout(() => this.showViaSuggestions = false, 200);
   }
 
+  /**
+   * Maneja específicamente la búsqueda por dirección, que tiene una lógica diferente
+   * al resto de búsquedas (no emite un SearchResult, solo navega).
+   */
+  private handleSearchByAddress() {
+    if (this.isSearchDisabled() || this.loading()) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.mapService.searchViasByEtiquetado(this.nombreVia)
+      .pipe(take(1))
+      .subscribe({
+        next: (features) => {
+          this.loading.set(false);
+          if (features && features.length > 0) {
+            // Creamos una GeometryCollection para que fitToGeometry se ajuste a todas las geometrías.
+            const geometryCollection: GeoJSONGeometry = {
+              type: 'GeometryCollection',
+              geometries: features.map(f => f.geometry)
+            };
+
+            // Ajustamos el mapa para que todas las geometrías de la vía sean visibles.
+            // La capa de resaltado se encargará de dibujar todos los segmentos.
+            this.mapService.fitToGeometry(geometryCollection, 'EPSG:32718', undefined, true);
+
+            // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
+            this.Close.emit(); // Cerramos el panel de búsqueda
+          } else {
+            this.searchError.set('No se encontraron vías con los criterios ingresados.');
+          }
+        },
+        error: (err) => {
+          console.error('Error en la búsqueda por dirección:', err);
+          this.searchError.set('Error de conexión con el servicio de vías.');
+          this.loading.set(false);
+        }
+      });
+  }
+
   handleSearch() {
     if (this.isSearchDisabled() || this.loading()) {
       return; // No hacer nada si la búsqueda está deshabilitada o ya está cargando
+    }
+
+    // La búsqueda por dirección ahora tiene su propio manejador
+    if (this.activeTab === 'direccion') {
+      this.handleSearchByAddress();
+      return;
     }
 
     if (this.activeTab === 'catastral') {
@@ -245,39 +279,7 @@ export class Consultas {
           this.loading.set(false);
         }
       });
-    } else if (this.activeTab === 'direccion') {      
-      this.loading.set(true);
-      this.searchError.set(null);
-      this.mapService.searchViasByEtiquetado(this.nombreVia)
-        .pipe(take(1))
-        .subscribe({
-          next: (features) => {
-            this.loading.set(false);
-            if (features && features.length > 0) {
-              // Tomamos solo el primer segmento de la vía encontrada.
-              const feature = features[0];
-              const direccion = feature.properties['etiquetado_ext'] || 'Vía sin nombre';
-              
-              // Pasamos la geometría del primer segmento para que el mapa se ajuste a él.
-              this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
-              
-              // Dibujamos el marcador en el centro del primer segmento.
-              this.mapService.drawSearchMarker(feature.geometry, direccion);
-
-              // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
-              // Si se quisiera mostrar info, se podría emitir un resultado parcial.
-              this.Close.emit(); // Cerramos el panel de búsqueda
-            } else {
-              this.searchError.set('No se encontraron vías con los criterios ingresados.');
-            }
-          },
-          error: (err) => {
-            console.error('Error en la búsqueda por dirección:', err);
-            this.searchError.set('Error de conexión con el servicio de vías.');
-            this.loading.set(false);
-          }
-        });
-    } else if (this.activeTab === 'ciudadano') {
+    }  else if (this.activeTab === 'ciudadano') {
       this.loading.set(true);
       this.searchError.set(null);
       const query = this.searchType === 'dni' ? this.dni : this.nombreCiudadano;

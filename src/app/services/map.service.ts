@@ -928,7 +928,7 @@ export class MapService {
     return this.http.get<WfsResponse>(url, { params }).pipe(map(response => response?.features ?? null));
   }
   /**
-   * Configura la capa de resaltado para las geometrías encontradas.
+   * Configura la capa de resaltado para las geometrías encontradas del lote.
    */
   private setupHighlightLayer(): void {
     const map = this._map();
@@ -937,11 +937,11 @@ export class MapService {
       source: new VectorSource(),
       style: new Style({
         stroke: new Stroke({
-          color: 'rgba(0, 123, 255, 1)', // Borde azul brillante
+          color: '#46570f', // Borde verde oscuro
           width: 3,
         }),
         fill: new Fill({
-          color: 'rgba(0, 123, 255, 0.2)', // Relleno celeste semi-transparente
+          color: 'rgba(70, 87, 15, 0.2)', // Relleno verde semi-transparente
         }),
       }),
       zIndex: 1000, // Asegura que esté por encima de otras capas

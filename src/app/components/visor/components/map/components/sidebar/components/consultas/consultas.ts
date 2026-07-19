@@ -258,7 +258,7 @@ export class Consultas {
       this.loading.set(true);
       this.searchError.set(null);
 
-      this.mapService.searchLoteByCodigo(`31${this.codigoCatastral}`).pipe(take(1)).subscribe({
+      this.mapService.searchLoteByCodigo(`31-${this.codigoCatastral}`).pipe(take(1)).subscribe({
         next: (feature) => {
           this.loading.set(false);
           if (feature) {

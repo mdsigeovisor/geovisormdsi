@@ -27,7 +27,6 @@ import {
   XYZ,
   ImageWMS,
   transform,
-  transformExtent,
   GeoJSON,
   Overlay,
   Feature,
@@ -39,7 +38,6 @@ import {
   Stroke
 } from '../modules/openlayers.module';
 import ImageLayer from 'ol/layer/Image';
-
 export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
 /**
  * Servicio de Angular para la gestión del mapa OpenLayers.
@@ -52,7 +50,6 @@ export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
 export class MapService {
   cambiarMapaBase(tipoMapaBase: TipoMapaBase): void {
     this.baseLayerType.set(tipoMapaBase);
-
     if (!this.satelliteLayer || !this.streetsLayer) {
       return;
     }
@@ -121,9 +118,6 @@ export class MapService {
             { type: 'layer', id: "manzana", label: "Manzana", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "veredas", label: "Veredas", visible: true, opacity: 1, showInLegend: false },
             { type: 'layer', id: "arearecreativa", label: "Área Recreativa", visible: true, opacity: 1, showInLegend: false },
-
-
-
           ]
         },
         {
@@ -230,13 +224,11 @@ export class MapService {
           expanded: true,
           layers: [
              { type: 'layer', id: "mz_colindantes", label: "Trama Colindante", visible: true, opacity: 1, showInLegend: false }
-
           ]
         },
       ]
     }
   ]);
-
   /** Indica si el mapa ha sido inicializado y está listo para su uso. */
   isReady = signal(false);
   /** Coordenadas actuales del usuario (longitud, latitud). */
@@ -253,7 +245,6 @@ export class MapService {
   private searchMarkerOverlay: Overlay | undefined;
   /** Elemento HTML para el marcador de búsqueda, registrado por un componente. */
   private searchMarkerElement: HTMLElement | undefined;
-
   /**
    * Permite que un componente registre el elemento HTML que se usará para el marcador de búsqueda.
    * @param element El elemento del marcador.
@@ -264,7 +255,6 @@ export class MapService {
       this.searchMarkerOverlay.setElement(this.searchMarkerElement);
     }
   }
-
   constructor() {
     this.setupLayerSyncEffect();
   }
@@ -280,7 +270,6 @@ export class MapService {
       setTimeout(() => this.isReady.set(true), 5000);
       return existingMap;
     }
-
     this.setupBaseLayers();
     const olMap = new OlMap({
       target,
@@ -292,7 +281,6 @@ export class MapService {
         maxZoom: 22,
       })
     });
-
     this._map.set(olMap);
     olMap.getViewport().style.cursor = 'pointer';
     this.setupInitialWmsLayers();
@@ -336,7 +324,6 @@ export class MapService {
       maxZoom: 19,
       wrapX: true
     });
-
     const streetsSource = new XYZ({
       url: OSM_URL,
       crossOrigin: 'anonymous',
@@ -348,7 +335,6 @@ export class MapService {
         if (!tileCoord) {
           return undefined;
         }
-
         const [z, x, y] = tileCoord;
         if (z <= 19) {
           return OSM_URL
@@ -356,7 +342,6 @@ export class MapService {
             .replace('{x}', String(x))
             .replace('{y}', String(y));
         }
-
         const delta = z - 19;
         const fallbackX = Math.floor(x / Math.pow(2, delta));
         const fallbackY = Math.floor(y / Math.pow(2, delta));
@@ -366,11 +351,9 @@ export class MapService {
           .replace('{y}', String(fallbackY));
       }
     });
-
     this.satelliteLayer = this.createBaseLayer(satelliteSource, 'Satélite', 'satellite');
     this.streetsLayer = this.createBaseLayer(streetsSource, 'Calles', 'streets');
   }
-
   /** Configura la carga inicial de capas WMS. */
   private setupInitialWmsLayers(): void {
     // Inicialización de la capa WMS de departamentos de INEI
@@ -382,19 +365,16 @@ export class MapService {
       zIndex: 5, // zIndex para posicionarse sobre el mapa base
       title: 'Departamento del Perú',
     });
-
     // Configuración de capas catastrales municipales
     const workspacePrefix = environment.geoserver.workspacePrefix;
     const catastralLayers: WmsLayerConfig[] = [
       //* Trama Externa
       { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Cartografia otros distritos'},
-
       //* Sectores
       { id: 'hab_urbana', layerName: `${workspacePrefix}gc_habilitacion_urbana`, zIndex: 2, title: 'Habilitación Urbana'},
       { id: 'sec_subvecinal', layerName: `${workspacePrefix}gc_subsector_vecinal`, zIndex: 2, title: 'Subsectores Vecinales'},
       { id: 'sec_vecinal', layerName: `${workspacePrefix}gc_sector_vecinal`, zIndex: 2, title: 'Sectores Vecinales'},
       { id: 'sec_catastrales', layerName: `${workspacePrefix}gc_sector_catastral`, zIndex: 2, title: 'Sectores Catastrales'},
-
       //* Capas Catastrales
       { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
       { id: 'lote', layerName: `${workspacePrefix}gc_lote_catastral`, zIndex: 0, title: 'Lote Catastral' },
@@ -403,17 +383,10 @@ export class MapService {
       { id: 'arearecreativa', layerName: `${workspacePrefix}gc_area_verde`, zIndex: 1, title: 'Área Recreativa' },    
       { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 2, title: 'Vias'},
       { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
-
-
       //* Vuelos
       { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 1, title: 'Fotos sin Procesar - 2018'},
-      { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 1, title: 'Fotos sin Procesar - 2024'},
-
-
-      
-      
+      { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 1, title: 'Fotos sin Procesar - 2024'},      
     ];
-
     // Inicializamos las capas catastrales recorriendo la lista
     catastralLayers.forEach(config => this.addWmsLayer(config));
   }
@@ -479,7 +452,6 @@ export class MapService {
       maxZoom: options.maxZoom, // La capa se ocultará si el zoom es igual o mayor a este valor
       properties: { id: options.id, title: options.title }
     });
-
     map.addLayer(layer);
     // Generamos la URL de la leyenda para servicios WMS (estándar GetLegendGraphic)
     const legendUrl = `${url}${url.includes('?') ? '&' : '?'}` +
@@ -537,30 +509,24 @@ export class MapService {
         }
       }
     ];
-
     olMap.on('singleclick', (evt) => {
       const view = olMap.getView();
       const viewResolution = view.getResolution()!;
       const projection = view.getProjection();
-
       // Priorizamos la capa visible con el zIndex más alto.
       const visibleClickableLayers = clickableLayersConfig
         .map(config => ({ config, layer: config.getLayer() }))
-        .filter(item => item.layer && item.layer.getVisible())
+        .filter(item => item.layer?.getVisible())
         .sort((a, b) => (b.layer?.getZIndex() ?? 0) - (a.layer?.getZIndex() ?? 0));
-
       const queryNextLayer = (layers: typeof visibleClickableLayers) => {
         if (layers.length === 0) return;
-
         const { config, layer } = layers[0];
         const source = layer?.getSource();
         if (!source) {
           queryNextLayer(layers.slice(1)); // Intenta con la siguiente
           return;
         };
-
         const url = source.getFeatureInfoUrl(evt.coordinate, viewResolution, projection, { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': '1' });
-
         if (url) {
           this.http.get<WfsResponse>(url).subscribe(response => {
             if (response?.features?.length > 0) {
@@ -573,7 +539,6 @@ export class MapService {
           queryNextLayer(layers.slice(1));
         }
       };
-
       queryNextLayer(visibleClickableLayers);
     });
   }
@@ -583,21 +548,18 @@ export class MapService {
   clearLoteInfo(): void {
     this.loteInfoUrl.set(null);
   }
-
   /**
    * Limpia la URL de la foto de dron de 2018, para cerrar el modal.
    */
   clearFotoDroneUrl2018(): void {
     this.fotoDroneUrl2018.set(null);
   }
-
   /**
    * Limpia la URL de la foto de dron de 2024, para cerrar el modal.
    */
   clearFotoDroneUrl2024(): void {
     this.fotoDroneUrl2024.set(null);
   }
-
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.
    * @param geometry La geometría donde se centrará el marcador.
@@ -606,13 +568,11 @@ export class MapService {
   drawSearchMarker(geometry: GeoJSONGeometry, text?: string): void {
     // Limpiamos resaltados anteriores
     this.highlightLayer?.getSource()?.clear();
-
     const map = this._map();
     if (!map || !this.searchMarkerElement) {
       console.warn('El marcador de búsqueda no se puede dibujar porque el elemento no ha sido registrado en MapService.');
       return;
     }
-
     const view = map.getView();
     const format = new GeoJSON();
     // Le indicamos a OL que la data viene en 32718 y la transforme a la proyección del mapa
@@ -621,11 +581,9 @@ export class MapService {
       featureProjection: view.getProjection()
     });
     const center = getCenter(olGeometry.getExtent());
-
     // Añadimos la geometría a la capa de resaltado
     const feature = new Feature({ geometry: olGeometry });
     this.highlightLayer?.getSource()?.addFeature(feature);
-
     if (!this.searchMarkerOverlay) {
       this.searchMarkerOverlay = new Overlay({
         element: this.searchMarkerElement,
@@ -634,7 +592,6 @@ export class MapService {
       });
       map.addOverlay(this.searchMarkerOverlay);
     }
-
     // Actualizamos el texto si se proporciona
     const textElement = this.searchMarkerElement.querySelector('.search-marker-text');
     if (textElement) {
@@ -642,12 +599,10 @@ export class MapService {
       // Hacemos visible el contenedor del texto si hay texto
       (textElement as HTMLElement).style.display = text ? 'block' : 'none';
     }
-
     this.searchMarkerElement.style.display = 'block';
     this.searchMarkerOverlay.setPosition(center);
     this.searchMarkerElement.style.transform = 'scale(2)'; // Duplicamos el tamaño del marcador
   }
-
   /** Limpia el marcador de búsqueda del mapa. */
   clearSearchMarker(): void {
     this.searchMarkerOverlay?.setPosition(undefined);
@@ -718,7 +673,6 @@ export class MapService {
       sec.id === sectionId ? { ...sec, expanded: !sec.expanded } : sec
     ));
   }
-
   toggleLayerVisibility(sectionId: string, layerId: string) {
     this.sections.update(s => s.map(sec =>
       sec.id === sectionId ? {
@@ -734,7 +688,6 @@ export class MapService {
       } : sec
     ));
   }
-
   setLayerVisibility(sectionId: string, layerId: string, visible: boolean) {
     this.sections.update(s => s.map(sec =>
       sec.id === sectionId ? {
@@ -750,7 +703,6 @@ export class MapService {
       } : sec
     ));
   }
-
   toggleAllLayersInSection(sectionId: string, visible: boolean) {
     this.sections.update(s => s.map(sec => {
       if (sec.id !== sectionId) return sec;
@@ -762,7 +714,6 @@ export class MapService {
       };
     }));
   }
-
   setLayerOpacity(sectionId: string, layerId: string, opacity: number) {
     this.sections.update(s => s.map(sec =>
       sec.id === sectionId ? {
@@ -804,7 +755,6 @@ export class MapService {
     if (!map || !geometry?.coordinates) return;
     const format = new GeoJSON();
     const view = map.getView();
-
     // Leemos la geometría directamente para evitar la ambigüedad de tipo (Feature vs Feature[])
     // Le indicamos a OL que la data viene en 32718 y la transforme a la proyección del mapa
     const geometryOl = format.readGeometry(geometry, {
@@ -812,19 +762,15 @@ export class MapService {
       featureProjection: view.getProjection()
     });
     if (!geometryOl) return;
-
     const extent = geometryOl.getExtent();
     const transformedExtent = extent; // La geometría ya está transformada, usamos su extent directamente
-
     const options: any = {
       duration: ANIMATION_DURATION,
       padding: [100, 100, 100, 420] // Aumentamos el padding derecho para compensar el sidebar
     };
-
     if (geometry.type === 'Point' && zoom) {
       options.zoom = zoom;
     }
-
     view.fit(transformedExtent, options);
   }
   /**
@@ -872,7 +818,6 @@ export class MapService {
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:32718')
       .set('cql_filter', `cuc = '${cucLimpio}'`);
-
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map((response) => {
         if (response?.features?.length > 0) {
@@ -882,7 +827,6 @@ export class MapService {
       })
     );
   }
-
   /**
    * Busca vías por dirección (tipo, nombre, cuadra) consultando el servicio WFS de GeoServer.
    * @param tipoViaId ID numérico del tipo de vía.
@@ -893,7 +837,6 @@ export class MapService {
   searchViasByDireccion(tipoViaId: number, nombreVia: string, numeroCuadra: string): Observable<GeoJSONFeature[] | null> {
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
-
     // Construcción del filtro CQL
     let cqlParts: string[] = [];
     if (tipoViaId > 0) {
@@ -906,7 +849,6 @@ export class MapService {
     if (numeroCuadra.trim()) {
       cqlParts.push(`num_cuadr = '${numeroCuadra.trim()}'`);
     }
-
     const params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
@@ -915,7 +857,6 @@ export class MapService {
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:4326')
       .set('cql_filter', cqlParts.join(' AND '));
-
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => response?.features?.length > 0 ? response.features : null)
     );
@@ -937,7 +878,6 @@ export class MapService {
     }
     return undefined;
   }
-
   /**
    * Obtiene una lista de nomenclaturas de vías únicas para autocompletado.
    * @param partialName Parte del nombre de la vía a buscar.
@@ -947,10 +887,8 @@ export class MapService {
     if (!partialName || partialName.trim().length < 3) {
       return new Observable(subscriber => subscriber.next([])); // Devuelve un array vacío si la entrada es muy corta
     }
-
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
-
     const params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '2.0.0') // Usamos 2.0.0 para soporte de propertyName
@@ -959,7 +897,6 @@ export class MapService {
       .set('outputFormat', 'application/json')
       .set('cql_filter', `nomenclatura ILIKE '%${partialName.trim().toUpperCase()}%'`)
       .set('propertyName', 'nomenclatura'); // Pedimos solo la nomenclatura
-
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => {
         const allNomenclaturas = response?.features?.map(f => f.properties['nomenclatura']) ?? [];
@@ -967,7 +904,6 @@ export class MapService {
       })
     );
   }
-
   /**
    * Busca propiedades por DNI o nombre del ciudadano consultando un servicio WFS.
    * @param searchType Si la búsqueda es por 'dni' o 'nombre'.
@@ -977,12 +913,10 @@ export class MapService {
   searchPropertiesByCitizen(searchType: 'dni' | 'nombre', query: string): Observable<GeoJSONFeature[] | null> {
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
-
     // El typeName y el cql_filter deben ajustarse al servicio real que se implemente en GeoServer.
     // Este es un ejemplo hipotético.
     const filterProperty = searchType === 'dni' ? 'numero_documento' : 'nombre_propietario';
     const cqlFilter = `${filterProperty} ILIKE '%${query.trim()}%'`;
-
     const params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
@@ -991,17 +925,14 @@ export class MapService {
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:4326')
       .set('cql_filter', cqlFilter);
-
     return this.http.get<WfsResponse>(url, { params }).pipe(map(response => response?.features ?? null));
   }
-
   /**
    * Configura la capa de resaltado para las geometrías encontradas.
    */
   private setupHighlightLayer(): void {
     const map = this._map();
     if (!map) return;
-
     this.highlightLayer = new VectorLayer({
       source: new VectorSource(),
       style: new Style({
@@ -1015,7 +946,6 @@ export class MapService {
       }),
       zIndex: 1000, // Asegura que esté por encima de otras capas
     });
-
     map.addLayer(this.highlightLayer);
   }
 }

@@ -7,13 +7,13 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, take } from 'rx
 
 
 @Component({
-  selector: 'app-buscar',
+  selector: 'app-consultas',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './buscar.html',
-  styleUrl: './buscar.css',
+  templateUrl: './consultas.html',
+  styleUrl: './consultas.css',
 })
-export class Buscar {
+export class Consultas {
   @Input() isGuest: boolean = false;
   private readonly mapService = inject(MapService);
   Close = output<void>();
@@ -370,4 +370,3 @@ export class Buscar {
     // this.onClose.emit();
   }
 }
-

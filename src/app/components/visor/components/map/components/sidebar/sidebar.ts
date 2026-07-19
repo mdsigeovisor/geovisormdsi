@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 
 import { CapasComponent } from './components/capas/capas';
-import { Buscar } from './components/buscar/buscar';
+import { Consultas } from './components/consultas/consultas';
 import { Leyenda } from './components/leyenda/leyenda';
 import { MapService } from '../../../../../../services/map.service';
 import { Descargaspdf } from './components/descargaspdf/descargaspdf';
@@ -19,7 +19,7 @@ import { Tematica } from './components/tematica/tematica';
   imports: [
     CommonModule,
     FormsModule,
-    Buscar,
+    Consultas,
     CapasComponent,
     Ortofotos,
     Leyenda,

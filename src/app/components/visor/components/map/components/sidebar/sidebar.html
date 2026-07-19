@@ -44,7 +44,7 @@
         @if (activeTab) {
           <div class="flex-1 p-3 overflow-y-auto custom-scrollbar">
             <ng-container [ngSwitch]="activeTab">
-              <app-buscar *ngSwitchCase="'search'" (onClose)="toggleSidebar()"></app-buscar>
+              <app-consultas *ngSwitchCase="'search'" (onClose)="toggleSidebar()"></app-consultas>
               <app-capas *ngSwitchCase="'layers'" (onClose)="toggleSidebar()"></app-capas>
               <app-leyenda *ngSwitchCase="'legend'" (onClose)="toggleSidebar()"></app-leyenda>
               <app-ortofotos *ngSwitchCase="'orthophotos'" (onClose)="toggleSidebar()"></app-ortofotos>

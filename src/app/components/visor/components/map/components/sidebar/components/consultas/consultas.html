@@ -1,10 +1,10 @@
 <div class="flex flex-col h-full animate-in fade-in duration-300">
   <!-- Fila Superior: Tabs de Navegación -->
-  <div class="shrink-0 overflow-y-auto custom-scrollbar pr-1.5 max-h-[60%]">
+  <div class="shrink-0 overflow-y-auto custom-scrollbar max-h-[60%] p-3">
     <div class="flex flex-col gap-2">
       <!-- Opción Catastral -->
       <button (click)="activeTab = 'catastral'" [class.bg-primary/10]="activeTab === 'catastral'"
-        [class.border-primary/30]="activeTab === 'catastral'"
+        [class.border-primary/30]="activeTab === 'catastral'" 
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
         <div class="text-primary/80 text-xl"><i class="bi bi-house-door-fill"></i></div>
         <div>
@@ -102,9 +102,9 @@
   </div>
 
   <!-- Fila Inferior: Contenido y Acciones -->
-  <div class="flex flex-col pt-4">
+  <div class="flex-1 flex flex-col pt-4">
     <!-- Contenido de Tabs -->
-    <div class="overflow-y-auto pr-1.5 custom-scrollbar">
+    <div class="flex-1 overflow-y-auto custom-scrollbar px-3">
       <!-- Formulario Catastral -->
       @if (activeTab === 'catastral') {
       <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="catastral-form">
@@ -166,35 +166,26 @@
       <!-- Formulario Dirección -->
       @if (activeTab === 'direccion') {
       <div class="animate-in slide-in-from-right-2 duration-300" id="direccion-form">
-        <div class="grid grid-cols-2 gap-x-3 gap-y-4">
-          <div class="col-span-2">
-            <label for="tipoViaSelect"
-              class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Tipo de
-              Vía</label>
-            <div class="relative">
-              <select id="tipoViaSelect" [(ngModel)]="tipoVia"
-                class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm appearance-none focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-                <option value="">Seleccione...</option>
-                @for (tipo of tiposVia; track tipo) {
-                <option [value]="tipo">{{ tipo }}</option>
-                }
-              </select>
-              <i
-                class="bi bi-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+        <div class="space-y-4">
+          <label for="nombreViaInput"
+            class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de la
+            Vía</label>
+          <div class="relative">
+            <input id="nombreViaInput" type="text" [(ngModel)]="nombreVia" (input)="onNombreViaInput($event)"
+              (blur)="onNombreViaBlur()" placeholder="Escriba para buscar una vía..."
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+            <!-- Lista de sugerencias de Vía -->
+            @if (showViaSuggestions && viaSuggestions.length > 0) {
+            <div
+              class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
+              @for (suggestion of viaSuggestions; track suggestion) {
+              <button (click)="selectViaSuggestion(suggestion)"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
+                {{ suggestion }}
+              </button>
+              }
             </div>
-          </div>
-          <div class="col-span-2">
-            <label for="nombreViaInput"
-              class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de la
-              Vía</label>
-            <input id="nombreViaInput" type="text" [(ngModel)]="nombreVia" placeholder="Ej: Av. La Marina"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-          </div>
-          <div>
-            <label for="numeroMunicipalInput"
-              class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Número</label>
-            <input id="numeroMunicipalInput" type="text" [(ngModel)]="numeroMunicipal" placeholder="Ej: 123"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+            }
           </div>
         </div>
       </div>
@@ -322,7 +313,7 @@
       }
     </div>
     <!-- Botones de Acción -->
-    <div class="flex gap-2 pt-2 border-t border-gray-100 bg-white sticky bottom-0">
+    <div class="flex gap-2 p-3 border-t border-gray-100 bg-white sticky bottom-0">
       <button (click)="handleClear()" [disabled]="loading()"
         class="flex-1 py-3 text-[11px] font-bold uppercase tracking-wider text-gray-400 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-600 transition-all">
         Limpiar

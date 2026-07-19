@@ -778,8 +778,9 @@ export class MapService {
    * @param codigo Código catastral en formato XX-XXX-XXX
    * @returns Observable con el feature encontrado o null
    */
-  searchLoteByCodigo(codigo: string): Observable<GeoJSONFeature | null> {
+  searchLoteByCodigoCatastral(codigo: string): Observable<GeoJSONFeature | null> {
     const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
     // Limpiamos guiones y espacios en blanco (ej: '3112065002    ' -> '3112065002')
     const codigoSinGuiones = codigo.replaceAll('-', '').trim();
     // Usamos HttpParams para asegurar la correcta construcción y codificación del cql_filter
@@ -787,7 +788,7 @@ export class MapService {
       .set('service', 'WFS')
       .set('version', '1.1.0')
       .set('request', 'GetFeature')
-      .set('typeName', 'mdsibde2026:vw_tg_lote')
+      .set('typeName', `${workspacePrefix}vw_tg_lote`)
       .set('outputFormat', 'application/json')
       // Solicitamos las coordenadas en la misma proyección del mapa
       .set('srsName', 'EPSG:32718')
@@ -834,33 +835,7 @@ export class MapService {
    * @param numeroCuadra Número de la cuadra.
    * @returns Observable con un array de features encontrados o null.
    */
-  searchViasByDireccion(tipoViaId: number, nombreVia: string, numeroCuadra: string): Observable<GeoJSONFeature[] | null> {
-    const url = environment.geoserver.owsUrl;
-    const workspacePrefix = environment.geoserver.workspacePrefix;
-    // Construcción del filtro CQL
-    let cqlParts: string[] = [];
-    if (tipoViaId > 0) {
-      cqlParts.push(`tipo_via = ${tipoViaId}`);
-    }
-    if (nombreVia.trim()) {
-      // Usamos ILIKE para búsqueda insensible a mayúsculas/minúsculas
-      cqlParts.push(`nomenclatura ILIKE '%${nombreVia.trim().toUpperCase()}%'`);
-    }
-    if (numeroCuadra.trim()) {
-      cqlParts.push(`num_cuadr = '${numeroCuadra.trim()}'`);
-    }
-    const params = new HttpParams()
-      .set('service', 'WFS')
-      .set('version', '1.1.0')
-      .set('request', 'GetFeature')
-      .set('typeName', `${workspacePrefix}vw_tg_via`)
-      .set('outputFormat', 'application/json')
-      .set('srsName', 'EPSG:4326')
-      .set('cql_filter', cqlParts.join(' AND '));
-    return this.http.get<WfsResponse>(url, { params }).pipe(
-      map(response => response?.features?.length > 0 ? response.features : null)
-    );
-  }
+  
   /**
    * Busca y devuelve una capa de OpenLayers por su ID asignado en la configuración.
    * @param id El identificador de la capa.
@@ -893,17 +868,58 @@ export class MapService {
       .set('service', 'WFS')
       .set('version', '2.0.0') // Usamos 2.0.0 para soporte de propertyName
       .set('request', 'GetFeature')
-      .set('typeName', `${workspacePrefix}vw_tg_via`)
+      .set('typeName', 'WEB_GIS:vw_tg_via')
       .set('outputFormat', 'application/json')
-      .set('cql_filter', `nomenclatura ILIKE '%${partialName.trim().toUpperCase()}%'`)
-      .set('propertyName', 'nomenclatura'); // Pedimos solo la nomenclatura
+      .set('cql_filter', `etiquetado_ext ILIKE '%${partialName.trim().toUpperCase()}%'`)
+      .set('propertyName', 'etiquetado_ext'); // Pedimos solo la nomenclatura
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => {
-        const allNomenclaturas = response?.features?.map(f => f.properties['nomenclatura']) ?? [];
-        return [...new Set(allNomenclaturas)]; // Devolvemos solo valores únicos
+        const allVias = response?.features?.map(f => f.properties['etiquetado_ext']) ?? [];
+        return [...new Set(allVias)]; // Devolvemos solo valores únicos
       })
     );
   }
+
+  /**
+   * Obtiene una lista completa y única de todas las vías (etiquetado_ext).
+   * @returns Un Observable con un array de todas las vías.
+   */
+  getAllVias(): Observable<string[]> {
+    const url = environment.geoserver.owsUrl;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '2.0.0')
+      .set('request', 'GetFeature')
+      .set('typeName', 'WEB_GIS:vw_tg_via')
+      .set('outputFormat', 'application/json')
+      .set('propertyName', 'etiquetado_ext');
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => [...new Set(response?.features?.map(f => f.properties['etiquetado_ext']) ?? [])].sort())
+    );
+  }
+
+  /**
+   * Busca una vía por su nombre completo (etiquetado_ext).
+   * @param etiquetado Nombre completo de la vía.
+   * @returns Observable con un array de features encontrados o null.
+   */
+  searchViasByEtiquetado(etiquetado: string): Observable<GeoJSONFeature[] | null> {
+    const url = environment.geoserver.owsUrl;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', 'WEB_GIS:vw_tg_via')
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:32718')
+      .set('cql_filter', `etiquetado_ext = '${etiquetado.trim().toUpperCase()}'`);
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => response?.features?.length > 0 ? response.features : null)
+    );
+  }
+
   /**
    * Busca propiedades por DNI o nombre del ciudadano consultando un servicio WFS.
    * @param searchType Si la búsqueda es por 'dni' o 'nombre'.

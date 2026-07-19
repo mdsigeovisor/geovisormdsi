@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MapService } from '../../../../../../../../services/map.service';
 import { SearchResult } from '../../../../../../../../interfaces/search';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs';
+import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 
 @Component({
@@ -42,7 +42,6 @@ export class Consultas {
   nombreVia = '';
   numeroMunicipal = ''; // Mantenido por si se usa en el futuro
   numeroCuadra = '';
-  /** Campos para búsqueda por Habilitación Urbana */
   // --- Lógica para autocompletado de vías ---
   private readonly nombreViaSubject = new Subject<string>();
   viaSuggestions: string[] = [];
@@ -86,6 +85,7 @@ export class Consultas {
     const value = (event.target as HTMLInputElement).value;
     this.nombreViaSubject.next(value);
   }
+
   /** Formatea el código catastral mientras el usuario escribe (XXXX-XXX-XXX) */
   handleCodigoCatastralChange(value: string) {
     const numbers = value.replace(/\D/g, "");
@@ -110,13 +110,9 @@ export class Consultas {
     const clearActions: Record<typeof this.activeTab, () => void> = {
       cuc: () => this.cuc = '',
       predial: () => this.codigoPredial = '',
-      direccion: () => {
-        this.tipoVia = 0;
-        this.nombreVia = '';
-        this.numeroMunicipal = '';
-        this.numeroCuadra = '';
-        this.viaSuggestions = [];
-        this.showViaSuggestions = false;
+      direccion: () => {        
+        this.nombreVia = '';        
+        this.numeroCuadra = '';        
       },
       habilitacion: () => {
         this.nombreHabilitacion = '';
@@ -146,7 +142,7 @@ export class Consultas {
       case 'predial':
         return this.codigoPredial.trim().length === 0;
       case 'direccion':
-        return !this.nombreVia.trim() || this.tipoVia === 0;
+        return this.nombreVia.trim().length === 0;
       case 'habilitacion':
         return this.nombreHabilitacion.trim().length === 0;
       case 'titular':
@@ -165,24 +161,13 @@ export class Consultas {
         return true;
     }
   }
+
   /** Ejecuta la búsqueda según la pestaña activa */
   selectViaSuggestion(suggestion: string) {
-    this.nombreVia = suggestion;
+    this.nombreVia = suggestion.trim(); // Limpiamos espacios en blanco al seleccionar
     this.showViaSuggestions = false;
     this.viaSuggestions = [];
-
-    // Ahora, buscamos el tipo de vía para la nomenclatura seleccionada
-    this.mapService.searchViasByDireccion(0, this.nombreVia, '').pipe(take(1)).subscribe(features => {
-      if (features && features.length > 0) {
-        // Si hay múltiples tipos de vía para el mismo nombre, tomamos el primero.
-        // Una mejora sería permitir al usuario elegir si hay ambigüedad.
-        const firstFeature = features[0];
-        const tipoViaId = firstFeature.properties['tipo_via'];
-        if (tipoViaId) {
-          this.tipoVia = tipoViaId;
-        }
-      }
-    });
+    this.handleSearch(); // Ejecutamos la búsqueda automáticamente
   }
 
   onNombreViaBlur() {
@@ -191,74 +176,14 @@ export class Consultas {
   }
 
   handleSearch() {
-    if (this.activeTab === 'cuc') {
-      this.loading.set(true);
-      this.searchError.set(null);
-      this.mapService.searchLoteByCuc(this.cuc).pipe(take(1)).subscribe({
-        next: (feature) => {
-          this.loading.set(false);
-          if (feature) {
-            const props = feature.properties as any;
-            const result: SearchResult = {
-              codigoCatastral: String(props['id_lote'] || 'N/A').trim(),
-              direccion: props['direccion'] ?? props['ubicacion'] ?? "Ubicación no disponible",
-              propietario: props['propietario'] ?? "Información reservada",
-              area: props['area_lote'] ? `${props['area_lote']} m²` : "No disponible",
-              zonificacion: props['zonificacion'] ?? "No disponible",
-              fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80",
-              numeroPisos: props['pisos'] ?? 1,
-              geometry: feature.geometry
-            };
-            this.mapService.fitToGeometry(feature.geometry);
-            this.mapService.drawSearchMarker(feature.geometry, `CUC encontrado: ${this.cuc}`);
-            this.emitResult(result);
-          } else {
-            this.searchError.set('No se encontró el lote con el CUC ingresado.');
-          }
-        },
-        error: (err) => {
-          console.error('Error en la búsqueda por CUC:', err);
-          this.searchError.set('Error de conexión con el servicio catastral.');
-          this.loading.set(false);
-        }
-      });
-      return;
+    if (this.isSearchDisabled() || this.loading()) {
+      return; // No hacer nada si la búsqueda está deshabilitada o ya está cargando
     }
-    if (this.activeTab === 'direccion') {      
+
+    if (this.activeTab === 'catastral') {
       this.loading.set(true);
       this.searchError.set(null);
-      this.mapService.searchViasByDireccion(this.tipoVia, this.nombreVia, this.numeroCuadra)
-        .pipe(take(1))
-        .subscribe({
-          next: (features) => {
-            this.loading.set(false);
-            if (features && features.length > 0) {
-              // Por ahora, solo tomamos la primera vía encontrada
-              const feature = features[0];
-              const props = feature.properties as any;
-              const tipoViaNombre = this.tiposVia.find(t => t.id === props['tipo_via'])?.nombre || 'Vía';
-              const direccion = `${tipoViaNombre} ${props['nomenclatura']}, Cuadra ${props['num_cuadr']}`;
-
-              this.mapService.fitToGeometry(feature.geometry, true);
-              this.mapService.drawSearchMarker(feature.geometry, direccion);
-              // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
-              // Si se quisiera mostrar info, se podría emitir un resultado parcial.
-              this.Close.emit(); // Cerramos el panel de búsqueda
-            } else {
-              this.searchError.set('No se encontraron vías con los criterios ingresados.');
-            }
-          },
-          error: (err) => {
-            console.error('Error en la búsqueda por dirección:', err);
-            this.searchError.set('Error de conexión con el servicio de vías.');
-            this.loading.set(false);
-          }
-        });
-    } else if (this.activeTab === 'catastral') {
-      this.loading.set(true);
-      this.searchError.set(null);
-
-      this.mapService.searchLoteByCodigo(`31-${this.codigoCatastral}`).pipe(take(1)).subscribe({
+      this.mapService.searchLoteByCodigoCatastral(`31-${this.codigoCatastral}`).pipe(take(1)).subscribe({
         next: (feature) => {
           this.loading.set(false);
           if (feature) {
@@ -289,6 +214,66 @@ export class Consultas {
           this.loading.set(false);
         }
       });
+    } else if (this.activeTab === 'cuc') {
+      this.loading.set(true);
+      this.searchError.set(null);
+      this.mapService.searchLoteByCuc(this.cuc).pipe(take(1)).subscribe({
+        next: (feature) => {
+          this.loading.set(false);
+          if (feature) {
+            const props = feature.properties as any;
+            const result: SearchResult = {
+              codigoCatastral: String(props['id_lote'] || 'N/A').trim(),
+              direccion: props['direccion'] ?? props['ubicacion'] ?? "Ubicación no disponible",
+              propietario: props['propietario'] ?? "Información reservada",
+              area: props['area_lote'] ? `${props['area_lote']} m²` : "No disponible",
+              zonificacion: props['zonificacion'] ?? "No disponible",
+              fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80",
+              numeroPisos: props['pisos'] ?? 1,
+              geometry: feature.geometry
+            };
+            this.mapService.fitToGeometry(feature.geometry);
+            this.mapService.drawSearchMarker(feature.geometry, `CUC encontrado: ${this.cuc}`);
+            this.emitResult(result);
+          } else {
+            this.searchError.set('No se encontró el lote con el CUC ingresado.');
+          }
+        },
+        error: (err) => {
+          console.error('Error en la búsqueda por CUC:', err);
+          this.searchError.set('Error de conexión con el servicio catastral.');
+          this.loading.set(false);
+        }
+      });
+    } else if (this.activeTab === 'direccion') {      
+      this.loading.set(true);
+      this.searchError.set(null);
+      this.mapService.searchViasByEtiquetado(this.nombreVia)
+        .pipe(take(1))
+        .subscribe({
+          next: (features) => {
+            this.loading.set(false);
+            if (features && features.length > 0) {
+              // Tomamos la primera vía encontrada para centrar el mapa
+              const feature = features[0];
+              const props = feature.properties as any;
+              const direccion = props['etiquetado_ext'] || 'Vía sin nombre';
+              
+              this.mapService.fitToGeometry(feature.geometry, true);
+              this.mapService.drawSearchMarker(feature.geometry, direccion);
+              // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
+              // Si se quisiera mostrar info, se podría emitir un resultado parcial.
+              this.Close.emit(); // Cerramos el panel de búsqueda
+            } else {
+              this.searchError.set('No se encontraron vías con los criterios ingresados.');
+            }
+          },
+          error: (err) => {
+            console.error('Error en la búsqueda por dirección:', err);
+            this.searchError.set('Error de conexión con el servicio de vías.');
+            this.loading.set(false);
+          }
+        });
     } else if (this.activeTab === 'ciudadano') {
       this.loading.set(true);
       this.searchError.set(null);

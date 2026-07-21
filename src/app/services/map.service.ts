@@ -936,74 +936,51 @@ export class MapService {
     }
     return undefined;
   }
+
   /**
-   * Obtiene una lista de nomenclaturas de vías únicas para autocompletado.
-   * @param partialName Parte del nombre de la vía a buscar.
-   * @returns Un Observable con un array de nomenclaturas de vías únicas.
+   * Busca vías en el servicio WFS. Puede buscar por nombre parcial (para autocompletar)
+   * o por nombre exacto (para obtener la geometría).
+   * @param query El nombre de la vía a buscar (parcial o completo).
+   * @param exactMatch Si es `true`, busca una coincidencia exacta. Por defecto es `false`.
+   * @param propertiesOnly Si es `true`, devuelve solo la propiedad 'etiquetado_ext'. Por defecto es `false`.
    */
-  getUniqueVias(partialName: string): Observable<string[]> {
-    if (!partialName || partialName.trim().length < 3) {
-      return new Observable(subscriber => subscriber.next([])); // Devuelve un array vacío si la entrada es muy corta
+  searchVias(query: string, exactMatch: boolean, propertiesOnly: true): Observable<string[]>;
+  searchVias(query: string, exactMatch: boolean, propertiesOnly: false): Observable<GeoJSONFeature[]>;
+  searchVias(query: string, exactMatch = false, propertiesOnly = false): Observable<GeoJSONFeature[] | string[]> {
+    if (!query || query.trim().length < 3) {
+      return new Observable(subscriber => subscriber.next([]));
     }
-    const url = environment.geoserver.owsUrl;
-    const workspacePrefix = environment.geoserver.workspacePrefix;
-    const params = new HttpParams()
-      .set('service', 'WFS')
-      .set('version', '2.0.0') // Usamos 2.0.0 para soporte de propertyName
-      .set('request', 'GetFeature')
-      .set('typeName', 'WEB_GIS:vw_tg_via')
-      .set('outputFormat', 'application/json')
-      .set('cql_filter', `etiquetado_ext ILIKE '%${partialName.trim().toUpperCase()}%'`)
-      .set('propertyName', 'etiquetado_ext'); // Pedimos solo la nomenclatura
-    return this.http.get<WfsResponse>(url, { params }).pipe(
-      map(response => {
-        const allVias = response?.features?.map(f => f.properties['etiquetado_ext']) ?? [];
-        return [...new Set(allVias)]; // Devolvemos solo valores únicos
-      })
-    );
-  }
 
-  /**
-   * Obtiene una lista completa y única de todas las vías (etiquetado_ext).
-   * @returns Un Observable con un array de todas las vías.
-   */
-  getAllVias(): Observable<string[]> {
-    const url = environment.geoserver.owsUrl;
-    const params = new HttpParams()
-      .set('service', 'WFS')
-      .set('version', '2.0.0')
-      .set('request', 'GetFeature')
-      .set('typeName', 'WEB_GIS:vw_tg_via')
-      .set('outputFormat', 'application/json')
-      .set('propertyName', 'etiquetado_ext');
+    // Normalizamos el query para asegurar que "CA " se convierta en "CA. "
+    // Esto soluciona inconsistencias entre el autocompletado y la búsqueda exacta.
+    const normalizedQuery = query.trim().toUpperCase().replace(/^CA\s/, 'CA. ').replace(/^CA\./, 'CA.');
 
-    return this.http.get<WfsResponse>(url, { params }).pipe(
-      map(response => [...new Set(response?.features?.map(f => f.properties['etiquetado_ext']) ?? [])].sort())
-    );
-  }
-
-  /**
-   * Busca una vía por su nombre completo (etiquetado_ext).
-   * @param etiquetado Nombre completo de la vía.
-   * @returns Observable con un array de features encontrados o null.
-   */
-  searchViasByEtiquetado(etiquetado: string): Observable<GeoJSONFeature[] | null> {
     const url = environment.geoserver.owsUrl;
-    const params = new HttpParams()
+    const filter = exactMatch
+      ? `etiquetado_ext = '${normalizedQuery}'`
+      : `etiquetado_ext ILIKE '%${normalizedQuery}%'`;
+
+    let params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
       .set('request', 'GetFeature')
-      .set('typeName', 'WEB_GIS:vw_tg_via')
+      .set('typeName', 'mdsibde2026:vw_tg_via')
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:32718')
-      .set('cql_filter', `etiquetado_ext = '${etiquetado.trim().toUpperCase()}'`);
+      .set('cql_filter', filter);
+
+    if (propertiesOnly) {
+      params = params.set('propertyName', 'etiquetado_ext');
+    }
 
     return this.http.get<WfsResponse>(url, { params }).pipe(
-      map(response => response?.features?.length > 0 ? response.features : null)
+      map(response => {
+        if (!response?.features) return [];
+        if (propertiesOnly) return [...new Set(response.features.map(f => f.properties['etiquetado_ext']))];
+        return response.features;
+      })
     );
   }
-
-
   /**
    * ENFOQUE A: Busca vías que intersectan una geometría usando un filtro WFS en el servidor.
    * @param geometry La geometría GeoJSON (en EPSG:32718) con la que se buscará la intersección.
@@ -1012,13 +989,11 @@ export class MapService {
   findIntersectingViasWFS(geometry: GeoJSONGeometry): Observable<WfsResponse | null> {
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
-
     // Convertimos la geometría GeoJSON a formato WKT para usarla en el filtro CQL
     const format = new GeoJSON();
     const olGeometry = format.readGeometry(geometry);
     const wktWriter = new WKT();
     const wktGeometry = wktWriter.writeGeometry(olGeometry);
-
     const params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
@@ -1027,7 +1002,6 @@ export class MapService {
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:32718') // Pedimos los resultados en la misma proyección de los datos
       .set('cql_filter', `INTERSECTS(geometry, ${wktGeometry})`); // El filtro espacial
-
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => {
         // Devuelve la colección completa o null si no hay resultados
@@ -1035,6 +1009,30 @@ export class MapService {
       })
     );
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   /**
    * Busca propiedades por DNI o nombre del ciudadano consultando un servicio WFS.

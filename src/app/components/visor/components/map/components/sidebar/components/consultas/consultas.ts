@@ -26,8 +26,6 @@ export class Consultas {
   codigoPredial = '';
   /** Campos para búsqueda por Dirección */
   nombreVia = '';
-  numeroMunicipal = ''; // Mantenido por si se usa en el futuro
-  numeroCuadra = '';
   // --- Lógica para autocompletado de vías ---
   private readonly nombreViaSubject = new Subject<string>();
   viaSuggestions: string[] = [];
@@ -65,7 +63,7 @@ export class Consultas {
     this.nombreViaSubject.pipe(
       debounceTime(300), // Espera 300ms después de la última pulsación
       distinctUntilChanged(), // Solo emite si el valor ha cambiado
-      switchMap(partialName => this.mapService.getUniqueVias(partialName))
+      switchMap(partialName => this.mapService.searchVias(partialName, false, true))
     ).subscribe(suggestions => {
       this.viaSuggestions = suggestions || [];
       this.showViaSuggestions = (suggestions?.length ?? 0) > 0;
@@ -118,7 +116,6 @@ export class Consultas {
       predial: () => this.codigoPredial = '',
       direccion: () => {        
         this.nombreVia = '';        
-        this.numeroCuadra = '';        
       },
       habilitacion: () => {
         this.nombreHabilitacion = '';
@@ -197,22 +194,36 @@ export class Consultas {
     }
     this.loading.set(true);
     this.searchError.set(null);
-    this.mapService.searchViasByEtiquetado(this.nombreVia)
+    console.log('[handleBuscarByDireccion] Iniciando búsqueda para:', this.nombreVia);
+    this.mapService.searchVias(this.nombreVia, true, false)
       .pipe(take(1))
       .subscribe({
         next: (features) => {
           this.loading.set(false);
-          if (features && features.length > 0) {
-            // Creamos una GeometryCollection para que fitToGeometry se ajuste a todas las geometrías.
-            const geometryCollection: GeoJSONGeometry = {
-              type: 'GeometryCollection',
-              geometries: features.map(f => f.geometry)
-            };
+          console.log('[handleBuscarByDireccion] Features recibidos:', features);
+          if (features && features.length > 0) {            
+            // Para resaltar la vía completa, que puede consistir en varios segmentos (LineString),
+            // los agrupamos en una única geometría MultiLineString.
+            const multiLineString: GeoJSONGeometry = {
+              type: 'MultiLineString',
+              // Usamos flatMap para manejar tanto LineString (que tiene un array de coordenadas)
+              // como MultiLineString (que tiene un array de arrays de coordenadas).
+              // Esto asegura que siempre obtengamos un array plano de coordenadas de líneas.
+              coordinates: features.flatMap(f => 
+                f.geometry.type === 'LineString'
+                  ? [f.geometry.coordinates] // Si es LineString, envolvemos sus coordenadas: [[lon, lat], ...] -> [[[lon, lat], ...]]
+                  : f.geometry.coordinates   // Si ya es MultiLineString, sus coordenadas ya tienen la estructura correcta: [[[lon, lat], ...]]
+              )
+            };            
+            console.log('[handleBuscarByDireccion] Geometría MultiLineString creada:', JSON.stringify(multiLineString, null, 2));
+
             // Ajustamos el mapa para que todas las geometrías de la vía sean visibles.
             // La capa de resaltado se encargará de dibujar todos los segmentos.
-            this.mapService.fitToGeometry(geometryCollection, 'EPSG:32718', undefined, true);
+            console.log('[handleBuscarByDireccion] Llamando a fitToGeometry...');
+            this.mapService.fitToGeometry(multiLineString, 'EPSG:32718', undefined, true);
             // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
             this.Close.emit(); // Cerramos el panel de búsqueda
+            console.log('[handleBuscarByDireccion] Búsqueda completada y panel cerrado.');
           } else {
             this.searchError.set('No se encontraron vías con los criterios ingresados.');
           }

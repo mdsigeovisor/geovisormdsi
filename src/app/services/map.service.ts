@@ -139,15 +139,26 @@ export class MapService {
     {
       id: "imaAereas",
       title: "Fotográfias Áereas",
+      subtitle: "INFORMACIÓN DE VUELOS",
       expanded: false,
       items: [
         {
           type: 'subsection',
-          id: 'fotos-areas',
-          title: 'Fotos sin Procesar',
+          id: 'ortofotos',
+          title: 'Ortofotos',
+          expanded: true,
+          layers: [              
+              { type: 'layer', id: "ortofoto_2024", label: "2024", visible: false, opacity: 1, showInLegend: false },
+              { type: 'layer', id: "ortofoto_2018", label: "2018", visible: false, opacity: 1, showInLegend: false }
+          ]
+        },
+        {
+          type: 'subsection',
+          id: 'ortofotos-sin-procesar',
+          title: 'Ortofotos sin procesar',
           expanded: true,
           layers: [
-              { type: 'layer', id: "fotos_sin_2018", label: "Fotos sin Procesar - 2018", visible: false, opacity: 1, showInLegend: false },
+              { type: 'layer', id: "fotos_sin_2018", label: "Fotos sin Procesar - 2018", visible: false, opacity: 1, showInLegend: false },              
               { type: 'layer', id: "fotos_sin_2024", label: "Fotos sin Procesar - 2024", visible: false, opacity: 1, showInLegend: false }
           ]
         }
@@ -200,23 +211,7 @@ export class MapService {
           ]
         },
       ]
-    },
-    {
-      id: "utilidades",
-      title: "Utilidades",
-      expanded: false,
-      items: [
-        {
-          type: 'subsection',
-          id: 'limites-areas',
-          title: 'Límites y Áreas',
-          expanded: true,
-          layers: [
-
-          ]
-        },
-      ]
-    },
+    },    
     {
       id: "carto_colindantes",
       title: "Cartografía Colindantes",
@@ -397,6 +392,21 @@ export class MapService {
       { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 1, title: 'Fotos sin Procesar - 2018'},
       { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 1, title: 'Fotos sin Procesar - 2024'},      
     ];
+
+    // Añadimos las capas de ortofotos como XYZ
+    const ortofotoLayers = [
+      { year: 2024, zIndex: -1 },
+      { year: 2018, zIndex: -2 }
+    ];
+
+    ortofotoLayers.forEach(config => {
+      this.addXyzLayer({
+        id: `ortofoto_${config.year}`,
+        url: `${environment.ortofotoServerUrl}/${config.year}/{z}/{x}/{y}.png`,
+        maxZoom: 22,
+        zIndex: config.zIndex
+      });
+    });
     // Inicializamos las capas catastrales recorriendo la lista
     catastralLayers.forEach(config => this.addWmsLayer(config));
   }
@@ -473,6 +483,41 @@ export class MapService {
           item.layers = item.layers.map(l => l.id === options.id ? { ...l, olLayer: layer, legendUrl } : l);
         } else if (item.type === 'layer' && item.id === options.id) { // Es LayerItem
           return { ...item, olLayer: layer, legendUrl };
+        }
+        return item;
+      })
+    })));
+  }
+
+  /**
+   * Método para agregar capas XYZ al mapa.
+   * @private
+   */
+  private addXyzLayer(options: { id: string, url: string, maxZoom?: number, zIndex?: number }): void {
+    const map = this._map();
+    if (!map) return;
+
+    const xyzSource = new XYZ({
+      url: options.url,
+      crossOrigin: 'anonymous',
+      maxZoom: options.maxZoom,
+      interpolate: true
+    });
+
+    const layer = new TileLayer({
+      source: xyzSource,
+      properties: { id: options.id },
+      zIndex: options.zIndex,
+      visible: false // Por defecto no visible
+    });
+
+    map.addLayer(layer);
+
+    this.sections.update(sections => sections.map(section => ({
+      ...section,
+      items: section.items.map(item => {
+        if ('layers' in item) { // Es SubSection
+          item.layers = item.layers.map(l => l.id === options.id ? { ...l, olLayer: layer } : l);
         }
         return item;
       })

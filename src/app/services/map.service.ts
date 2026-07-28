@@ -38,7 +38,8 @@ import {
   Style,
   Fill,
   Stroke,
-  WKT
+  WKT,
+  createXYZ
 } from '../modules/openlayers.module';
 import ImageLayer from 'ol/layer/Image';
 export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
@@ -86,6 +87,28 @@ export class MapService {
   public streetsLayer?: TileLayer;
   /** Capa para resaltar geometrías de búsqueda */
   private highlightLayer: VectorLayer<any> | undefined;
+  /**
+   * Configuración centralizada para las capas de ortofotos.
+   * Esta será la única fuente de verdad para generar tanto los
+   * controles en el panel de capas como las capas XYZ en el mapa.
+   */
+  private readonly ortofotoLayerConfigs = [
+    { year: 2025, zIndex: 1 },
+    { year: 2024, zIndex: 2 },
+    { year: 2018, zIndex: 3 },
+    { year: 2016, zIndex: 4 },
+    { year: 2015, zIndex: 5 },
+    { year: 2012, zIndex: 6 },
+    { year: 2008, zIndex: 7 },
+    { year: 2006, zIndex: 8 },
+    { year: 2002, zIndex: 9 },
+    { year: 1998, zIndex: 10 },
+    { year: 1984, zIndex: 11 },
+    { year: 1974, zIndex: 12 },
+    { year: 1958, zIndex: 13 },
+    { year: 1949, zIndex: 14 },
+    { year: 1943, zIndex: 15 },
+  ];
   /**
    * Signal que gestiona las secciones y capas del visor.
    */
@@ -147,10 +170,14 @@ export class MapService {
           id: 'ortofotos',
           title: 'Ortofotos',
           expanded: true,
-          layers: [              
-              { type: 'layer', id: "ortofoto_2024", label: "2024", visible: false, opacity: 1, showInLegend: false },
-              { type: 'layer', id: "ortofoto_2018", label: "2018", visible: false, opacity: 1, showInLegend: false }
-          ]
+          // Generamos dinámicamente las capas de ortofotos a partir de la configuración
+          layers: this.ortofotoLayerConfigs.map(config => ({
+            type: 'layer',
+            id: `ortofoto_${config.year}`,
+            label: `${config.year}`,
+            visible: false,
+            opacity: 1, showInLegend: false
+          }))
         },
         {
           type: 'subsection',
@@ -393,13 +420,8 @@ export class MapService {
       { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 1, title: 'Fotos sin Procesar - 2024'},      
     ];
 
-    // Añadimos las capas de ortofotos como XYZ
-    const ortofotoLayers = [
-      { year: 2024, zIndex: -1 },
-      { year: 2018, zIndex: -2 }
-    ];
-
-    ortofotoLayers.forEach(config => {
+    // Añadimos las capas de ortofotos como XYZ usando la configuración centralizada
+    this.ortofotoLayerConfigs.forEach(config => {
       this.addXyzLayer({
         id: `ortofoto_${config.year}`,
         url: `${environment.ortofotoServerUrl}/${config.year}/{z}/{x}/{y}.png`,
@@ -756,20 +778,61 @@ export class MapService {
       sec.id === sectionId ? { ...sec, expanded: !sec.expanded } : sec
     ));
   }
+  /**
+   * Alterna la visibilidad de una capa. Para las ortofotos, se comporta como
+   * un grupo de radio-buttons, asegurando que solo una esté visible a la vez.
+   * @param sectionId ID de la sección principal (ej: 'imaAereas').
+   * @param layerId ID de la capa a cambiar (ej: 'ortofoto_2024').
+   */
   toggleLayerVisibility(sectionId: string, layerId: string) {
-    this.sections.update(s => s.map(sec =>
-      sec.id === sectionId ? {
-        ...sec,
-        items: sec.items.map(item => {
-          if ('layers' in item) { // SubSection
-            item.layers = item.layers.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l);
-          } else if (item.type === 'layer' && item.id === layerId) { // LayerItem
-            return { ...item, visible: !item.visible };
+    // Lógica especial para ortofotos: solo una puede estar activa a la vez.
+    if (layerId.startsWith('ortofoto_')) {
+      this.sections.update(currentSections => {
+        let isTurningOn = true; // Asumimos que vamos a encender una capa.
+
+        // Primero, determinamos si la capa clicada ya está visible.
+        const sectionsWithOrtoState = currentSections.map(sec => {
+          if (sec.id === 'imaAereas') {
+            sec.items.forEach(item => {
+              if (item.id === 'ortofotos' && 'layers' in item) {
+                const clickedLayer = item.layers.find(l => l.id === layerId);
+                if (clickedLayer?.visible) {
+                  isTurningOn = false; // Si ya está visible, la vamos a apagar.
+                }
+              }
+            });
           }
-          return item;
-        })
-      } : sec
-    ));
+          return sec;
+        });
+
+        // Ahora aplicamos los cambios.
+        return sectionsWithOrtoState.map(sec => {
+          if (sec.id !== 'imaAereas') return sec;
+          const newItems = sec.items.map(item => {
+            if (item.id !== 'ortofotos' || !('layers' in item)) return item;
+            // Desactivamos todas las ortofotos y luego activamos solo la clicada si es necesario.
+            const newLayers = item.layers.map(l => ({ ...l, visible: l.id === layerId ? isTurningOn : false }));
+            return { ...item, layers: newLayers };
+          });
+          return { ...sec, items: newItems };
+        });
+      });
+    } else {
+      // Lógica original para el resto de las capas.
+      this.sections.update(s => s.map(sec =>
+        sec.id === sectionId ? {
+          ...sec,
+          items: sec.items.map(item => {
+            if ('layers' in item) { // SubSection
+              item.layers = item.layers.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l);
+            } else if (item.type === 'layer' && item.id === layerId) { // LayerItem
+              return { ...item, visible: !item.visible };
+            }
+            return item;
+          })
+        } : sec
+      ));
+    }
   }
   setLayerVisibility(sectionId: string, layerId: string, visible: boolean) {
     this.sections.update(s => s.map(sec =>

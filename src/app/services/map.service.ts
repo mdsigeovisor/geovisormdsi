@@ -2,6 +2,9 @@ import { Injectable, signal, inject, NgZone, effect } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
+import { ORTOFOTO_YEARS } from '../interfaces/ortofoto.config';
+import { Observable, map } from 'rxjs';
+
 import {
   Section,
   WmsLayerConfig,
@@ -9,7 +12,7 @@ import {
   WfsResponse,
   GeoJSONGeometry
 } from '../interfaces/geoLayers';
-import { Observable, map } from 'rxjs';
+
 import {
   INITIAL_CENTER,
   INITIAL_ZOOM,
@@ -20,28 +23,30 @@ import {
   SAN_ISIDRO_CENTER,
   SAN_ISIDRO_ZOOM
 } from '../interfaces/map.constants';
+
 import {
-  fromLonLat,  OlMap,
-  TileLayer,
-  View,
-  XYZ,
-  ImageWMS,
-  transform,
-  GeoJSON,
-  transformExtent,
-  getDistance,
-  Overlay,
   Feature,
+  Fill,
+  fromLonLat,  
+  GeoJSON,
   getCenter,
+  getDistance,
+  ImageLayer,
+  ImageWMS,
+  OlMap,
+  Overlay,
+  Stroke,
+  Style,
+  TileLayer,
+  transform,
+  transformExtent,
   VectorLayer,
   VectorSource,
-  Style,
-  Fill,
-  Stroke,
+  View,
   WKT,
-  createXYZ
+  XYZ,
 } from '../modules/openlayers.module';
-import ImageLayer from 'ol/layer/Image';
+
 export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
 /**
  * Servicio de Angular para la gestión del mapa OpenLayers.
@@ -76,6 +81,7 @@ export class MapService {
   private readonly http = inject(HttpClient);
   private readonly zone = inject(NgZone);
   baseLayerType = signal<TipoMapaBase>('streets');
+
   /** Instancia del mapa OpenLayers */
   private readonly _map = signal<OlMap | undefined>(undefined);
   /** Exposición del mapa como Signal de solo lectura */
@@ -93,22 +99,10 @@ export class MapService {
    * controles en el panel de capas como las capas XYZ en el mapa.
    */
   private readonly ortofotoLayerConfigs = [
-    { year: 2025, zIndex: 1 },
-    { year: 2024, zIndex: 2 },
-    { year: 2018, zIndex: 3 },
-    { year: 2016, zIndex: 4 },
-    { year: 2015, zIndex: 5 },
-    { year: 2012, zIndex: 6 },
-    { year: 2008, zIndex: 7 },
-    { year: 2006, zIndex: 8 },
-    { year: 2002, zIndex: 9 },
-    { year: 1998, zIndex: 10 },
-    { year: 1984, zIndex: 11 },
-    { year: 1974, zIndex: 12 },
-    { year: 1958, zIndex: 13 },
-    { year: 1949, zIndex: 14 },
-    { year: 1943, zIndex: 15 },
-  ];
+    // Generamos dinámicamente la configuración a partir de la lista de años importada.
+    // Esto facilita la adición de nuevos años de ortofotos.
+    ...ORTOFOTO_YEARS.map(year => ({ year, zIndex: 1 }))
+  ] as const;
   /**
    * Signal que gestiona las secciones y capas del visor.
    */
@@ -385,7 +379,7 @@ export class MapService {
   }
   /** Configura la carga inicial de capas WMS. */
   private setupInitialWmsLayers(): void {
-    // Inicialización de la capa WMS de departamentos de INEI
+    // Inicialización de la capa WMS de departamentos
     this.addWmsLayer({
       id: 'tg_departamentos',
       url: TRAMA_WMS_URL,
@@ -432,6 +426,7 @@ export class MapService {
     // Inicializamos las capas catastrales recorriendo la lista
     catastralLayers.forEach(config => this.addWmsLayer(config));
   }
+  
   /**
    * Asegura que el mapa se actualice fuera de la zona de Angular para rendimiento.
    */
@@ -510,6 +505,23 @@ export class MapService {
       })
     })));
   }
+
+  private updateLayerInSection(sectionId: string, subSectionId: string, layerId: string, updateFn: (layer: any) => any) {
+    this.sections.update(sections => sections.map(section => {
+      if (section.id === sectionId) {
+        section.items = section.items.map(item => {
+          if (item.id === subSectionId && 'layers' in item) {
+            item.layers = item.layers.map(l => l.id === layerId ? updateFn(l) : l);
+          }
+          return item;
+        });
+      }
+      return section;
+    }));
+  }
+
+
+
 
   /**
    * Método para agregar capas XYZ al mapa.
@@ -986,20 +998,6 @@ export class MapService {
       })
     );
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   /**
    * Busca un lote por su Código Único Catastral (CUC) consultando el servicio WFS de GeoServer.
    * @param cuc Código Único Catastral
@@ -1117,30 +1115,6 @@ export class MapService {
       })
     );
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   /**
    * Busca propiedades por DNI o nombre del ciudadano consultando un servicio WFS.

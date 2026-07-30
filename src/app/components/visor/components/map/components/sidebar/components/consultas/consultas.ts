@@ -2,9 +2,8 @@ import { Component, Input, signal, output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MapService } from '../../../../../../../../services/map.service';
-import { SearchResult } from '../../../../../../../../interfaces/search';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
-import { GeoJSONFeature, GeoJSONGeometry } from '../../../../../../../../interfaces/geoLayers';
+import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '../../../../../../../../interfaces/geoLayers';
 
 @Component({
   selector: 'app-consultas',

@@ -3,9 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import { Observable, map } from 'rxjs';
-//* Interfaces
 import { ORTOFOTO_YEARS } from '../interfaces/ortofotos';
-import { LAYER_PANEL_SECTIONS } from '../interfaces/control_capas';
+import { LAYER_PANEL_SECTIONS } from '../interfaces/controlCapasConfig';
 import {
   Section,
   WmsLayerConfig,
@@ -14,6 +13,7 @@ import {
   WfsResponse,
   GeoJSONGeometry
 } from '../interfaces/geoLayers';
+import { INITIAL_WMS_LAYERS } from '../interfaces/capasWMS.config';
 import {
   INITIAL_CENTER,
   INITIAL_ZOOM,
@@ -24,7 +24,6 @@ import {
   SAN_ISIDRO_CENTER,
   SAN_ISIDRO_ZOOM
 } from '../interfaces/mapas.config';
-//* OpenLayers
 import {
   Feature,
   Fill,
@@ -266,31 +265,6 @@ export class MapService {
       zIndex: 5, // zIndex para posicionarse sobre el mapa base
       title: 'Departamento del Perú',
     });
-    // Configuración de capas catastrales municipales
-    const workspacePrefix = environment.geoserver.workspacePrefix;
-    const catastralLayers: WmsLayerConfig[] = [
-      //* Trama Externa
-      { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Cartografia otros distritos'},
-      //* Sectores
-      { id: 'hab_urbana', layerName: `${workspacePrefix}gc_habilitacion_urbana`, zIndex: 2, title: 'Habilitación Urbana'},
-      { id: 'sec_subvecinal', layerName: `${workspacePrefix}gc_subsector_vecinal`, zIndex: 2, title: 'Subsectores Vecinales'},
-      { id: 'sec_vecinal', layerName: `${workspacePrefix}gc_sector_vecinal`, zIndex: 2, title: 'Sectores Vecinales'},
-      { id: 'sec_catastrales', layerName: `${workspacePrefix}gc_sector_catastral`, zIndex: 2, title: 'Sectores Catastrales'},
-      //* Capas Catastrales
-      { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0.5, title: 'Construcciones' },
-      { id: 'lote', layerName: `${workspacePrefix}gc_lote_catastral`, zIndex: 0, title: 'Lote Catastral' },
-      { id: 'manzana', layerName: `${workspacePrefix}gc_manzana_catastral`, zIndex: 0, title: 'Manzana Catastral' },
-      { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },      
-      { id: 'arearecreativa', layerName: `${workspacePrefix}gc_area_verde`, zIndex: 1, title: 'Área Recreativa' },
-      
-      { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 2, title: 'Vias'},
-      { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras'},
-      { id: 'puertas', layerName: `${workspacePrefix}vw_tg_puertas`, zIndex: 1, title: 'Puertas'},
-      //* Vuelos
-      { id: 'parques', layerName: `${workspacePrefix}vw_tg_area_rec_nombres`, zIndex: 1, title: 'Parques'},
-      { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 1, title: 'Fotos sin Procesar - 2018'},
-      { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 1, title: 'Fotos sin Procesar - 2024'},      
-    ];
 
     // Añadimos las capas de ortofotos como XYZ usando la configuración centralizada
     this.ortofotoLayerConfigs.forEach(config => {
@@ -302,7 +276,7 @@ export class MapService {
       });
     });
     // Inicializamos las capas catastrales recorriendo la lista
-    catastralLayers.forEach(config => this.addWmsLayer(config));
+    INITIAL_WMS_LAYERS.forEach(config => this.addWmsLayer(config));
   }
   
   /**
@@ -371,17 +345,7 @@ export class MapService {
     // Generamos la URL de la leyenda para servicios WMS (estándar GetLegendGraphic)
     const legendUrl = `${url}${url.includes('?') ? '&' : '?'}` +
       `SERVICE=WMS&VERSION=${version}&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${options.layerName}&TRANSPARENT=true`;
-    this.sections.update(sections => sections.map(section => ({
-      ...section,
-      items: section.items.map(item => {
-        if ('layers' in item) { // Es SubSection
-          item.layers = item.layers.map(l => l.id === options.id ? { ...l, olLayer: layer, legendUrl } : l);
-        } else if (item.type === 'layer' && item.id === options.id) { // Es LayerItem
-          return { ...item, olLayer: layer, legendUrl };
-        }
-        return item;
-      })
-    })));
+    this.updateLayerProperties(options.id, { olLayer: layer, legendUrl });
   }  
   /**
    * Método para agregar capas XYZ al mapa.
@@ -406,17 +370,48 @@ export class MapService {
     });
 
     map.addLayer(layer);
-
-    this.sections.update(sections => sections.map(section => ({
-      ...section,
-      items: section.items.map(item => {
-        if ('layers' in item) { // Es SubSection
-          item.layers = item.layers.map(l => l.id === options.id ? { ...l, olLayer: layer } : l);
-        }
-        return item;
-      })
-    })));
+    this.updateLayerInSectionsSignal(options.id, layer);
   }
+  /**
+   * Actualiza el `signal` `sections` para asociar una capa de OpenLayers (olLayer)
+   * a un `LayerItem` específico dentro de la estructura.
+   * @param layerId El ID del `LayerItem` a actualizar.
+   * @param olLayer La instancia de `TileLayer` de OpenLayers a asociar.
+   */
+  private updateLayerInSectionsSignal(layerId: string, olLayer: TileLayer): void {
+    this.sections.update(sections => sections.map(section => this.processSectionForLayerUpdate(section, layerId, olLayer)));
+  }
+
+  /**
+   * Procesa una sección para actualizar la `olLayer` de una capa específica.
+   * @param section La sección a procesar.
+   * @param layerId El ID de la capa a actualizar.
+   * @param olLayer La instancia de la capa de OpenLayers.
+   * @returns La sección actualizada.
+   */
+  private processSectionForLayerUpdate(section: Section, layerId: string, olLayer: TileLayer): Section {
+    const updatedItems = section.items.map(item => {
+      // Solo procesamos subsecciones, ya que es donde se asocian las capas XYZ
+      if ('layers' in item) {
+        const updatedLayers = this.updateLayersInSubSection(item.layers, layerId, olLayer);
+        return { ...item, layers: updatedLayers };
+      }
+      return item;
+    });
+    return { ...section, items: updatedItems };
+  }
+
+  /**
+   * Actualiza la `olLayer` en un array de capas si encuentra una coincidencia de ID.
+   * @param layers El array de `LayerItem` a procesar.
+   * @param layerId El ID de la capa a actualizar.
+   * @param olLayer La instancia de la capa de OpenLayers.
+   * @returns El array de capas actualizado.
+   */
+  private updateLayersInSubSection(layers: LayerItem[], layerId: string, olLayer: TileLayer): LayerItem[] {
+    return layers.map(l => (l.id === layerId ? { ...l, olLayer } : l));
+  }
+
   /**
    * Configura el manejador de clics en el mapa para obtener información de las capas WMS.
    * @param olMap Instancia del mapa de OpenLayers.
@@ -690,60 +685,65 @@ export class MapService {
       });
     } else {
       // Lógica original para el resto de las capas.
-      this.sections.update(s => s.map(sec =>
-        sec.id === sectionId ? {
-          ...sec,
-          items: sec.items.map(item => {
-            if ('layers' in item) { // SubSection
-              item.layers = item.layers.map(l => l.id === layerId ? { ...l, visible: !l.visible } : l);
-            } else if (item.type === 'layer' && item.id === layerId) { // LayerItem
-              return { ...item, visible: !item.visible };
-            }
-            return item;
-          })
-        } : sec
-      ));
+      this.updateLayerProperties(layerId, (layer) => ({ visible: !layer.visible }));
     }
   }
   setLayerVisibility(sectionId: string, layerId: string, visible: boolean) {
-    this.sections.update(s => s.map(sec =>
-      sec.id === sectionId ? {
-        ...sec,
-        items: sec.items.map(item => {
-          if ('layers' in item) { // SubSection
-            item.layers = item.layers.map(l => l.id === layerId ? { ...l, visible } : l);
-          } else if (item.type === 'layer' && item.id === layerId) { // LayerItem
-            return { ...item, visible };
-          }
-          return item;
-        })
-      } : sec
-    ));
-  }
-  toggleAllLayersInSection(sectionId: string, visible: boolean) {
-    this.sections.update(s => s.map(sec => {
-      if (sec.id !== sectionId) return sec;
-      return {
-        ...sec,
-        items: sec.items.map(item => 'layers' in item
-          ? { ...item, layers: item.layers.map(l => ({ ...l, visible })) }
-          : { ...item, visible: item.type === 'layer' ? visible : (item as any).visible })
-      };
-    }));
+    this.updateLayerProperties(layerId, { visible });
   }
   setLayerOpacity(sectionId: string, layerId: string, opacity: number) {
-    this.sections.update(s => s.map(sec =>
-      sec.id === sectionId ? {
-        ...sec,
-        items: sec.items.map(item => {
-          if ('layers' in item) { // Es una SubSection
-            item.layers = item.layers.map(l => l.id === layerId ? { ...l, opacity } : l);
-          } else if (item.type === 'layer' && item.id === layerId) { // Es un LayerItem
-            return { ...item, opacity };
-          }
-          return item;
-        })
-      } : sec
+    this.updateLayerProperties(layerId, { opacity });
+  }
+
+  /**
+   * Actualiza las propiedades de una capa específica por su ID.
+   * @param layerId El ID de la capa a actualizar.
+   * @param newProps Un objeto con las nuevas propiedades o una función que devuelve las nuevas propiedades.
+   */
+  private updateLayerProperties(layerId: string, newProps: Partial<LayerItem> | ((layer: LayerItem) => Partial<LayerItem>)): void {
+    this.sections.update(sections => sections.map(section => this.updateSectionItems(section, layerId, newProps)));
+  }
+
+  /**
+   * Itera sobre los items de una sección para actualizar una capa.
+   */
+  private updateSectionItems(section: Section, layerId: string, newProps: Partial<LayerItem> | ((layer: LayerItem) => Partial<LayerItem>)): Section {
+    return {
+      ...section,
+      items: section.items.map(item => this.updateItem(item, layerId, newProps))
+    };
+  }
+
+  /**
+   * Procesa un item (LayerItem o SubSection) para actualizar una capa.
+   */
+  private updateItem(item: LayerItem | any, layerId: string, newProps: Partial<LayerItem> | ((layer: LayerItem) => Partial<LayerItem>)): LayerItem | any {
+    if ('layers' in item) { // Es una SubSection
+      return {
+        ...item,
+        layers: item.layers.map((l: LayerItem) => this.applyLayerUpdate(l, layerId, newProps))
+      };
+    } else if (item.type === 'layer') { // Es un LayerItem
+      return this.applyLayerUpdate(item, layerId, newProps);
+    }
+    return item;
+  }
+
+  /**
+   * Aplica la actualización a una capa si su ID coincide.
+   */
+  private applyLayerUpdate(layer: LayerItem, layerId: string, newProps: Partial<LayerItem> | ((layer: LayerItem) => Partial<LayerItem>)): LayerItem {
+    if (layer.id !== layerId) {
+      return layer;
+    }
+    const propsToApply = typeof newProps === 'function' ? newProps(layer) : newProps;
+    return { ...layer, ...propsToApply };
+  }
+
+  toggleAllLayersInSection(sectionId: string, visible: boolean) {
+    this.sections.update(s => s.map(sec => sec.id === sectionId
+      ? { ...sec, items: sec.items.map(item => 'layers' in item ? { ...item, layers: item.layers.map(l => ({ ...l, visible })) } : { ...item, visible: item.type === 'layer' ? visible : (item as any).visible }) }
+      : sec
     ));
   }
   /**

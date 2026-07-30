@@ -48,7 +48,6 @@ export interface WmsLayerConfig {
   maxZoom?: number;
   className?: string;
 }
-
 export interface SubSection {
   type: 'subsection';
   id: string;
@@ -56,11 +55,24 @@ export interface SubSection {
   expanded: boolean;
   layers: LayerItem[];
 }
-
 export interface Section {
   id: string;
   title: string;
   subtitle?: string;
   expanded: boolean;
   items: (LayerItem | SubSection)[];
+}
+
+/** Interfaz para los resultados de búsqueda de predios */
+export interface SearchResult {
+  codigoCatastral: string;
+  direccion: string;
+  propietario?: string;
+  area?: string;
+  zonificacion?: string;
+  fotoFrontis: string;
+  numeroPisos?: number;
+  materialPredominante?: string;
+  estadoConservacion?: string;
+  geometry?: GeoJSONGeometry;
 }

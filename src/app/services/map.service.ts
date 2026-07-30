@@ -2,17 +2,18 @@ import { Injectable, signal, inject, NgZone, effect } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
-import { ORTOFOTO_YEARS } from '../interfaces/ortofoto.config';
 import { Observable, map } from 'rxjs';
-
+//* Interfaces
+import { ORTOFOTO_YEARS } from '../interfaces/ortofotos';
+import { LAYER_PANEL_SECTIONS } from '../interfaces/control_capas';
 import {
   Section,
   WmsLayerConfig,
   GeoJSONFeature,
+  LayerItem,  
   WfsResponse,
   GeoJSONGeometry
 } from '../interfaces/geoLayers';
-
 import {
   INITIAL_CENTER,
   INITIAL_ZOOM,
@@ -22,8 +23,8 @@ import {
   ANIMATION_DURATION,
   SAN_ISIDRO_CENTER,
   SAN_ISIDRO_ZOOM
-} from '../interfaces/map.constants';
-
+} from '../interfaces/mapas.config';
+//* OpenLayers
 import {
   Feature,
   Fill,
@@ -78,6 +79,7 @@ export class MapService {
         break;
     }
   }
+
   private readonly http = inject(HttpClient);
   private readonly zone = inject(NgZone);
   baseLayerType = signal<TipoMapaBase>('streets');
@@ -106,150 +108,7 @@ export class MapService {
   /**
    * Signal que gestiona las secciones y capas del visor.
    */
-  sections = signal<Section[]>([
-    {
-      id: "catastral",
-      title: "Información Catastral",
-      subtitle: "INFORMACIÓN GPUC",
-      expanded: false,
-      items: [       
-           {
-          type: 'subsection',
-          id: 'sectores',
-          title: 'SECTORIZACIÓN',
-          expanded: false,
-          layers: [
-          { type: 'layer', id: "hab_urbana", label: "Habilitación Urbana", visible: false, opacity: 1, showInLegend: false },
-          { type: 'layer', id: "sec_catastrales", label: "Sectores Catastrales", visible: false, opacity: 1, showInLegend: false },
-          { type: 'layer', id: "sec_vecinal", label: "Sectores Vecinales", visible: false, opacity: 1, showInLegend: false },
-          { type: 'layer', id: "sec_subvecinal", label: "Sub Sectores - Junta Vecinal", visible: false, opacity: 1, showInLegend: false }
-
-          ]
-        },
-        {
-          type: 'subsection',
-          id: 'catastro',
-          title: 'CARTOGRAFIA CATASTRAL',
-          expanded: false,
-          layers: [
-            { type: 'layer', id: "num_cuadra", label: "Cuadra", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "construcciones", label: "Construcciones", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "lote", label: "Lote", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "manzana", label: "Manzana", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "veredas", label: "Veredas", visible: true, opacity: 1, showInLegend: false },            
-            { type: 'layer', id: "arearecreativa", label: "Área Recreativa", visible: true, opacity: 1, showInLegend: false },
-            
-          ]
-        },
-        {
-          type: 'subsection',
-          id: 'nom_vias',
-          title: 'VIAS',
-          expanded: false,
-          layers: [
-            { type: 'layer', id: "vias", label: "Nomenclatura de Vías", visible: true, opacity: 1, showInLegend: false },
-            { type: 'layer', id: "puertas", label: "Puertas", visible: false, opacity: 1, showInLegend: true }
-          ]
-        }
-      ]
-    },
-    {
-      id: "imaAereas",
-      title: "Fotográfias Áereas",
-      subtitle: "INFORMACIÓN DE VUELOS",
-      expanded: false,
-      items: [
-        {
-          type: 'subsection',
-          id: 'ortofotos',
-          title: 'Ortofotos',
-          expanded: true,
-          // Generamos dinámicamente las capas de ortofotos a partir de la configuración
-          layers: this.ortofotoLayerConfigs.map(config => ({
-            type: 'layer',
-            id: `ortofoto_${config.year}`,
-            label: `${config.year}`,
-            visible: false,
-            opacity: 1, showInLegend: false
-          }))
-        },
-        {
-          type: 'subsection',
-          id: 'ortofotos-sin-procesar',
-          title: 'Ortofotos sin procesar',
-          expanded: true,
-          layers: [
-              { type: 'layer', id: "fotos_sin_2018", label: "Fotos sin Procesar - 2018", visible: false, opacity: 1, showInLegend: false },              
-              { type: 'layer', id: "fotos_sin_2024", label: "Fotos sin Procesar - 2024", visible: false, opacity: 1, showInLegend: false }
-          ]
-        }
-      ]
-    },
-    {
-      id: "normatividadUrbana",
-      title: "Normatividad Urbana",
-      expanded: false,
-      items: [
-        {
-          type: 'subsection',
-          id: 'limites-areas',
-          title: 'Límites y Áreas',
-          expanded: true,
-          layers: [
-
-          ]
-        },
-      ]
-    },
-    {
-      id: "infraestructuraUrbana",
-      title: "Infraestructura Urbana",
-      expanded: false,
-      items: [
-        {
-          type: 'subsection',
-          id: 'limites-areas',
-          title: 'Límites y Áreas',
-          expanded: true,
-          layers: [
-
-          ]
-        },
-      ]
-    },
-    {
-      id: "informacionTematica",
-      title: "Información Temática",
-      expanded: false,
-      items: [
-        {
-          type: 'subsection',
-          id: 'limites-areas',
-          title: 'Límites y Áreas',
-          expanded: true,
-          layers: [
-
-          ]
-        },
-      ]
-    },    
-    {
-      id: "carto_colindantes",
-      title: "Cartografía Colindantes",
-      expanded: false,
-      items: [
-        {
-          type: 'subsection',
-          id: 'manzanas',
-          title: 'Cartografía otros distritos',
-          expanded: true,
-          layers: [
-             { type: 'layer', id: "mz_colindantes", label: "Trama Colindante", visible: true, opacity: 1, showInLegend: false }
-          ]
-        },
-      ]
-    }
-  ]);
+  sections = signal<Section[]>(LAYER_PANEL_SECTIONS);
   /** Indica si el mapa ha sido inicializado y está listo para su uso. */
   isReady = signal(false);
   /** Coordenadas actuales del usuario (longitud, latitud). */
@@ -319,20 +178,39 @@ export class MapService {
   private setupLayerSyncEffect(): void {
     effect(() => {
       this.sections().forEach(section => {
-        section.items.forEach(item => {
+        section.items.forEach((item: any) => {
           if ('layers' in item) { // Es una SubSection
-            item.layers.forEach(layerData => {
-              if (layerData.olLayer) {
-                layerData.olLayer.setVisible(layerData.visible);
-                layerData.olLayer.setOpacity(layerData.opacity);
-              }
-            });
-          } else if (item.olLayer) { // Es un LayerItem
-            item.olLayer.setVisible(item.visible);
-            item.olLayer.setOpacity(item.opacity);
+            this.processSubSectionLayers(item.layers);
+          } else { // Es un LayerItem
+            this.processSingleLayerItem(item);
           }
         });
       });
+    });
+  }
+
+  /**
+   * Procesa un LayerItem individual para sincronizar su visibilidad y opacidad con OpenLayers.
+   * @param layerItem El LayerItem a procesar.
+   */
+  private processSingleLayerItem(layerItem: LayerItem): void {
+    if (layerItem.olLayer) {
+      layerItem.olLayer.setVisible(layerItem.visible);
+      layerItem.olLayer.setOpacity(layerItem.opacity);
+    }
+  }
+
+  /**
+   * Procesa una lista de LayerItems (típicamente de una SubSection) para sincronizar
+   * su visibilidad y opacidad con OpenLayers.
+   * @param layerItems La lista de LayerItems a procesar.
+   */
+  private processSubSectionLayers(layerItems: LayerItem[]): void {
+    layerItems.forEach(layerItem => {
+      if (layerItem.olLayer) {
+        layerItem.olLayer.setVisible(layerItem.visible);
+        layerItem.olLayer.setOpacity(layerItem.opacity);
+      }
     });
   }
   /**
@@ -504,25 +382,7 @@ export class MapService {
         return item;
       })
     })));
-  }
-
-  private updateLayerInSection(sectionId: string, subSectionId: string, layerId: string, updateFn: (layer: any) => any) {
-    this.sections.update(sections => sections.map(section => {
-      if (section.id === sectionId) {
-        section.items = section.items.map(item => {
-          if (item.id === subSectionId && 'layers' in item) {
-            item.layers = item.layers.map(l => l.id === layerId ? updateFn(l) : l);
-          }
-          return item;
-        });
-      }
-      return section;
-    }));
-  }
-
-
-
-
+  }  
   /**
    * Método para agregar capas XYZ al mapa.
    * @private
@@ -697,7 +557,6 @@ export class MapService {
   clearHighlightLayer(): void {
     this.highlightLayer?.getSource()?.clear();
   }
-
   /**
    * Remueve una capa del mapa definitivamente basándose en su ID.
    */
@@ -1022,9 +881,7 @@ export class MapService {
         return null;
       })
     );
-  }
- 
-  
+  }  
   /**
    * Busca y devuelve una capa de OpenLayers por su ID asignado en la configuración.
    * @param id El identificador de la capa.
@@ -1042,7 +899,6 @@ export class MapService {
     }
     return undefined;
   }
-
   /**
    * Busca vías en el servicio WFS. Puede buscar por nombre parcial (para autocompletar)
    * o por nombre exacto (para obtener la geometría).
@@ -1115,7 +971,6 @@ export class MapService {
       })
     );
   }
-
   /**
    * Busca propiedades por DNI o nombre del ciudadano consultando un servicio WFS.
    * @param searchType Si la búsqueda es por 'dni' o 'nombre'.

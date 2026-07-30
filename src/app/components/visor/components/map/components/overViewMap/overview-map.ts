@@ -1,7 +1,7 @@
 import { Component, Input, ElementRef, ViewChild, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OlMap, OverviewMap, View, TileLayer, XYZ } from '../../../../../../modules/openlayers.module';
-import { OSM_URL } from '../../../../../../interfaces/map.constants';
+import { OSM_URL } from '../../../../../../interfaces/mapas.config';
 
 /**
  * Componente para integrar el control OverviewMap de OpenLayers.

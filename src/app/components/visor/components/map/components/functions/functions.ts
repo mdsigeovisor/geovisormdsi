@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { OverviewMapComponent } from '../overViewMap/overview-map';
 
 import { MapService, TipoMapaBase } from '@services/map.service';
-import { ANIMATION_DURATION } from '@interfaces/map.constants';
+import { ANIMATION_DURATION } from '@app/interfaces/mapas.config';
 import { fromLonLat, Overlay, OverlayPositioning, transformExtent } from '../../../../../../modules/openlayers.module';
 
 @Component({

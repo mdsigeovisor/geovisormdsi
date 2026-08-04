@@ -16,9 +16,7 @@ export interface OrtofotoLayerConfig {
  */
 export const ORTOFOTO_YEARS: number[] = [
   1943, 
-  1949, 
-  1958, 
-  1974, 
+  1949,  
   1984, 
   1998, 
   2002, 

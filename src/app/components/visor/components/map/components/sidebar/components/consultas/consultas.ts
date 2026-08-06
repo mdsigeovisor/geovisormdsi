@@ -269,8 +269,6 @@ export class Consultas {
     this.loteUrbano = ''; // Limpiamos el lote
     this.manzanaSuggestions = []; // Limpiamos las sugerencias de manzana
     this.loteSuggestions = []; // Limpiamos las sugerencias de lote
-    // Centramos el mapa en la habilitación seleccionada
-    this.mapService.fitToGeometry(suggestion.geometry, 'EPSG:32718', 16, false);
     // Cargamos las manzanas para la habilitación seleccionada
     this.loadManzanas();
   }

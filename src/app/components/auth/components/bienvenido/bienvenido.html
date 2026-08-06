@@ -1,12 +1,18 @@
 <div
-  class="absolute inset-0 z-50 flex flex-col items-center justify-center p-4 font-sans bg-primary/95 backdrop-blur-[2px]">
+  class="absolute inset-0 z-50 flex flex-col items-center justify-center p-4 font-sans bg-primary/95 backdrop-blur-sm">
   <!-- Imagen de fondo tipo sombra / marca de agua -->
   <div class="fondo-sombra-container">
     <img src="assets/images/fondo_welcome.jpg" class="fondo-sombra-img" alt>
   </div>
-  <div
-    class="relative z-10 w-full max-w-md scale-[0.7] md:scale-100 overflow-hidden rounded-3xl bg-white backdrop-blur-md px-6 py-8 shadow-[0_0_100px_10px_rgba(255,255,255,0.9)] border border-white/20">
-    <div class="relative z-10 text-center">
+
+  <!-- Contenedor principal para la tarjeta y la imagen lateral -->
+  <div class="relative z-10 flex w-full max-w-4xl items-stretch justify-center">
+    <!-- Tarjeta de bienvenida -->
+    <div
+      class="w-full max-w-md flex-shrink-0 scale-[0.8] transform overflow-hidden rounded-3xl bg-white/90 px-6 py-8 shadow-[0_0_100px_10px_rgba(255,255,255,0.9)] backdrop-blur-md transition-all duration-300 md:scale-100 border border-white/20">
+      <div class="relative z-10 text-center">
+
+        <!-- Contenido de la tarjeta -->
       <div class="mb-4 flex items-center justify-center gap-2">
         <img src="assets/images/logomsi.jpg"
           alt="Municipalidad de San Isidro"
@@ -51,8 +57,17 @@
       </div>
       <p class="mt-4 text-center text-base font-medium text-primary">MSI ©
         {{ currentYear }}</p>
+      </div>
+    </div>
+
+    <!-- Imagen lateral (visible en pantallas grandes) -->
+    <div class="hidden lg:block ml-[-60px] z-[-1]">
+      <div
+        class="image-slideshow h-full w-[450px] bg-cover bg-center rounded-2xl shadow-2xl border-4 border-white/50">
+      </div>
     </div>
   </div>
+
   <div class="relative z-10 mt-8 text-center">
     <p class="mb-3 text-white text-sm font-medium drop-shadow-md">Navegadores
       recomendados</p>

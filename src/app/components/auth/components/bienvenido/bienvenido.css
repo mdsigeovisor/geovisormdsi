@@ -23,3 +23,31 @@
   object-fit: cover; /* Llena todo el espacio manteniendo la proporción (responsivo) */
   object-position: center;
 }
+
+/* Estilos para el carrusel de imágenes lateral */
+.image-slideshow {
+  animation: changeImage 10s infinite ease-in-out;
+}
+
+@keyframes changeImage {
+  0%, 20% {
+    /* Inicia y se mantiene en la imagen 0 */
+    background-image: url('/assets/images/bienvenido_0.png');
+  }
+  25%, 45% {
+    /* Transición y se mantiene en la imagen 1 */
+    background-image: url('/assets/images/bienvenido_1.png');
+  }
+  50%, 70% {
+    /* Transición y se mantiene en la imagen 2 */
+    background-image: url('/assets/images/bienvenido_2.png');
+  }
+  75%, 95% {
+    /* Transición y se mantiene en la imagen 3 */
+    background-image: url('/assets/images/bienvenido_3.png');
+  }
+  100% {
+    /* Vuelve a la imagen inicial para un bucle suave */
+    background-image: url('/assets/images/bienvenido_0.png');
+  }
+}

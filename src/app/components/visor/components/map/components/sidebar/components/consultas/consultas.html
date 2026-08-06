@@ -222,35 +222,23 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label for="manzanaUrbanaInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Manzana</label>
-              <div class="relative">
-                <input id="manzanaUrbanaInput" type="text" [(ngModel)]="manzanaUrbana" (input)="onManzanaUrbanaInput($event)" (blur)="onManzanaUrbanaBlur()" placeholder="Ej: A1" [disabled]="!nombreHabilitacion"
-                  class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all disabled:opacity-50 disabled:bg-gray-100">
-                @if (showManzanaSuggestions && manzanaSuggestions.length > 0) {
-                <div class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
-                  @for (suggestion of manzanaSuggestions; track suggestion) {
-                  <button (click)="selectManzanaSuggestion(suggestion)" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
-                    {{ suggestion }}
-                  </button>
-                  }
-                </div>
+              <select id="manzanaUrbanaInput" [(ngModel)]="manzanaUrbana" (change)="onManzanaChange($event)" [disabled]="!nombreHabilitacion || manzanaSuggestions.length === 0"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all disabled:opacity-50 disabled:bg-gray-100">
+                <option value="" disabled>Seleccione</option>
+                @for (manzana of manzanaSuggestions; track manzana) {
+                  <option [value]="manzana">{{ manzana }}</option>
                 }
-              </div>
+              </select>
             </div>
             <div>
               <label for="loteUrbanoInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Lote</label>
-              <div class="relative">
-                <input id="loteUrbanoInput" type="text" [(ngModel)]="loteUrbano" (input)="onLoteUrbanoInput($event)" (blur)="onLoteUrbanoBlur()" placeholder="Ej: 20" [disabled]="!nombreHabilitacion || !manzanaUrbana"
-                  class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all disabled:opacity-50 disabled:bg-gray-100">
-                @if (showLoteSuggestions && loteSuggestions.length > 0) {
-                <div class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
-                  @for (suggestion of loteSuggestions; track suggestion) {
-                  <button (click)="selectLoteSuggestion(suggestion)" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
-                    {{ suggestion }}
-                  </button>
-                  }
-                </div>
+              <select id="loteUrbanoInput" [(ngModel)]="loteUrbano" [disabled]="!manzanaUrbana || loteSuggestions.length === 0"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all disabled:opacity-50 disabled:bg-gray-100">
+                <option value="" disabled>Seleccione</option>
+                @for (lote of loteSuggestions; track lote) {
+                  <option [value]="lote">{{ lote }}</option>
                 }
-              </div>
+              </select>
             </div>
           </div>
         </div>

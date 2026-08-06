@@ -917,11 +917,15 @@ export class MapService {
    * @returns Un Observable con un array de nombres de manzanas únicos.
    */
   searchManzanasByHabilitacion(habilitacion: string, partialManzana: string): Observable<string[]> {
-    if (!habilitacion || !partialManzana) {
+    if (!habilitacion) {
       return new Observable(subscriber => subscriber.next([]));
     }
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
+    let cqlFilter = `urbanizaci = '${habilitacion}'`;
+    if (partialManzana && partialManzana.trim().length > 0) {
+      cqlFilter += ` AND mzaurb ILIKE '%${partialManzana.trim()}%'`;
+    }
     const params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
@@ -929,7 +933,7 @@ export class MapService {
       .set('typeName', `${workspacePrefix}vw_tg_lote_urbano`)
       .set('outputFormat', 'application/json')
       .set('propertyName', 'mzaurb')
-      .set('cql_filter', `urbanizaci = '${habilitacion}' AND mzaurb ILIKE '%${partialManzana.trim()}%'`);
+      .set('cql_filter', cqlFilter);
 
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => {
@@ -948,11 +952,15 @@ export class MapService {
    * @returns Un Observable con un array de números de lote únicos.
    */
   searchLotesByHabilitacionManzana(habilitacion: string, manzana: string, partialLote: string): Observable<string[]> {
-    if (!habilitacion || !manzana || !partialLote) {
+    if (!habilitacion || !manzana) {
       return new Observable(subscriber => subscriber.next([]));
     }
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
+    let cqlFilter = `urbanizaci = '${habilitacion}' AND mzaurb = '${manzana}'`;
+    if (partialLote && partialLote.trim().length > 0) {
+      cqlFilter += ` AND loteurb ILIKE '%${partialLote.trim()}%'`;
+    }
     const params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
@@ -960,7 +968,7 @@ export class MapService {
       .set('typeName', `${workspacePrefix}vw_tg_lote_urbano`)
       .set('outputFormat', 'application/json')
       .set('propertyName', 'loteurb')
-      .set('cql_filter', `urbanizaci = '${habilitacion}' AND mzaurb = '${manzana}' AND loteurb ILIKE '%${partialLote.trim()}%'`);
+      .set('cql_filter', cqlFilter);
 
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => {

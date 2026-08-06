@@ -142,6 +142,13 @@ export class Consultas {
     this.loteUrbanoSubject.next(value);
   }
 
+  onManzanaChange(event: Event) {
+    const selectedManzana = (event.target as HTMLSelectElement).value;
+    this.manzanaUrbana = selectedManzana;
+    this.loteUrbano = ''; // Reseteamos el lote
+    this.loadLotes(); // Cargamos los lotes para la nueva manzana
+  }
+
   /** Formatea el código catastral mientras el usuario escribe (XXXX-XXX-XXX) */
   handleCodigoCatastralChange(value: string) {
     const numbers = value.replace(/\D/g, "");
@@ -260,20 +267,38 @@ export class Consultas {
     this.habilitacionSuggestions = [];
     this.manzanaUrbana = ''; // Limpiamos la manzana
     this.loteUrbano = ''; // Limpiamos el lote
+    this.manzanaSuggestions = []; // Limpiamos las sugerencias de manzana
+    this.loteSuggestions = []; // Limpiamos las sugerencias de lote
     // Centramos el mapa en la habilitación seleccionada
     this.mapService.fitToGeometry(suggestion.geometry, 'EPSG:32718', 16, false);
+    // Cargamos las manzanas para la habilitación seleccionada
+    this.loadManzanas();
   }
 
   selectManzanaSuggestion(suggestion: string) {
     this.manzanaUrbana = suggestion;
     this.showManzanaSuggestions = false;
     this.manzanaSuggestions = [];
+    this.loteUrbano = ''; // Reseteamos el lote
+    this.loadLotes(); // Cargamos los lotes para la nueva manzana
   }
 
   selectLoteSuggestion(suggestion: string) {
     this.loteUrbano = suggestion;
     this.showLoteSuggestions = false;
     this.loteSuggestions = [];
+  }
+
+  private loadManzanas() {
+    this.mapService.searchManzanasByHabilitacion(this.nombreHabilitacion, '')
+      .pipe(take(1))
+      .subscribe(manzanas => this.manzanaSuggestions = manzanas);
+  }
+
+  private loadLotes() {
+    this.mapService.searchLotesByHabilitacionManzana(this.nombreHabilitacion, this.manzanaUrbana, '')
+      .pipe(take(1))
+      .subscribe(lotes => this.loteSuggestions = lotes);
   }
 
   /**

@@ -9,6 +9,7 @@ import { Navbar } from './components/navbar/navbar';
 import { Sidebar } from './components/sidebar/sidebar';
 import { Funciones } from './components/functions/functions';
 import { Spinner } from '../../../../animations/spinner/spinner';
+import { CoordinateInfo } from './components/coordinate-info/coordinate-info';
 /**
  * Componente principal de la interfaz del mapa.
  * Coordina la visualización de la barra de herramientas, barra lateral y los controles
@@ -23,6 +24,7 @@ import { Spinner } from '../../../../animations/spinner/spinner';
     Sidebar,    
     Funciones,
     Spinner,
+    CoordinateInfo,
   ],
   templateUrl: './map.html',
   styleUrl: './map.css',

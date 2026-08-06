@@ -572,7 +572,6 @@ export class MapService {
     this.isNavigating.set(true);
 
     const view = map.getView();
-    const currentZoom = view.getZoom() ?? INITIAL_ZOOM;
     const currentCenter = view.getCenter()!;
     const destination = fromLonLat([lon, lat]);
 
@@ -581,23 +580,34 @@ export class MapService {
     const distance = getDistance(currentCenter, destination);
 
     const completeCallback = (complete: boolean) => {
-      this.isNavigating.set(false);
-      if (complete && onComplete) {
-        onComplete(complete);
-      }
+      this.zone.run(() => { // Ensure signal update runs inside Angular zone
+        this.isNavigating.set(false);
+        if (complete && onComplete) {
+          onComplete(complete);
+        }
+      });
     };
 
     if (distance > 500000) { // Si estamos lejos, hacemos un zoom out primero
+      const peruCenter = fromLonLat([-75, -10]); // Centro aproximado de Perú
+      const zoomOutDuration = duration * 0.4; // 40% de la duración total para el zoom out
+      const zoomInDuration = duration * 0.6;  // 60% de la duración total para el zoom in
+
+      // Primera animación: zoom out a una vista más amplia centrada en Perú
       view.animate({
-        zoom: 4, // Zoom a nivel continental
-        duration: duration / 3,
+        center: peruCenter,
+        zoom: 4, // Zoom a nivel continental para mostrar Perú
+        duration: zoomOutDuration,
         easing: easeOut
-      }, {
-        center: destination,
+      }, () => {
+        // Segunda animación: zoom a la ubicación de destino (San Isidro)
+        view.animate({
+          center: destination,
         zoom,
-        duration: duration * 2 / 3,
+          duration: zoomInDuration,
         easing: easeOut
-      }, completeCallback);
+        }, completeCallback);
+      });
     } else { // Si estamos cerca, solo nos movemos
       view.animate({ center: destination, zoom, duration, easing: easeOut }, completeCallback);
     }

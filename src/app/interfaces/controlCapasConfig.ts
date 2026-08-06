@@ -19,6 +19,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
         expanded: false,
         layers: [
           { type: 'layer', id: 'hab_urbana', label: 'Habilitación Urbana', visible: false, opacity: 1, showInLegend: false },
+          { type: 'layer', id: 'lote_urbano', label: 'Lote Urbano', visible: false, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'sec_catastrales', label: 'Sectores Catastrales', visible: false, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'sec_vecinal', label: 'Sectores Vecinales', visible: false, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'sec_subvecinal', label: 'Sub Sectores - Junta Vecinal', visible: false, opacity: 1, showInLegend: false },
@@ -53,7 +54,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
   {
     id: 'imaAereas',
     title: 'Fotográfias Áereas',
-    subtitle: 'INFORMACIÓN DE VUELOS',
+    subtitle: 'INFORMACIÓN DE ORTOFOTOS',
     expanded: false,
     items: [
       {

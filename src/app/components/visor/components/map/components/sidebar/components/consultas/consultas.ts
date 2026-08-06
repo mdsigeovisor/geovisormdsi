@@ -405,3 +405,4 @@ export class Consultas {
     this.SearchResult.emit(result);
   }
 }
+

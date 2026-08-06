@@ -2,6 +2,51 @@
   <!-- Fila Superior: Tabs de Navegación -->
   <div class="shrink-0 overflow-y-auto custom-scrollbar max-h-[60%] p-3">
     <div class="flex flex-col gap-2">
+      <!-- Opción CUC -->
+      <button (click)="activeTab = 'cuc'" [class.bg-primary/10]="activeTab === 'cuc'"
+        [class.border-primary/30]="activeTab === 'cuc'"
+        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+        <div class="text-primary/80 text-xl"><i class="bi bi-upc-scan"></i></div>
+        <div>
+          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Código CUC</h3>
+          <p class="text-xs text-gray-500 mt-0.5">Búsqueda por Código Único Catastral.</p>
+        </div>
+      </button>
+      <!-- Opción Código Predial -->
+      <button (click)="activeTab = 'predial'" [class.bg-primary/10]="activeTab === 'predial'"
+        [class.border-primary/30]="activeTab === 'predial'"
+        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+        <div class="text-primary/80 text-xl"><i class="bi bi-file-earmark-text"></i></div>
+        <div>
+          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Código Predial</h3>
+          <p class="text-xs text-gray-500 mt-0.5">Búsqueda por el código de predio.</p>
+        </div>
+      </button>
+            <!-- Opción Dirección -->
+      <button (click)="activeTab = 'direccion'" [class.bg-primary/10]="activeTab === 'direccion'"
+        [class.border-primary/30]="activeTab === 'direccion'"
+        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
+        <div class="text-primary/80 text-xl"><i class="bi bi-geo-alt-fill"></i></div>
+        <div>
+          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Dirección</h3>
+          <p class="text-xs text-gray-500 mt-0.5">Encuentra un predio usando el nombre de la vía y número.</p>
+        </div>
+      </button>         
+      <!-- Opción Habilitación Urbana -->
+      <button
+        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"
+        disabled title="Próximamente disponible">
+        <div class="text-primary/80 text-xl"><i class="bi bi-map"></i></div>
+        <div>
+          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Habilitación Urbana</h3>
+          <p class="text-xs text-gray-500 mt-0.5">Busca por habilitación, manzana y lote.</p>
+        </div>
+      </button>
+
+
+
+
+
       <!-- Opción Catastral -->
       <button (click)="activeTab = 'catastral'" [class.bg-primary/10]="activeTab === 'catastral'"
         [class.border-primary/30]="activeTab === 'catastral'" 
@@ -12,16 +57,7 @@
           <p class="text-xs text-gray-500 mt-0.5">Búsqueda precisa usando el código de Sector, Manzana y Lote.</p>
         </div>
       </button>
-         <!-- Opción Dirección -->
-      <button (click)="activeTab = 'direccion'" [class.bg-primary/10]="activeTab === 'direccion'"
-        [class.border-primary/30]="activeTab === 'direccion'"
-        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
-        <div class="text-primary/80 text-xl"><i class="bi bi-geo-alt-fill"></i></div>
-        <div>
-          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Dirección</h3>
-          <p class="text-xs text-gray-500 mt-0.5">Encuentra un predio usando el nombre de la vía y número.</p>
-        </div>
-      </button>
+   
 
         <!-- Opción Nombre de Parque -->
       <button (click)="activeTab = 'parque'" [class.bg-primary/10]="activeTab === 'parque'"
@@ -34,38 +70,9 @@
         </div>
       </button>
 
-      <!-- Opción CUC -->
-      <button (click)="activeTab = 'cuc'" [class.bg-primary/10]="activeTab === 'cuc'"
-        [class.border-primary/30]="activeTab === 'cuc'"
-        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
-        <div class="text-primary/80 text-xl"><i class="bi bi-upc-scan"></i></div>
-        <div>
-          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Código CUC</h3>
-          <p class="text-xs text-gray-500 mt-0.5">Búsqueda por Código Único Catastral.</p>
-        </div>
-      </button>
-      <!-- Opción Código Predial -->
-      <button
-        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"
-        disabled
-        title="Próximamente disponible">
-        <div class="text-primary/80 text-xl"><i class="bi bi-file-earmark-text"></i></div>
-        <div>
-          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Código Predial</h3>
-          <p class="text-xs text-gray-500 mt-0.5">Búsqueda por el código de predio.</p>
-        </div>
-      </button>
-   
-      <!-- Opción Habilitación Urbana -->
-      <button
-        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"
-        disabled title="Próximamente disponible">
-        <div class="text-primary/80 text-xl"><i class="bi bi-map"></i></div>
-        <div>
-          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Habilitación Urbana</h3>
-          <p class="text-xs text-gray-500 mt-0.5">Busca por habilitación, manzana y lote.</p>
-        </div>
-      </button>
+      
+      
+
       <!-- Opción Titular Catastral -->
       <button
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"

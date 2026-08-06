@@ -13,11 +13,13 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Cartografia otros distritos' },
   //* Sectores
   { id: 'hab_urbana', layerName: `${workspacePrefix}gc_habilitacion_urbana`, zIndex: 0, title: 'Habilitación Urbana' },
+  { id: 'lote_urbano', layerName: `${workspacePrefix}vw_tg_lote_urbano`, zIndex: 0, title: 'Lote Urbano' },
+
   { id: 'sec_subvecinal', layerName: `${workspacePrefix}gc_subsector_vecinal`, zIndex: 0, title: 'Subsectores Vecinales' },
   { id: 'sec_vecinal', layerName: `${workspacePrefix}gc_sector_vecinal`, zIndex: 0, title: 'Sectores Vecinales' },
   { id: 'sec_catastrales', layerName: `${workspacePrefix}gc_sector_catastral`, zIndex: 0, title: 'Sectores Catastrales' },
   //* Capas Catastrales
-  { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 0, title: 'Construcciones' },
+  { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 1, title: 'Construcciones' },
   { id: 'lote', layerName: `${workspacePrefix}gc_lote_catastral`, zIndex: 0, title: 'Lote Catastral' },
   { id: 'manzana', layerName: `${workspacePrefix}gc_manzana_catastral`, zIndex: 0, title: 'Manzana Catastral' },
   { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },

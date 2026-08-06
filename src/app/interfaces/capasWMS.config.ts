@@ -15,6 +15,10 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   { id: 'hab_urbana', layerName: `${workspacePrefix}gc_habilitacion_urbana`, zIndex: 0, title: 'Habilitación Urbana' },
   { id: 'lote_urbano', layerName: `${workspacePrefix}vw_tg_lote_urbano`, zIndex: 0, title: 'Lote Urbano' },
 
+  // Puntos Geodesicos
+  { id: 'puntos_geodesicos', layerName: `${workspacePrefix}vw_cu_punto_geodesico`, zIndex: 1, title: 'Puntos Geodésicos' },
+  
+
   { id: 'sec_subvecinal', layerName: `${workspacePrefix}gc_subsector_vecinal`, zIndex: 0, title: 'Subsectores Vecinales' },
   { id: 'sec_vecinal', layerName: `${workspacePrefix}gc_sector_vecinal`, zIndex: 0, title: 'Sectores Vecinales' },
   { id: 'sec_catastrales', layerName: `${workspacePrefix}gc_sector_catastral`, zIndex: 0, title: 'Sectores Catastrales' },

@@ -19,7 +19,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
         expanded: false,
         layers: [
           { type: 'layer', id: 'hab_urbana', label: 'Habilitación Urbana', visible: false, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'lote_urbano', label: 'Lote Urbano', visible: false, opacity: 1, showInLegend: false },
+          
           { type: 'layer', id: 'sec_catastrales', label: 'Sectores Catastrales', visible: false, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'sec_vecinal', label: 'Sectores Vecinales', visible: false, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'sec_subvecinal', label: 'Sub Sectores - Junta Vecinal', visible: false, opacity: 1, showInLegend: false },
@@ -34,6 +34,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
           { type: 'layer', id: 'num_cuadra', label: 'Cuadra', visible: true, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'construcciones', label: 'Construcciones', visible: true, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'lote', label: 'Lote', visible: true, opacity: 1, showInLegend: false },
+          { type: 'layer', id: 'lote_urbano', label: 'Lote Urbano', visible: false, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'manzana', label: 'Manzana', visible: true, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'veredas', label: 'Veredas', visible: true, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'arearecreativa', label: 'Área Recreativa', visible: true, opacity: 1, showInLegend: false },
@@ -49,6 +50,14 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
           { type: 'layer', id: 'puertas', label: 'Puertas', visible: false, opacity: 1, showInLegend: true },
         ],
       },
+    ],
+  },
+    {
+    id: 'puntosGeodesicos',
+    title: 'Puntos Geodésicos',
+    expanded: false,
+    items: [
+      { type: 'layer', id: 'puntos_geodesicos', label: 'Puntos Geodésicos', visible: true, opacity: 1, showInLegend: true },
     ],
   },
   {

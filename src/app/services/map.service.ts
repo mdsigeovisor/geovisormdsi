@@ -843,6 +843,129 @@ export class MapService {
     );
   }
   /**
+   * Busca un lote urbano por habilitación, manzana y lote.
+   * @param habilitacion Nombre de la habilitación urbana.
+   * @param manzana Manzana urbana.
+   * @param lote Lote urbano.
+   * @returns Un Observable con el feature encontrado o null.
+   */
+  searchLoteByHabilitacion(habilitacion: string, manzana: string, lote: string): Observable<GeoJSONFeature | null> {
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+
+    // Construimos un filtro CQL que busca coincidencias en los tres campos.
+    // Usamos ILIKE para la habilitación para ser flexible con mayúsculas/minúsculas.
+    const cqlFilter = `urbanizaci ILIKE '%${habilitacion.trim()}%' AND mzaurb = '${manzana.trim()}' AND loteurb = '${lote.trim()}'`;
+
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_lote_urbano`)
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:32718')
+      .set('cql_filter', cqlFilter);
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => {
+        if (response?.features?.length > 0) {
+          return response.features[0]; // Devolvemos el primer resultado
+        }
+        return null;
+      })
+    );
+  }
+  /**
+   * Busca nombres de habilitaciones urbanas que coincidan parcialmente.
+   * @param partialName El nombre parcial de la habilitación.
+   * @returns Un Observable con un array de nombres de habilitaciones únicos.
+   */
+  searchHabilitaciones(partialName: string): Observable<string[]> {
+    if (!partialName || partialName.trim().length < 3) {
+      return new Observable(subscriber => subscriber.next([]));
+    }
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_habilitacion_urbana`)
+      .set('outputFormat', 'application/json')
+      .set('propertyName', 'nombre')
+      .set('cql_filter', `nombre ILIKE '%${partialName.trim()}%'`);
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => {
+        if (!response?.features) return [];
+        // Extraemos los nombres y eliminamos duplicados
+        const names = response.features.map(f => f.properties['nombre']);
+        return [...new Set(names)];
+      })
+    );
+  }
+
+  /**
+   * Busca manzanas urbanas basadas en una habilitación y un nombre parcial de manzana.
+   * @param habilitacion El nombre exacto de la habilitación.
+   * @param partialManzana El nombre parcial de la manzana.
+   * @returns Un Observable con un array de nombres de manzanas únicos.
+   */
+  searchManzanasByHabilitacion(habilitacion: string, partialManzana: string): Observable<string[]> {
+    if (!habilitacion || !partialManzana) {
+      return new Observable(subscriber => subscriber.next([]));
+    }
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_lote_urbano`)
+      .set('outputFormat', 'application/json')
+      .set('propertyName', 'mzaurb')
+      .set('cql_filter', `urbanizaci = '${habilitacion}' AND mzaurb ILIKE '%${partialManzana.trim()}%'`);
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => {
+        if (!response?.features) return [];
+        const manzanas = response.features.map(f => f.properties['mzaurb']);
+        return [...new Set(manzanas)];
+      })
+    );
+  }
+
+  /**
+   * Busca lotes urbanos basados en una habilitación, una manzana y un número de lote parcial.
+   * @param habilitacion El nombre exacto de la habilitación.
+   * @param manzana El nombre exacto de la manzana.
+   * @param partialLote El número parcial del lote.
+   * @returns Un Observable con un array de números de lote únicos.
+   */
+  searchLotesByHabilitacionManzana(habilitacion: string, manzana: string, partialLote: string): Observable<string[]> {
+    if (!habilitacion || !manzana || !partialLote) {
+      return new Observable(subscriber => subscriber.next([]));
+    }
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_lote_urbano`)
+      .set('outputFormat', 'application/json')
+      .set('propertyName', 'loteurb')
+      .set('cql_filter', `urbanizaci = '${habilitacion}' AND mzaurb = '${manzana}' AND loteurb ILIKE '%${partialLote.trim()}%'`);
+
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => {
+        if (!response?.features) return [];
+        const lotes = response.features.map(f => f.properties['loteurb']);
+        return [...new Set(lotes)];
+      })
+    );
+  }
+  /**
    * Busca un parque por su nombre consultando el servicio WFS de GeoServer.
    * @param nombre_parque Nombre del parque a buscar.
    * @returns Un Observable con un array de features encontrados o null.

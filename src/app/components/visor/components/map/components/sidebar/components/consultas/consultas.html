@@ -33,9 +33,9 @@
         </div>
       </button>         
       <!-- Opción Habilitación Urbana -->
-      <button
-        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"
-        disabled title="Próximamente disponible">
+      <button (click)="activeTab = 'habilitacion'" [class.bg-primary/10]="activeTab === 'habilitacion'"
+        [class.border-primary/30]="activeTab === 'habilitacion'"
+        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent hover:bg-gray-50 transition-all w-full">
         <div class="text-primary/80 text-xl"><i class="bi bi-map"></i></div>
         <div>
           <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Habilitación Urbana</h3>
@@ -204,25 +204,53 @@
       <div class="animate-in slide-in-from-right-2 duration-300" id="habilitacion-form">
         <div class="space-y-4">
           <div>
-            <label for="nombreHabilitacionInput"
-              class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de
-              Habilitación</label>
-            <input id="nombreHabilitacionInput" type="text" [(ngModel)]="nombreHabilitacion"
-              placeholder="Ej: Jardines de San Isidro"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+            <label for="nombreHabilitacionInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de Habilitación</label>
+            <div class="relative">
+              <input id="nombreHabilitacionInput" type="text" [(ngModel)]="nombreHabilitacion" (input)="onNombreHabilitacionInput($event)" (blur)="onNombreHabilitacionBlur()" placeholder="Escriba para buscar..."
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+              @if (showHabilitacionSuggestions && habilitacionSuggestions.length > 0) {
+              <div class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-30 max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
+                @for (suggestion of habilitacionSuggestions; track suggestion) {
+                <button (click)="selectHabilitacionSuggestion(suggestion)" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
+                  {{ suggestion }}
+                </button>
+                }
+              </div>
+              }
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label for="manzanaUrbanaInput"
-                class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Manzana</label>
-              <input id="manzanaUrbanaInput" type="text" [(ngModel)]="manzanaUrbana" placeholder="Ej: A1"
-                class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+              <label for="manzanaUrbanaInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Manzana</label>
+              <div class="relative">
+                <input id="manzanaUrbanaInput" type="text" [(ngModel)]="manzanaUrbana" (input)="onManzanaUrbanaInput($event)" (blur)="onManzanaUrbanaBlur()" placeholder="Ej: A1" [disabled]="!nombreHabilitacion"
+                  class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all disabled:opacity-50 disabled:bg-gray-100">
+                @if (showManzanaSuggestions && manzanaSuggestions.length > 0) {
+                <div class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
+                  @for (suggestion of manzanaSuggestions; track suggestion) {
+                  <button (click)="selectManzanaSuggestion(suggestion)" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
+                    {{ suggestion }}
+                  </button>
+                  }
+                </div>
+                }
+              </div>
             </div>
             <div>
-              <label for="loteUrbanoInput"
-                class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Lote</label>
-              <input id="loteUrbanoInput" type="text" [(ngModel)]="loteUrbano" placeholder="Ej: 20"
-                class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+              <label for="loteUrbanoInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Lote</label>
+              <div class="relative">
+                <input id="loteUrbanoInput" type="text" [(ngModel)]="loteUrbano" (input)="onLoteUrbanoInput($event)" (blur)="onLoteUrbanoBlur()" placeholder="Ej: 20" [disabled]="!nombreHabilitacion || !manzanaUrbana"
+                  class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all disabled:opacity-50 disabled:bg-gray-100">
+                @if (showLoteSuggestions && loteSuggestions.length > 0) {
+                <div class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
+                  @for (suggestion of loteSuggestions; track suggestion) {
+                  <button (click)="selectLoteSuggestion(suggestion)" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
+                    {{ suggestion }}
+                  </button>
+                  }
+                </div>
+                }
+              </div>
             </div>
           </div>
         </div>

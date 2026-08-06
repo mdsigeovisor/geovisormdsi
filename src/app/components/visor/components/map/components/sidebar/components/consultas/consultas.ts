@@ -34,10 +34,22 @@ export class Consultas {
   parqueSuggestions: GeoJSONFeature[] = [];
   showParqueSuggestions = false;
 
+  // --- Lógica para autocompletado de Habilitación Urbana ---
+  private readonly nombreHabilitacionSubject = new Subject<string>();
+  habilitacionSuggestions: string[] = [];
+  showHabilitacionSuggestions = false;
+  private readonly manzanaUrbanaSubject = new Subject<string>();
+  manzanaSuggestions: string[] = [];
+  showManzanaSuggestions = false;
+  private readonly loteUrbanoSubject = new Subject<string>();
+  loteSuggestions: string[] = [];
+  showLoteSuggestions = false;
+
   // -----------------------------------------
   nombreHabilitacion = '';
   manzanaUrbana = '';
   loteUrbano = '';
+
   /** Campos para búsqueda por Titular Catastral */
   codigoTitular = '';
   /** Campos para búsqueda por Denominación del Predio */
@@ -76,6 +88,33 @@ export class Consultas {
       this.parqueSuggestions = suggestions || [];
       this.showParqueSuggestions = (suggestions?.length ?? 0) > 0;
     });
+
+    this.nombreHabilitacionSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(partialName => this.mapService.searchHabilitaciones(partialName))
+    ).subscribe(suggestions => {
+      this.habilitacionSuggestions = suggestions || [];
+      this.showHabilitacionSuggestions = (suggestions?.length ?? 0) > 0;
+    });
+
+    this.manzanaUrbanaSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(partialManzana => this.mapService.searchManzanasByHabilitacion(this.nombreHabilitacion, partialManzana))
+    ).subscribe(suggestions => {
+      this.manzanaSuggestions = suggestions || [];
+      this.showManzanaSuggestions = (suggestions?.length ?? 0) > 0;
+    });
+
+    this.loteUrbanoSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(partialLote => this.mapService.searchLotesByHabilitacionManzana(this.nombreHabilitacion, this.manzanaUrbana, partialLote))
+    ).subscribe(suggestions => {
+      this.loteSuggestions = suggestions || [];
+      this.showLoteSuggestions = (suggestions?.length ?? 0) > 0;
+    });
   }
 
   onNombreViaInput(event: Event) {
@@ -86,6 +125,21 @@ export class Consultas {
   onNombreParqueInput(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.nombreParqueSubject.next(value);
+  }
+
+  onNombreHabilitacionInput(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.nombreHabilitacionSubject.next(value);
+  }
+
+  onManzanaUrbanaInput(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.manzanaUrbanaSubject.next(value);
+  }
+
+  onLoteUrbanoInput(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.loteUrbanoSubject.next(value);
   }
 
   /** Formatea el código catastral mientras el usuario escribe (XXXX-XXX-XXX) */
@@ -120,6 +174,9 @@ export class Consultas {
         this.nombreHabilitacion = '';
         this.manzanaUrbana = '';
         this.loteUrbano = '';
+        this.habilitacionSuggestions = [];
+        this.manzanaSuggestions = [];
+        this.loteSuggestions = [];
       },
       titular: () => this.codigoTitular = '',
       denominacion: () => this.denominacionPredio = '',
@@ -146,7 +203,9 @@ export class Consultas {
       case 'direccion':
         return this.nombreVia.trim().length === 0;
       case 'habilitacion':
-        return this.nombreHabilitacion.trim().length === 0;
+        return this.nombreHabilitacion.trim().length === 0 || 
+               this.manzanaUrbana.trim().length === 0 || 
+               this.loteUrbano.trim().length === 0;
       case 'titular':
         return this.codigoTitular.trim().length === 0;
       case 'denominacion':
@@ -181,6 +240,36 @@ export class Consultas {
     setTimeout(() => {
       this.showParqueSuggestions = false;
     }, 200);
+  }
+
+  onNombreHabilitacionBlur() {
+    setTimeout(() => this.showHabilitacionSuggestions = false, 200);
+  }
+
+  onManzanaUrbanaBlur() {
+    setTimeout(() => this.showManzanaSuggestions = false, 200);
+  }
+
+  onLoteUrbanoBlur() {
+    setTimeout(() => this.showLoteSuggestions = false, 200);
+  }
+
+  selectHabilitacionSuggestion(suggestion: string) {
+    this.nombreHabilitacion = suggestion;
+    this.showHabilitacionSuggestions = false;
+    this.habilitacionSuggestions = [];
+  }
+
+  selectManzanaSuggestion(suggestion: string) {
+    this.manzanaUrbana = suggestion;
+    this.showManzanaSuggestions = false;
+    this.manzanaSuggestions = [];
+  }
+
+  selectLoteSuggestion(suggestion: string) {
+    this.loteUrbano = suggestion;
+    this.showLoteSuggestions = false;
+    this.loteSuggestions = [];
   }
 
   /**
@@ -347,6 +436,40 @@ export class Consultas {
           this.loading.set(false);
         }
       });
+    } else if (this.activeTab === 'habilitacion') {
+      this.loading.set(true);
+      this.searchError.set(null);
+      this.mapService.searchLoteByHabilitacion(this.nombreHabilitacion, this.manzanaUrbana, this.loteUrbano)
+        .pipe(take(1))
+        .subscribe({
+          next: (feature) => {
+            this.loading.set(false);
+            if (feature) {
+              const props = feature.properties as any;
+              const result: SearchResult = {
+                codigoCatastral: String(props['id_lote'] || 'N/A').trim(),
+                direccion: props['direccion'] ?? props['ubicacion'] ?? "Ubicación no disponible",
+                propietario: props['propietario'] ?? "Información reservada",
+                area: props['area_lote'] ? `${props['area_lote']} m²` : "No disponible",
+                zonificacion: props['zonificacion'] ?? "No disponible",
+                fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80",
+                numeroPisos: props['pisos'] ?? 1,
+                geometry: feature.geometry
+              };
+              // Navegamos al polígono encontrado y lo resaltamos
+              this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
+              this.mapService.drawSearchMarker(feature.geometry);
+              this.emitResult(result);
+            } else {
+              this.searchError.set('No se encontró el lote con los datos de habilitación ingresados.');
+            }
+          },
+          error: (err) => {
+            console.error('Error en la búsqueda por habilitación:', err);
+            this.searchError.set('Error de conexión con el servicio de búsqueda.');
+            this.loading.set(false);
+          }
+      });
     }  else if (this.activeTab === 'ciudadano') {
       this.loading.set(true);
       this.searchError.set(null);
@@ -405,4 +528,3 @@ export class Consultas {
     this.SearchResult.emit(result);
   }
 }
-

@@ -45,6 +45,40 @@
     </div>
   }
   </div>
+  <!-- Panel de Herramientas de Dibujo y Medición -->
+  @if (herramientasActivas()) {
+  <div class="fixed right-14 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-50 animate-in fade-in duration-300">
+    <button (click)="medirDistancia()" title="Medir Distancia"
+            class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
+      <i class="bi bi-rulers text-xl"></i>
+    </button>
+    <button (click)="medirArea()" title="Medir Área"
+            class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
+      <i class="bi bi-bounding-box-circles text-xl"></i>
+    </button>
+    <button (click)="dibujarPoligono()" title="Dibujar Polígono"
+            class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
+      <i class="bi bi-pentagon text-xl"></i>
+    </button>
+    <button (click)="dibujarLinea()" title="Dibujar Línea"
+            class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
+      <i class="bi bi-slash-lg text-xl"></i>
+    </button>
+    <button (click)="dibujarPunto()" title="Dibujar Punto"
+            class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
+      <i class="bi bi-pin-map-fill text-xl"></i>
+    </button>
+    <button (click)="limpiarDibujo()" title="Limpiar Dibujos"
+            class="w-10 h-10 flex items-center justify-center bg-red-500 backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-red-600 hover:scale-105 transition-all active:scale-95 cursor-pointer">
+      <i class="bi bi-trash-fill text-xl"></i>
+    </button>
+  </div>
+  }
+  <button (click)="toggleHerramientas()"
+          class="fixed right-4 top-[calc(50%+17.5rem)] -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
+          title="Herramientas de Dibujo">
+    <i class="bi bi-tools text-xl"></i>
+  </button>
 
   <div class="hidden md:block">
     <app-overview-map [mainMap]="olMap()!"></app-overview-map>

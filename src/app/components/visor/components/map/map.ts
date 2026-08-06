@@ -1,8 +1,9 @@
-import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect, SecurityContext, HostListener } from '@angular/core';
+import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 // Servicios y módulos
 import { MapService } from '../../../../services/map.service';
+import { DrawMeasureService } from '../../../../services/draw.service';
 // Componentes relacionados
 import { Navbar } from './components/navbar/navbar';
 import { Sidebar } from './components/sidebar/sidebar';
@@ -19,7 +20,7 @@ import { Spinner } from '../../../../animations/spinner/spinner';
   imports: [
     CommonModule,
     Navbar,
-    Sidebar,
+    Sidebar,    
     Funciones,
     Spinner,
   ],
@@ -36,6 +37,7 @@ export class MapComponent {
   public readonly mapService = inject(MapService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly drawMeasureService = inject(DrawMeasureService);
 
   constructor() {
     // Usamos un 'effect' para reaccionar a los cambios de la signal 'isReady'.
@@ -59,7 +61,9 @@ export class MapComponent {
    */
   private initMap(): void {
     // Utilizamos el servicio para inicializar el mapa centralizando la lógica
-    this.mapService.initMap(this.mapContainer.nativeElement);
+    const map = this.mapService.initMap(this.mapContainer.nativeElement);
+    // Una vez que el mapa está inicializado, lo pasamos al servicio de dibujo
+    this.drawMeasureService.inicializar(map);
 
     this.cdr.detectChanges();
   }

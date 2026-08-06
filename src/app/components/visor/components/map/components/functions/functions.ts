@@ -1,64 +1,82 @@
-import { Component, computed, inject, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, afterNextRender, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MapService, TipoMapaBase } from '../../../../../../services/map.service';
+import { DrawMeasureService } from '../../../../../../services/draw.service';
+import { Overlay } from '../../../../../../modules/openlayers.module';
 import { OverviewMapComponent } from '../overViewMap/overview-map';
 
-import { MapService, TipoMapaBase } from '@services/map.service';
-import { ANIMATION_DURATION } from '@app/interfaces/mapas.config';
-import { fromLonLat, Overlay, OverlayPositioning, transformExtent } from '../../../../../../modules/openlayers.module';
-
 @Component({
-  selector: 'app-functions',
+  selector: 'app-funciones',
   standalone: true,
-  imports: [CommonModule, OverviewMapComponent],
+  imports: [CommonModule,OverviewMapComponent],
   templateUrl: './functions.html',
-  styleUrls: ['./functions.css'],
+  styleUrl: './functions.css'
 })
-export class Funciones implements AfterViewInit {
-  private readonly mapService = inject(MapService);
-  /**
-   * Referencias a los elementos del DOM definidos localmente en functions.html
-   */
-  @ViewChild('userMarker') userMarkerEl!: ElementRef;
-  @ViewChild('locationPopup') locationPopupEl!: ElementRef;
-  @ViewChild('searchMarker') searchMarkerEl!: ElementRef<HTMLElement>;
-  /** Overlay para mostrar la ubicación actual del usuario */
-  private locationOverlay?: Overlay;
-  /** Overlay para mostrar un popup con información de la ubicación */
-  private popupOverlay?: Overlay;
-  /** Sincronización con el estado del mapa en el servicio */
-  olMap = this.mapService.map;
-  isReady = computed(() => !!this.olMap());
-  baseLayerType = this.mapService.baseLayerType;
-  /** Signal con las coordenadas actuales obtenidas por GPS */
-  userCoords = this.mapService.userCoords;
+export class Funciones {
+  @ViewChild('userMarker') userMarker!: ElementRef;
+  @ViewChild('locationPopup') locationPopup!: ElementRef;
+  @ViewChild('searchMarker') searchMarker!: ElementRef;
 
-  ngAfterViewInit(): void {
-    this.mapService.registerSearchMarkerElement(this.searchMarkerEl.nativeElement);
+  private readonly mapService = inject(MapService);
+  private readonly drawMeasureService = inject(DrawMeasureService);
+
+  // Signals para controlar el estado de la UI
+  public readonly isReady = this.mapService.isReady;
+  public readonly olMap = this.mapService.map;
+  public readonly userCoords = this.mapService.userCoords;
+  public readonly baseLayerType = this.mapService.baseLayerType;
+  public readonly isMapBasePanelOpen = signal(false);
+  public readonly herramientasActivas = signal(false);
+
+  private userMarkerOverlay?: Overlay;
+  private readonly locationPopupOverlay?: Overlay;
+
+  constructor() {
+    afterNextRender(() => {
+      this.mapService.registerSearchMarkerElement(this.searchMarker.nativeElement);
+    });
   }
 
   zoomIn(): void {
-    this.adjustZoom(1);
+    this.olMap()?.getView().animate({
+      zoom: this.olMap()!.getView().getZoom()! + 1,
+      duration: 250
+    });
   }
+
   zoomOut(): void {
-    this.adjustZoom(-1);
+    this.olMap()?.getView().animate({
+      zoom: this.olMap()!.getView().getZoom()! - 1,
+      duration: 250
+    });
   }
+
   goHome(): void {
-    this.mapService.cambiarMapaBase('blanco');
     this.mapService.goToDistrito();
   }
-  /**
-   * Realiza una animación de cambio de zoom relativa al valor actual.
-   */
-  private adjustZoom(delta: number): void {
-    const view = this.olMap()?.getView();
-    const currentZoom = view?.getZoom();
-    if (view && currentZoom !== undefined) {
-      view.animate({ zoom: currentZoom + delta, duration: 250 });
+
+  getCurrentLocation(): void {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { longitude, latitude } = position.coords;
+          this.mapService.userCoords.set({ lon: longitude, lat: latitude });
+          this.mapService.goToCoordinates(latitude, longitude, 18);
+          this.showUserMarker(longitude, latitude);
+        },
+        (error) => {
+          console.error('Error al obtener la geolocalización:', error);
+          alert('No se pudo obtener tu ubicación. Asegúrate de haber concedido los permisos necesarios.');
+        }
+      );
+    } else {
+      alert('La geolocalización no es compatible con este navegador.');
     }
   }
 
   toggleBaseLayer(): void {
-    const currentType = this.baseLayerType();    let nextType: TipoMapaBase;
+    const currentType = this.baseLayerType();
+    let nextType: TipoMapaBase;
     if (currentType === 'satellite') {
       nextType = 'streets';
     } else if (currentType === 'streets') {
@@ -69,115 +87,50 @@ export class Funciones implements AfterViewInit {
     this.mapService.cambiarMapaBase(nextType);
   }
 
-  async getCurrentLocation(): Promise<void> {
-    if (!this.userMarkerEl?.nativeElement || !this.locationPopupEl?.nativeElement) {
-      console.warn('Los elementos de ubicación no están inicializados.');
-      return;
-    }
-  
-    const markerElement = this.userMarkerEl.nativeElement;
-    const popupElement = this.locationPopupEl.nativeElement;
-  
-    if (!('geolocation' in navigator)) {
-      alert('La geolocalización no está disponible en su navegador.');
-      return;
-    }
-  
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        });
-      });
-  
-      const result = { lon: position.coords.longitude, lat: position.coords.latitude };
-      const transformedCoords = fromLonLat([result.lon, result.lat]);
-  
-      // 1. Marcamos el punto azul inmediatamente
-      this.updateUserLocationOverlay(transformedCoords, markerElement);
-      this.userCoords.set(result);
-  
-      // 2. Animamos el mapa y esperamos a que termine
-      const view = this.olMap()?.getView();
-      if (view) {
-        await view.animate({
-          center: transformedCoords,
-          zoom: 20, // Nivel de zoom para una escala aproximada de 1/1000
-          duration: ANIMATION_DURATION,
-        });
-        // 3. Mostramos el popup al finalizar el viaje
-        this.showLocationPopup(transformedCoords, popupElement);
-      }
-    } catch (error) {
-      console.error('Error al obtener ubicación:', error);
-      alert('No se pudo obtener su ubicación actual.');
-    }
-  }
-
-  /**
-   * Actualiza la posición del overlay del marcador de usuario.
-   */
-  private updateUserLocationOverlay(transformedCoords: number[], element: HTMLElement): void {
-    this.locationOverlay = this.getOrCreateOverlay(this.locationOverlay, element, {
-      positioning: 'center-center'
-    });
-    element.style.display = 'flex';
-    this.locationOverlay.setPosition(transformedCoords);
-  }
-
-  /**
-   * Muestra un popup en la ubicación especificada.
-   */
-  private showLocationPopup(transformedCoords: number[], element: HTMLElement): void {
-    this.popupOverlay = this.getOrCreateOverlay(this.popupOverlay, element, {
-      positioning: 'bottom-center',
-      stopEvent: true,
-      offset: [0, -32]
-    });
-    element.style.display = 'block';
-    this.popupOverlay.setPosition(transformedCoords);
-  }
-
-  /**
-   * Obtiene un overlay existente o crea uno nuevo si no existe.
-   */
-  private getOrCreateOverlay(
-    overlayRef: Overlay | undefined,
-    element: HTMLElement,
-    options: { positioning: OverlayPositioning; offset?: number[]; stopEvent?: boolean }
-  ): Overlay {
-    if (overlayRef) {
-      overlayRef.setElement(element);
-      return overlayRef;
-    }
+  private showUserMarker(lon: number, lat: number): void {
     const map = this.olMap();
-    if (!map) throw new Error("Mapa no inicializado");
+    if (!map) return;
 
-    const newOverlay = new Overlay({
-      element,
-      positioning: options.positioning,
-      offset: options.offset || [0, 0],
-      stopEvent: options.stopEvent ?? false,
-    });
-
-    map.addOverlay(newOverlay);
-    return newOverlay;
+    if (!this.userMarkerOverlay) {
+      this.userMarkerOverlay = new Overlay({
+        element: this.userMarker.nativeElement,
+        positioning: 'center-center',
+        stopEvent: false,
+      });
+      map.addOverlay(this.userMarkerOverlay);
+    }
+    this.userMarker.nativeElement.style.display = 'flex';
+    this.userMarkerOverlay.setPosition(this.mapService.offsetLonLat(lon, lat));
   }
-  /**
-   * Oculta el marcador y el popup y resetea las coordenadas del usuario.
-   */
+
   removeLocationMarker(): void {
-    this.locationOverlay?.setPosition(undefined);
-    this.popupOverlay?.setPosition(undefined);
-    const marker = this.locationOverlay?.getElement();
-    const popup = this.popupOverlay?.getElement();
-    if (marker) marker.style.display = 'none';
-    if (popup) popup.style.display = 'none';
-    this.userCoords.set(null);
+    this.userMarkerOverlay?.setPosition(undefined);
+    this.locationPopupOverlay?.setPosition(undefined);
+    this.mapService.userCoords.set(null);
   }
-    isMapBasePanelOpen(): boolean {
-    return this.mapService.activeSidebarTools().has('mapbase');
+
+  // --- Métodos para Dibujo y Medición ---
+
+  toggleHerramientas(): void {
+    this.herramientasActivas.update(v => !v);
+    if (!this.herramientasActivas()) {
+      this.drawMeasureService.desactivarHerramienta();
+    }
+  }
+
+  medirDistancia(): void {
+    this.drawMeasureService.medirDistancia();
+  }
+
+  medirArea(): void {
+    this.drawMeasureService.medirArea();
+  }
+
+  dibujarPunto(): void { this.drawMeasureService.dibujarPunto(); }
+  dibujarLinea(): void { this.drawMeasureService.dibujarLinea(); }
+  dibujarPoligono(): void { this.drawMeasureService.dibujarPoligono(); }
+
+  limpiarDibujo(): void {
+    this.drawMeasureService.limpiar();
   }
 }

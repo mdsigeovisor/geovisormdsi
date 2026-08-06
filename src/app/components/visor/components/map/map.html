@@ -11,8 +11,7 @@
 <app-navbar></app-navbar>
 <app-sidebar></app-sidebar>
 <div #mapContainer class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
-<app-functions></app-functions>
-
+<app-funciones></app-funciones>
 <!-- Modal para información del lote -->
 @if (mapService.loteInfoUrl(); as url) {
 <div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in" (click)="closeLoteModal()" tabindex="-1">

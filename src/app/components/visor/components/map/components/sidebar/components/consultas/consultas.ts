@@ -264,6 +264,10 @@ export class Consultas {
   selectHabilitacionSuggestion(suggestion: GeoJSONFeature) {
     this.nombreHabilitacion = suggestion.properties['urbanizaci'];
     this.showHabilitacionSuggestions = false;
+    this.showHabilitacionSuggestions = false;    
+    // Resaltamos la geometría del parque seleccionado y centramos el mapa en él.
+    this.mapService.fitToGeometry(suggestion.geometry, 'EPSG:32718', undefined, true);
+    this.Close.emit(); // Cerramos el panel para una mejor visualización.
     this.habilitacionSuggestions = [];
     this.manzanaUrbana = ''; // Limpiamos la manzana
     this.loteUrbano = ''; // Limpiamos el lote

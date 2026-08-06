@@ -14,11 +14,9 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   //* Sectores
   { id: 'hab_urbana', layerName: `${workspacePrefix}gc_habilitacion_urbana`, zIndex: 0, title: 'Habilitación Urbana' },
   { id: 'lote_urbano', layerName: `${workspacePrefix}vw_tg_lote_urbano`, zIndex: 0, title: 'Lote Urbano' },
-
   // Puntos Geodesicos
   { id: 'puntos_geodesicos', layerName: `${workspacePrefix}vw_cu_punto_geodesico`, zIndex: 1, title: 'Puntos Geodésicos' },
-  
-
+  // Sectores y Subsectores
   { id: 'sec_subvecinal', layerName: `${workspacePrefix}gc_subsector_vecinal`, zIndex: 0, title: 'Subsectores Vecinales' },
   { id: 'sec_vecinal', layerName: `${workspacePrefix}gc_sector_vecinal`, zIndex: 0, title: 'Sectores Vecinales' },
   { id: 'sec_catastrales', layerName: `${workspacePrefix}gc_sector_catastral`, zIndex: 0, title: 'Sectores Catastrales' },
@@ -31,8 +29,13 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias' },
   { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 0, title: 'Número de Cuadras' },
   { id: 'puertas', layerName: `${workspacePrefix}vw_tg_puertas`, zIndex: 0, title: 'Puertas' },
-  //* Vuelos y otros
-  { id: 'parques', layerName: `${workspacePrefix}vw_tg_area_rec_nombres`, zIndex: 0, title: 'Parques' },
+  
+  //* Vuelos y otros  
   { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 0, title: 'Fotos sin Procesar - 2018' },
   { id: 'fotos_sin_2024', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2024`, zIndex: 0, title: 'Fotos sin Procesar - 2024' },
+
+
+  //Normativa Urbana
+  { id: 'zonificacion', layerName: `${workspacePrefix}vw_nor_zonificacion_poligono`, zIndex: 1, title: 'Zonificación' },
+  { id: 'etiq_zonificacion', layerName: `${workspacePrefix}vw_nor_zonificacion_poligono_puntos`, zIndex: 2, title: 'Etiqueta Zonificación' },
 ];

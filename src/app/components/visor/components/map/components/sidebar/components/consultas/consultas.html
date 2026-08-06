@@ -210,9 +210,9 @@
                 class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
               @if (showHabilitacionSuggestions && habilitacionSuggestions.length > 0) {
               <div class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-30 max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
-                @for (suggestion of habilitacionSuggestions; track suggestion) {
+                @for (suggestion of habilitacionSuggestions; track suggestion.id) {
                 <button (click)="selectHabilitacionSuggestion(suggestion)" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
-                  {{ suggestion }}
+                  {{ suggestion.properties['urbanizaci'] }}
                 </button>
                 }
               </div>

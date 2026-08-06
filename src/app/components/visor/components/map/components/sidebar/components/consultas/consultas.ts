@@ -36,7 +36,7 @@ export class Consultas {
 
   // --- Lógica para autocompletado de Habilitación Urbana ---
   private readonly nombreHabilitacionSubject = new Subject<string>();
-  habilitacionSuggestions: string[] = [];
+  habilitacionSuggestions: GeoJSONFeature[] = [];
   showHabilitacionSuggestions = false;
   private readonly manzanaUrbanaSubject = new Subject<string>();
   manzanaSuggestions: string[] = [];
@@ -254,10 +254,14 @@ export class Consultas {
     setTimeout(() => this.showLoteSuggestions = false, 200);
   }
 
-  selectHabilitacionSuggestion(suggestion: string) {
-    this.nombreHabilitacion = suggestion;
+  selectHabilitacionSuggestion(suggestion: GeoJSONFeature) {
+    this.nombreHabilitacion = suggestion.properties['urbanizaci'];
     this.showHabilitacionSuggestions = false;
     this.habilitacionSuggestions = [];
+    this.manzanaUrbana = ''; // Limpiamos la manzana
+    this.loteUrbano = ''; // Limpiamos el lote
+    // Centramos el mapa en la habilitación seleccionada
+    this.mapService.fitToGeometry(suggestion.geometry, 'EPSG:32718', 16, false);
   }
 
   selectManzanaSuggestion(suggestion: string) {

@@ -880,27 +880,32 @@ export class MapService {
    * @param partialName El nombre parcial de la habilitación.
    * @returns Un Observable con un array de nombres de habilitaciones únicos.
    */
-  searchHabilitaciones(partialName: string): Observable<string[]> {
-    if (!partialName || partialName.trim().length < 3) {
-      return new Observable(subscriber => subscriber.next([]));
-    }
+  searchHabilitaciones(partialName: string): Observable<GeoJSONFeature[] | null> {
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
     const params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
       .set('request', 'GetFeature')
-      .set('typeName', `${workspacePrefix}vw_tg_habilitacion_urbana`)
+      .set('typeName', `${workspacePrefix}vw_tg_lote_urbano`)
       .set('outputFormat', 'application/json')
-      .set('propertyName', 'nombre')
-      .set('cql_filter', `nombre ILIKE '%${partialName.trim()}%'`);
+      .set('srsName', 'EPSG:32718')
+      .set('cql_filter', `urbanizaci ILIKE '%${partialName.trim().toUpperCase()}%'`);
 
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => {
-        if (!response?.features) return [];
-        // Extraemos los nombres y eliminamos duplicados
-        const names = response.features.map(f => f.properties['nombre']);
-        return [...new Set(names)];
+        if (response?.features?.length > 0) {
+          // Para evitar duplicados, creamos un mapa de habilitaciones únicas
+          const uniqueHabilitaciones = new Map<string, GeoJSONFeature>();
+          response.features.forEach(feature => {
+            const nombreHabilitacion = feature.properties['urbanizaci'];
+            if (!uniqueHabilitaciones.has(nombreHabilitacion)) {
+              uniqueHabilitaciones.set(nombreHabilitacion, feature);
+            }
+          });
+          return Array.from(uniqueHabilitaciones.values());
+        }
+        return null;
       })
     );
   }

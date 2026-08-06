@@ -629,6 +629,8 @@ export class MapService {
    * previas que no pasan explícitamente lat/lon.
    */
   goToSanIsidro(duration = 1800, onComplete?: (complete: boolean) => void): void {
+    // Cambiamos el mapa base a blanco como se solicitó.
+    
     // Usamos goToCoordinates para una animación de "vuelo" más suave.
     this.goToCoordinates(SAN_ISIDRO_CENTER[1], SAN_ISIDRO_CENTER[0], SAN_ISIDRO_ZOOM, duration, onComplete);
   }
@@ -639,11 +641,10 @@ export class MapService {
   goToDistrito(duration = ANIMATION_DURATION / 2): void {
     const map = this._map();
     if (!map) return;
-
     const view = map.getView();
     const extent32718 = [275224.08, 8660213.79, 281557.72, 8663299.55];
     const transformedExtent = transformExtent(extent32718, 'EPSG:32718', view.getProjection());
-
+    this.cambiarMapaBase('blanco');
     view.fit(transformedExtent, { duration, padding: [20, 20, 20, 20] });
   }
   /**

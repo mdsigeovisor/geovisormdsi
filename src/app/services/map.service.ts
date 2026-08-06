@@ -1059,7 +1059,6 @@ export class MapService {
     if (!query || query.trim().length < 3) {
       return new Observable(subscriber => subscriber.next([]));
     }
-
     // Normalizamos el query para asegurar que "CA " se convierta en "CA. "
     // Esto soluciona inconsistencias entre el autocompletado y la búsqueda exacta.
     const normalizedQuery = query.trim().toUpperCase().replace(/^CA\s/, 'CA. ').replace(/^CA\./, 'CA.');

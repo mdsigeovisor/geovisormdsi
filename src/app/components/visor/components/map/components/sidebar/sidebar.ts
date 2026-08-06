@@ -30,7 +30,7 @@ import { UbicacionCoordenadas } from './components/coordenadas/coordenadas';
 })
 export class Sidebar implements OnInit {
   ngOnInit(): void {
-    throw new Error('Method not implemented.');
+    
   }
   public mapService = inject(MapService);
   /** Exponemos el signal para que el template sepa cuál está activo visualmente */

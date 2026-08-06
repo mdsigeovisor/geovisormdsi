@@ -109,7 +109,8 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     expanded: false,
     items: [
       { type: 'layer', id: 'etiq_zonificacion', label: 'Etiqueta Zonificación', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'zonificacion', label: 'Zonificación', visible: false, opacity: 1, showInLegend: true },      
+      { type: 'layer', id: 'zonificacion', label: 'Zonificación', visible: false, opacity: 1, showInLegend: true },
+      { type: 'layer', id: 'amUrbHomogeneo', label: 'Ambito Urbano Homogéneo', visible: false, opacity: 1, showInLegend: true },
     ],
   },
 

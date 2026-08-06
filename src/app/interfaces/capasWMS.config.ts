@@ -36,6 +36,7 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
 
 
   //Normativa Urbana
-  { id: 'zonificacion', layerName: `${workspacePrefix}vw_nor_zonificacion_poligono`, zIndex: 1, title: 'Zonificación' },
   { id: 'etiq_zonificacion', layerName: `${workspacePrefix}vw_nor_zonificacion_poligono_puntos`, zIndex: 2, title: 'Etiqueta Zonificación' },
+  { id: 'zonificacion', layerName: `${workspacePrefix}vw_nor_zonificacion_poligono`, zIndex: 1, title: 'Zonificación' },  
+  { id: 'amUrbHomogeneo', layerName: `${workspacePrefix}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 1, title: 'Ambito Urbano Homogéneo'},
 ];

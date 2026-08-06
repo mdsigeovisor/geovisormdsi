@@ -13,12 +13,12 @@ export const routes: Routes = [
   },
   {
 		path: '',
-		redirectTo: '/visor',
+		redirectTo: '/auth',
 		pathMatch: 'full',
 	},
 	{
 		path: '**',
-		redirectTo: '/visor',
+		redirectTo: '/auth',
 		pathMatch: 'full',
 	},
 ];

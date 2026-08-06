@@ -47,10 +47,8 @@
               <app-consultas *ngSwitchCase="'search'" (onClose)="toggleSidebar()"></app-consultas>
               <app-capas *ngSwitchCase="'layers'" (onClose)="toggleSidebar()"></app-capas>
               <app-leyenda *ngSwitchCase="'legend'" (onClose)="toggleSidebar()"></app-leyenda>
-              <app-ortofotos *ngSwitchCase="'orthophotos'" (onClose)="toggleSidebar()"></app-ortofotos>
-              <app-normativa *ngSwitchCase="'normativa'" (onClose)="toggleSidebar()"></app-normativa>
-              <app-infraestructura *ngSwitchCase="'infraestructura'" (onClose)="toggleSidebar()"></app-infraestructura>
-              <app-tematica *ngSwitchCase="'thematic'" (onClose)="toggleSidebar()"></app-tematica>              
+              <app-coordenadas *ngSwitchCase="'coordenadas'" (onClose)="toggleSidebar()"></app-coordenadas>
+              <app-imprimir *ngSwitchCase="'print'" (onClose)="toggleSidebar()"></app-imprimir>
               <app-descargaspdf *ngSwitchCase="'downloads'" (onClose)="toggleSidebar()"></app-descargaspdf>
               <!-- Mensaje para herramientas sin componente aún -->
               <div *ngSwitchDefault class="flex flex-col items-center justify-center h-full text-gray-400">

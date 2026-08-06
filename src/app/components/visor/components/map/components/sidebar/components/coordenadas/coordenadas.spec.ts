@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Infraestructura } from './infraestructura';
+import { UbicacionCoordenadas } from './coordenadas';
 
-describe('Infraestructura', () => {
-  let component: Infraestructura;
-  let fixture: ComponentFixture<Infraestructura>;
+describe('UbicacionCoordenadas', () => {
+  let component: UbicacionCoordenadas;
+  let fixture: ComponentFixture<UbicacionCoordenadas>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Infraestructura]
+      imports: [UbicacionCoordenadas]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Infraestructura);
+    fixture = TestBed.createComponent(UbicacionCoordenadas);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

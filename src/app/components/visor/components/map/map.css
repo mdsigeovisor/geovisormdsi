@@ -24,6 +24,10 @@
   background-color: #ffffff !important;
 }
 
+/*
+  * Keyframes para las animaciones de los modales.
+  * `fadeIn` para el fondo y `scaleIn` para el contenido del modal.
+*/
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -44,3 +48,10 @@
   }
 }
 
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}

@@ -1,5 +1,6 @@
 import { Injectable, signal, inject, NgZone, effect } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { DrawMeasureService } from './draw.service';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import { Observable, map } from 'rxjs';
@@ -81,6 +82,7 @@ export class MapService {
 
   private readonly http = inject(HttpClient);
   private readonly zone = inject(NgZone);
+  private readonly drawMeasureService = inject(DrawMeasureService);
   baseLayerType = signal<TipoMapaBase>('streets');
 
   /** Instancia del mapa OpenLayers */
@@ -454,6 +456,11 @@ export class MapService {
       }
     ];
     olMap.on('singleclick', (evt) => {
+      // Si se está usando una herramienta de dibujo, no hacemos nada.
+      if (this.drawMeasureService.isDrawing()) {
+        return;
+      }
+
       const view = olMap.getView();
       const viewResolution = view.getResolution()!;
       const projection = view.getProjection();

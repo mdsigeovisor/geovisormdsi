@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import Map from 'ol/Map';
 import Draw from 'ol/interaction/Draw';
 import VectorLayer from 'ol/layer/Vector';
@@ -19,6 +19,7 @@ export class DrawMeasureService {
   private draw?: Draw;
   private readonly source = new VectorSource();
   private overlays: Overlay[] = [];
+  public readonly isDrawing = signal(false);
 
   private readonly layer = new VectorLayer({
     source: this.source,
@@ -73,6 +74,7 @@ export class DrawMeasureService {
     if (this.map && this.draw) {
       this.map.removeInteraction(this.draw);
       this.draw = undefined;
+      this.isDrawing.set(false);
     }
 
     this.map?.getTargetElement().style.setProperty('cursor', '');
@@ -84,6 +86,7 @@ export class DrawMeasureService {
     }
 
     console.log('Mapa en servicio:', this.map);
+    this.isDrawing.set(true);
     console.log('Tipo dibujo:', tipo);
 
     this.desactivarHerramienta();
@@ -145,6 +148,7 @@ export class DrawMeasureService {
 
       this.map?.getTargetElement().style.setProperty('cursor', '');
       this.desactivarHerramienta();
+      this.isDrawing.set(false);
     });
   }
 

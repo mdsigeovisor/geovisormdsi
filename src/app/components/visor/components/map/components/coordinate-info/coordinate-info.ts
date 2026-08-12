@@ -101,3 +101,4 @@ export class CoordinateInfo implements OnDestroy {
   }
 
 }
+

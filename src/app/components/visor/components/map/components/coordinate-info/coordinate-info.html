@@ -1,39 +1,39 @@
-<div class="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-max max-w-[95vw] pointer-events-none">
-  <div id="tour-coordinate-info" class="bg-primary/90 backdrop-blur-md rounded-xl px-4.5 py-2.25 shadow-2xl border border-white/10 pointer-events-auto">
-    <div class="flex flex-col md:flex-row items-center gap-y-2 md:gap-x-4.5 text-[11px] text-white font-mono">
+<div class="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-max max-w-[90vw] pointer-events-none">
+  <div id="tour-coordinate-info" class="bg-primary/90 backdrop-blur-md rounded-2xl px-6 py-1 shadow-2xl shadow-lime-400/50 border border-lime-400/30 pointer-events-auto cursor-pointer">
+    <div class="flex flex-col md:flex-row items-center gap-y-2 md:gap-x-6 text-base text-white font-sans" style="font-family: 'Arial Narrow', sans-serif;">
       <!-- Grupo 1: DATUM + Coordenadas Geográficas -->
-      <div class="flex items-center gap-4.5">
-        <div class="flex items-center gap-1">
-          <span class="font-black uppercase tracking-tighter">DATUM WGS 84</span>
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-1.5">
+          <span class="uppercase tracking-tighter">DATUM WGS 84</span>
         </div>
-        <div class="w-px h-4.5 bg-white/20"></div>
+        <div class="w-px h-4 bg-white/20"></div>
         
-        <div class="flex items-center gap-4.5">
-          <div class="flex items-center gap-1">
-            <span class="text-white/60 font-bold uppercase">Lat:</span>
-            <span class="font-bold">{{ lat.toFixed(5) || '---' }}</span>
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-1.5">
+            <span class="text-white/60 uppercase">Lat:</span>
+            <span>{{ lat.toFixed(4) || '---' }}</span>
           </div>
-          <div class="flex items-center gap-1">
-            <span class="text-white/60 font-bold uppercase">Lon:</span>
-            <span class="font-bold">{{ lon.toFixed(5) || '---' }}</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-white/60 uppercase">Lon:</span>
+            <span>{{ lon.toFixed(4) || '---' }}</span>
           </div>
         </div>
       </div>
       <!-- Separador vertical que solo se muestra en Desktop -->
-      <div class="hidden md:block w-px h-4.5 bg-white/20"></div>
+      <div class="hidden md:block w-px h-4 bg-white/20"></div>
       <!-- Grupo 2: Información UTM -->
-      <div class="flex items-center gap-4.5">
-        <div class="flex items-center gap-1">
-          <span class="text-white/60 font-bold uppercase">Zona:</span>
-          <span class="font-bold">{{ zona || '--' }}</span>
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-1.5">
+          <span class="text-white/60 uppercase">Zona:</span>
+          <span>{{ zona || '--' }}</span>
         </div>
-        <div class="flex items-center gap-1">
-          <span class="text-white/60 font-bold uppercase">N:</span>
-          <span class="font-bold">{{ norte.toFixed(2) || '---' }}</span>
+        <div class="flex items-center gap-1.5">
+          <span class="text-white/60 uppercase">N:</span>
+          <span>{{ norte.toFixed(4) || '---' }}</span>
         </div>
-        <div class="flex items-center gap-1">
-          <span class="text-white/60 font-bold uppercase">E:</span>
-          <span class="font-bold">{{ este.toFixed(2) || '---' }}</span>
+        <div class="flex items-center gap-1.5">
+          <span class="text-white/60 uppercase">E:</span>
+          <span>{{ este.toFixed(4) || '---' }}</span>
         </div>
       </div>
     </div>

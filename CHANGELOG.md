@@ -55,3 +55,4 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 *   **Arquitectura:** El proyecto se estructura con componentes `standalone`, mejorando la modularidad y reduciendo la dependencia de `NgModules`.
 
 ---
+

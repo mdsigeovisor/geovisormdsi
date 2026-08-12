@@ -14,6 +14,22 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     items: [
       {
         type: 'subsection',
+        id: 'catastro',
+        title: 'CARTOGRAFIA',        
+        expanded: false,
+        layers: [
+          { type: 'layer', id: 'etiquetas_catastrales', label: 'Etiquetas Catastrales', visible: true, opacity: 1, showInLegend: false },
+          { type: 'layer', id: 'num_cuadra', label: 'Cuadra', visible: true, opacity: 1, showInLegend: false },
+          { type: 'layer', id: 'construcciones', label: 'Construcciones', visible: true, opacity: 1, showInLegend: false },
+          { type: 'layer', id: 'lote', label: 'Lote', visible: true, opacity: 1, showInLegend: false },
+          
+          { type: 'layer', id: 'manzana', label: 'Manzana', visible: true, opacity: 1, showInLegend: false },
+          { type: 'layer', id: 'veredas', label: 'Veredas', visible: true, opacity: 1, showInLegend: false },
+          { type: 'layer', id: 'arearecreativa', label: 'Área Recreativa', visible: true, opacity: 1, showInLegend: false },
+        ],
+      },
+      {
+        type: 'subsection',
         id: 'sectores',
         title: 'SECTORIZACIÓN',
         expanded: false,
@@ -35,21 +51,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
           
         ],
       },
-      {
-        type: 'subsection',
-        id: 'catastro',
-        title: 'CARTOGRAFIA CATASTRAL',
-        expanded: false,
-        layers: [
-          { type: 'layer', id: 'num_cuadra', label: 'Cuadra', visible: true, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'construcciones', label: 'Construcciones', visible: true, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'lote', label: 'Lote', visible: true, opacity: 1, showInLegend: false },
-          
-          { type: 'layer', id: 'manzana', label: 'Manzana', visible: true, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'veredas', label: 'Veredas', visible: true, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'arearecreativa', label: 'Área Recreativa', visible: true, opacity: 1, showInLegend: false },
-        ],
-      },
+      
       {
         type: 'subsection',
         id: 'nom_vias',

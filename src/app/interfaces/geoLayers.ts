@@ -52,6 +52,7 @@ export interface SubSection {
   type: 'subsection';
   id: string;
   title: string;
+  subtitle?: string;
   expanded: boolean;
   layers: LayerItem[];
 }

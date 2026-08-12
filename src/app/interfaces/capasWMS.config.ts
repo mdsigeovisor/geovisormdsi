@@ -9,6 +9,17 @@ const workspacePrefix = environment.geoserver.workspacePrefix;
  * de nuevas capas WMS sin modificar la lógica del `MapService`.
  */
 export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
+  //* Capas Catastrales
+  { id: 'etiquetas_catastrales', layerName: `${workspacePrefix}gcEtiquetaCatastral`, zIndex: 2, title: 'Etiquetas Catastrales' },
+  { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 1, title: 'Construcciones' },
+  { id: 'lote', layerName: `${workspacePrefix}vw_tg_lote`, zIndex: 0, title: 'Lote Catastral' },
+  { id: 'manzana', layerName: `${workspacePrefix}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
+  { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
+  { id: 'arearecreativa', layerName: `${workspacePrefix}gc_area_verde`, zIndex: 0, title: 'Área Recreativa' },
+  { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias' },
+  { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 0, title: 'Número de Cuadras' },
+  { id: 'puertas', layerName: `${workspacePrefix}vw_tg_puertas`, zIndex: 0, title: 'Puertas' },
+
   //* Trama Externa
   { id: 'mz_colindantes', layerName: `${workspacePrefix}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Cartografia otros distritos' },
   //* Sectores
@@ -19,16 +30,7 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   // Sectores y Subsectores
   { id: 'sec_subvecinal', layerName: `${workspacePrefix}gc_subsector_vecinal`, zIndex: 1, title: 'Subsectores Vecinales' },
   { id: 'sec_vecinal', layerName: `${workspacePrefix}gc_sector_vecinal`, zIndex: 1, title: 'Sectores Vecinales' },
-  { id: 'sec_catastrales', layerName: `${workspacePrefix}gc_sector_catastral`, zIndex: 1, title: 'Sectores Catastrales' },
-  //* Capas Catastrales
-  { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 1, title: 'Construcciones' },
-  { id: 'lote', layerName: `${workspacePrefix}gc_lote_catastral`, zIndex: 0, title: 'Lote Catastral' },
-  { id: 'manzana', layerName: `${workspacePrefix}gc_manzana_catastral`, zIndex: 0, title: 'Manzana Catastral' },
-  { id: 'veredas', layerName: `${workspacePrefix}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
-  { id: 'arearecreativa', layerName: `${workspacePrefix}gc_area_verde`, zIndex: 0, title: 'Área Recreativa' },
-  { id: 'vias', layerName: `${workspacePrefix}vw_tg_via`, zIndex: 0, title: 'Vias' },
-  { id: 'num_cuadra', layerName: `${workspacePrefix}vw_tg_cuadra`, zIndex: 0, title: 'Número de Cuadras' },
-  { id: 'puertas', layerName: `${workspacePrefix}vw_tg_puertas`, zIndex: 0, title: 'Puertas' },
+  { id: 'sec_catastrales', layerName: `${workspacePrefix}gc_sector_catastral`, zIndex: 1, title: 'Sectores Catastrales' },  
   
   //* Vuelos y otros  
   { id: 'fotos_sin_2018', layerName: `${workspacePrefix}vw_tg_fotosSinProcesar_2018`, zIndex: 1, title: 'Fotos sin Procesar - 2018' },

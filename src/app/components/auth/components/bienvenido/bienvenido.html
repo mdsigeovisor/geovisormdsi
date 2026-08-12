@@ -6,28 +6,26 @@
   </div>
 
   <!-- Contenedor principal para la tarjeta y la imagen lateral -->
-  <div class="relative z-10 flex w-full max-w-4xl items-stretch justify-center">
+  <div class="relative z-10 flex w-full max-w-4xl items-stretch justify-center drop-shadow-2xl">
     <!-- Tarjeta de bienvenida -->
     <div
-      class="w-full max-w-md flex-shrink-0 scale-[0.8] transform overflow-hidden rounded-3xl bg-white/90 px-6 py-8 shadow-[0_0_100px_10px_rgba(255,255,255,0.9)] backdrop-blur-md transition-all duration-300 md:scale-100 border border-white/20">
+      class="w-full max-w-md flex-shrink-0 scale-[0.8] transform overflow-hidden rounded-3xl bg-white px-6 py-8 transition-all duration-300 md:scale-100 border border-gray-200">
       <div class="relative z-10 text-center">
 
         <!-- Contenido de la tarjeta -->
       <div class="mb-4 flex items-center justify-center gap-2">
-        <img src="assets/images/logomsi.jpg"
+        <img #logo
+          src="assets/images/LogoMSI2024.jpg"
           alt="Municipalidad de San Isidro"
           class="hidden md:block h-24 w-auto"
-          onerror="this.onerror=null; this.src='https://v0.app/placeholder.svg';">
+          (error)="logo.src='https://v0.app/placeholder.svg'">
       </div>
       <div class="mb-6 text-center">
-        <h1 class="text-2xl font-bold text-primary">Bienvenidos</h1>
-        <p class="text-lg font-medium text-primary">Visor Atención al
-          Ciudadano</p>
+        <h1 class="text-lg font-bold text-primary">Bienvenidos</h1>
+        <p class="text-2xl font-medium text-primary">Sistema de Información Geográfica</p>
       </div>
       <p class="mb-4 text-center text-sm leading-snug text-primary">
-        Acceda al visor geográfico para consultar información urbana, catastral
-        y territorial.
-      </p>
+        Acceda al visor Geográfico para consultar información catastral del distrito de San Isidro.</p>
       <div class="mb-4 flex items-center gap-3 rounded-xl bg-gray-600/30 p-4">
         <input id="terms" type="checkbox"
           class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
@@ -44,26 +42,19 @@
       </div>
       <div class="flex flex-col gap-4">
         <button routerLink="/visor" [disabled]="!termsAccepted"
-          class="flex items-center justify-center gap-2 h-10 w-full rounded-xl bg-[#fcf4dd]/80 border border-[#e9c46a]/30 text-primary text-base font-semibold transition-all hover:bg-[#f7e8c3] active:scale-[0.98] disabled:opacity-50 cursor-pointer disabled:cursor-default">
-          <span class="material-icons text-primary">account_circle</span>
-          Consulta como vecino
+          class="flex items-center justify-center gap-2 h-10 w-full rounded-xl bg-primary text-white text-base font-semibold transition-all hover:bg-primary/90 active:scale-[0.98] disabled:opacity-50 cursor-pointer disabled:cursor-default">
+          <span class="material-icons">account_circle</span>
+          Ingresar
         </button>
-        <button routerLink="/auth/login" [disabled]="!termsAccepted"
-          class="flex items-center justify-center gap-2 h-10 w-full rounded-xl bg-primary text-white text-base font-semibold shadow-md transition-all hover:brightness-105 active:scale-[0.98] disabled:opacity-50 cursor-pointer disabled:cursor-default">
-          <span class="material-icons text-white">login</span>
-          Iniciar Sesión
-        </button>
-
       </div>
-      <p class="mt-4 text-center text-base font-medium text-primary">MSI ©
-        {{ currentYear }}</p>
+      <p class="mt-4 text-center text-base font-medium text-primary">Municipalidad de San Isidro © {{ currentYear }}</p>
       </div>
     </div>
 
     <!-- Imagen lateral (visible en pantallas grandes) -->
     <div class="hidden lg:block ml-[-60px] z-[-1]">
       <div
-        class="image-slideshow h-full w-[450px] bg-cover bg-center rounded-2xl shadow-2xl border-4 border-white/50">
+        class="image-slideshow h-full w-[450px] bg-cover bg-center rounded-2xl border-4 border-white/50">
       </div>
     </div>
   </div>

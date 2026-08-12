@@ -1,23 +1,34 @@
-import { Component, signal, HostListener } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../../../../../../environments/environment';
-
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './navbar.html',
-  // Asumo que no hay un css específico o que está en línea con el html
+  styleUrl: './navbar.css'
 })
-export class Navbar {
-  public version = environment.version;
-  public showLogoutModal = signal(false);
+export class Navbar implements OnInit, OnDestroy {
+  showLogoutModal = signal(false);
+  visitCount = 1234;
+  private intervalId: any;
 
-  @HostListener('document:keydown.escape', ['$event'])
-  onKeydownHandler(event: KeyboardEvent) {
-    if (this.showLogoutModal()) {
-      this.cancelLogout();
+  constructor(private router: Router) {}
+
+  ngOnInit(): void {
+    this.intervalId = setInterval(() => {
+      if (this.visitCount < 2000) {
+        this.visitCount++;
+      } else {
+        clearInterval(this.intervalId);
+      }
+    }, 10);
+  }
+
+  ngOnDestroy(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
     }
   }
 
@@ -25,17 +36,12 @@ export class Navbar {
     this.showLogoutModal.set(true);
   }
 
-  cancelLogout(): void {
+  confirmLogout(): void {
     this.showLogoutModal.set(false);
+    this.router.navigate(['/auth']);
   }
 
-  confirmLogout(): void {
-    console.log('Cerrando sesión desde navbar.ts...');
-    this.showLogoutModal.set(true);
-    // Nota: Por seguridad, los navegadores modernos solo permiten que los scripts
-    // cierren ventanas que ellos mismos abrieron. Si el usuario abrió la pestaña
-    // manualmente, window.close() no funcionará. Una alternativa fiable es
-    // redirigir a una página en blanco.
-    window.location.href = 'about:blank';
+  cancelLogout(): void {
+    this.showLogoutModal.set(false);
   }
 }

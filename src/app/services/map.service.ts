@@ -148,7 +148,7 @@ export class MapService {
     if (this._map()) {
       const existingMap = this._map()!;
       existingMap.setTarget(target);
-      setTimeout(() => this.isReady.set(true), 5000);
+      setTimeout(() => this.isReady.set(true), 2000);
       return existingMap;
     }
     this.setupBaseLayers();
@@ -296,7 +296,7 @@ export class MapService {
     olMap.once('rendercomplete', () => {
       setTimeout(() => {
         this.isReady.set(true);
-      }, 5000);
+      }, 2000);
     });
   }
   /**

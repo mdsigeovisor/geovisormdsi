@@ -7,7 +7,7 @@ flowchart TB
   %% =========================
   subgraph L1[Front]
     direction LR
-    FRONT[GeoVisorMDSI]
+    FRONT[GeoVisor-MDSI]
   end
 
   subgraph L2[APIs]
@@ -42,7 +42,7 @@ flowchart TB
   API -.->|TCP 5432| DB2
   ARM -.->|TCP 5432| DB2
   POLI -.->|TCP 5432| DB2
-  GEOSERVER -.->|JDBC| DB
+  GEOSERVER -.->|PostgreSQL| DB
   SYS -.->|TCP 5432| DB1
   AUTH -.->|TCP 5432| DB1
 

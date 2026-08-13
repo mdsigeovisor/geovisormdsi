@@ -10,7 +10,7 @@ graph TB
   end
 
   subgraph "Capa de Servicios (APIs)"
-    AUTH[seguridad]
+    AUTH[Seguridad]
   end
 
   subgraph "Bases de Datos"
@@ -18,7 +18,11 @@ graph TB
   end
   
   subgraph "Servicios Geoespaciales"
-    GEOSERVER[GeoServer]
+    GEOSERVER_PROD[GeoServer]
+  end
+
+  subgraph "Servicios Geoespaciales"
+    GEOSERVER_DEV[GeoServer]
   end
 
   subgraph "Servicios Ortofotos"
@@ -29,7 +33,8 @@ graph TB
   %% RELACIONES
   %% =========================
   FRONT --> AUTH
-  FRONT --> GEOSERVER
+  FRONT --> GEOSERVER_PROD
+  FRONT --> GEOSERVER_DEV
   FRONT --> ORTOFOTOS
   
 

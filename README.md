@@ -13,8 +13,12 @@ graph TB
     AUTH[Seguridad]
   end
 
-  subgraph "Bases de Datos"
-    DB1[(mdsibde - 192.168.40.57)]
+  subgraph "Bases de Datos PostgreSQL"
+    DB1[(mdsibde - 192.168.40.57:5432)]
+  end
+
+  subgraph "Bases de Datos ArcGIS"
+    DB1[(mdsibde - 192.168.40.57:5433)]
   end
   
   subgraph "Servicios Geoespaciales"

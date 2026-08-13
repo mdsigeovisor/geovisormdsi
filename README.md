@@ -26,25 +26,9 @@ flowchart TB
 
   %% =========================
   %% RELACIONES
-  %% =========================
-  FRONT -->|HTTP| EXPO
-  FRONT -->|HTTP| REPO
-  FRONT -->|HTTP| API
-  FRONT -->|HTTP| SYS
-  FRONT -->|HTTP| AUTH
-  FRONT -->|HTTP| ARM
-  FRONT -->|HTTP| POLI
-  FRONT -->|WMS/WFS| GEOSERVER
-  FRONT -->|HTTP| WIKI
-  FRONT -->|HTTP| GOOGLE
-  EXPO -.->|TCP 5432| DB3
-  REPO -.->|TCP 5432| DB3
-  API -.->|TCP 5432| DB2
-  ARM -.->|TCP 5432| DB2
-  POLI -.->|TCP 5432| DB2
-  GEOSERVER -.->|JDBC| DB2
-  SYS -.->|TCP 5432| DB1
-  AUTH -.->|TCP 5432| DB1
+  %% =========================  
+  GEOSERVER -.->|JDBC| DB1  
+  AUTH -.->|TCP 0000| DB2
 
   %% =========================
   %% ESTILOS

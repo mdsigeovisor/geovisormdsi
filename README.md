@@ -1,3 +1,14 @@
+## 📏 Estándares y buenas prácticas
+
+- Arquitectura modular
+- Lazy loading para módulos
+- Tipado estricto habilitado
+- ESLint configurado
+- Angular Style Guide
+- Separación clara de responsabilidades
+
+---
+
 ## 📦 Diagrama de componentes:
 
 ```mermaid

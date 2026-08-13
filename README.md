@@ -18,11 +18,11 @@ graph TB
   end
   
   subgraph "Servicios Geoespaciales"
-    GEOSERVER_PROD[GeoServer]
+    GEOSERVER_PROD[GeoServer 3.0 - Produccion]
   end
 
   subgraph "Servicios Geoespaciales"
-    GEOSERVER_DEV[GeoServer]
+    GEOSERVER_DEV[GeoServer 3.0 - Desarrollo]
   end
 
   subgraph "Servicios Ortofotos"

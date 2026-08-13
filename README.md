@@ -42,8 +42,8 @@ graph TB
   FRONT --> ORTOFOTOS
   FRONT --> ORTOFOTOS
   
-  GEOSERVER_PROD -- "PostgreSQL" --> DB2
-  GEOSERVER_DEV -- "PostgreSQL" --> DB2
+  GEOSERVER_PROD -- "PostgreSQL" --> DB1
+  GEOSERVER_DEV -- "PostgreSQL" --> DB1
   
 
   %% =========================
@@ -55,5 +55,6 @@ graph TB
 
   class FRONT front;
   class AUTH,GEOSERVER service;
+  class DB1 db;
   class DB2 db;
 ```

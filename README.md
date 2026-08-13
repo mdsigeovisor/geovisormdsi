@@ -28,8 +28,8 @@ graph TB
   %% =========================
   %% RELACIONES
   %% =========================
-  FRONT --> AUTH
-  FRONT --> GEOSERVER
+  FRONT <-- AUTH
+  FRONT <-- GEOSERVER
 
   AUTH --> DB1
   GEOSERVER -- "PostgreSQL" --> DB1

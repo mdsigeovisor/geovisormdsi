@@ -9,6 +9,16 @@
 
 ---
 
+## 🔀 Flujo de trabajo Git
+
+- Rama principal: `main`
+- Desarrollo y Producción: `main`
+- Features: `feature/hu*`
+- Fixes: `hotfix/*`
+
+
+---
+
 ## 📦 Diagrama de componentes:
 
 ```mermaid

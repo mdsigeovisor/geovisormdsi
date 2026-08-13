@@ -7,11 +7,7 @@ graph TB
   %% =========================
   subgraph "Cliente Web"
     FRONT[GeoVisor-MDSI]
-  end
-
-  subgraph "Capa de Servicios (APIs)"
-    AUTH[Seguridad]
-  end
+  end  
 
   subgraph "Bases de Datos PostgreSQL"
     DB1[(mdsibde - 192.168.40.57:5432)]
@@ -35,6 +31,10 @@ graph TB
 
   subgraph "Interoperatibilidad"
     INTER[http://192.168.41.160/DataGIS_WGS84/WEBFILES]
+  end
+
+  subgraph "Capa de Servicios (APIs)"
+    AUTH[Seguridad]
   end  
 
   %% =========================

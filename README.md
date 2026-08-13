@@ -10,7 +10,7 @@ graph TB
   end
 
   subgraph "Capa de Servicios (APIs)"
-    AUTH[mdsi-auth]
+    AUTH[seguridad]
   end
 
   subgraph "Bases de Datos"

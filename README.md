@@ -67,7 +67,11 @@ graph TB
 ## 🌍 Links de las publicaciones:
 
 [Local](http://localhost:4200/)
+
 [Desarrollo](http://192.168.40.58:80)
+
 [Producción - IP](http://192.168.40.58:80)
+
 [Producción - URL](https://visor.mdsi.gob.pe/)
+
 [Producción - GeoServer](https://geoserver.mdsi.gob.pe/)

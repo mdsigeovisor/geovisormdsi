@@ -11,22 +11,15 @@ flowchart TB
   end
 
   subgraph L2[APIs]
-    direction LR
-    REPO[sicu-ladm-consultas-api]
-    EXPO[sicu-visor-ladm-api]
-    API[sicu-visor-api]
-    SYS[sicu.sysmanager]
-    AUTH[sicu.oauth2]
-    ARM[sicu.armonization]
-    POLI[sicu-consultas-ficha-api]
+    direction LR    
+    AUTH[sicu.oauth2]    
   end
 
   subgraph L3[Base de datos]
     direction LR
     DB1[(192.168.40.57)]    
   end
-
-  subgraph L4[Otros]
+  subgraph L4[Servidor de Mapas]
     direction LR
     GEOSERVER[GeoServer]    
   end

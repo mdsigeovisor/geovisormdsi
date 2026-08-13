@@ -75,12 +75,14 @@ graph TB
   %% =========================
   %% ESTILOS
   %% =========================
-  classDef front fill:#0f172a,stroke:#334155,stroke-width:1px,color:#fff;
-  classDef service fill:#111827,stroke:#374151,stroke-width:1px,color:#fff;
-  classDef db fill:#fde68a,stroke:#92400e,stroke-width:1px,color:#111827;
+  classDef front fill:#518330,stroke:#3b6d22,stroke-width:2px,color:#fff;
+  classDef service fill:#f0fdf4,stroke:#84cc16,stroke-width:1px,color:#166534;
+  classDef db fill:#fefce8,stroke:#eab308,stroke-width:1px,color:#854d0e;
+  classDef external fill:#fafafa,stroke:#a1a1aa,stroke-width:1px,color:#3f3f46;
 
   class FRONT front;
-  class AUTH,GEOSERVER service;
+  class AUTH,MAPA,GEOSERVER_PROD,GEOSERVER_DEV,ORTOFOTOS,SEGURIDAD service;
+  class INTER external;
   class DB1 db;
   class DB2 db;
 ```

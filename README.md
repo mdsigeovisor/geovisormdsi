@@ -22,7 +22,7 @@ graph TB
   end
 
   subgraph "Servicios Ortofotos"
-    192.168.40.57[8082]
+    ORTOFOTOS[tiles_static_app]
   end
 
   %% =========================
@@ -30,6 +30,9 @@ graph TB
   %% =========================
   FRONT --> AUTH
   FRONT --> GEOSERVER
+  FRONT --> ORTOFOTOS
+  
+
 
   AUTH --> DB1
   GEOSERVER -- "PostgreSQL" --> DB1

@@ -18,7 +18,15 @@ graph TB
   %% =========================
   subgraph "Cliente Web"
     FRONT[GeoVisor-MDSI]
-  end  
+  end 
+
+  subgraph "Auth"
+    FRONT[Auth]
+  end
+
+  subgraph "Mapa"
+    FRONT[Mapa]
+  end
 
   subgraph "Bases de Datos PostgreSQL"
     DB1[(mdsibde - 192.168.40.57:5432)]

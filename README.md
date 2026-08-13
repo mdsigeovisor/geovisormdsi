@@ -12,16 +12,17 @@ flowchart TB
 
   subgraph L2[APIs]
     direction LR    
-    AUTH[mdsi-auth]    
+    AUTH[mdsi-auth]
   end
 
   subgraph L3[Base de datos]
     direction LR
     DB1[(192.168.40.57)]    
   end
+
   subgraph L4[Servidor de Mapas]
     direction LR
-    GEOSERVER[GeoServer]    
+    GEOSERVER[GeoServer]
   end
 
   %% =========================
@@ -44,7 +45,7 @@ flowchart TB
   POLI -.->|TCP 5432| DB2
   GEOSERVER -.->|PostgreSQL| DB1
   SYS -.->|TCP 5432| DB1
-  AUTH -.->|TCP 5432| DB2
+  AUTH -.->|TCP 5432| L2
 
   %% =========================
   %% ESTILOS

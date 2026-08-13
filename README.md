@@ -33,6 +33,10 @@ graph TB
     ORTOFOTOS[tiles_static_app]
   end
 
+  subgraph "Interoperatibilidad"
+    INTER[http://192.168.41.160/DataGIS_WGS84/WEBFILES]
+  end  
+
   %% =========================
   %% RELACIONES
   %% =========================

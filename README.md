@@ -61,11 +61,11 @@ graph TB
   %% =========================
   FRONT --> AUTH
   FRONT --> MAPA
-  FRONT --> SEGURIDAD
-  FRONT --> GEOSERVER_PROD
-  FRONT --> GEOSERVER_DEV
-  FRONT --> ORTOFOTOS
-  FRONT --> INTER
+  AUTH --> SEGURIDAD
+  MAPA --> GEOSERVER_PROD
+  MAPA --> GEOSERVER_DEV
+  MAPA --> ORTOFOTOS
+  MAPA --> INTER
   DB1 --> DB2
   
   GEOSERVER_PROD -- "PostgreSQL" --> DB1

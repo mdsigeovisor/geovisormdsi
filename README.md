@@ -25,54 +25,54 @@ Desarrollado con **Angular 20** y **OpenLayers**.
 
 ## 🏛️ Arquitectura de la Aplicación
 
-El siguiente diagrama ilustra la arquitectura general del sistema, mostrando la interacción entre el frontend, los servicios backend y las fuentes de datos externas.
+La aplicación sigue una arquitectura de microservicios orientada a la web, donde el frontend actúa como un cliente inteligente que consume datos de diversas fuentes especializadas. A continuación, se detalla cada componente principal:
+
+*   **Frontend (Visor Geográfico):** Es la interfaz de usuario desarrollada en **Angular**. Se encarga de la renderización del mapa, la gestión de la interacción del usuario y la orquestación de las llamadas a los diferentes servicios backend.
+
+*   **Servicios Geoespaciales:**
+    *   **GeoServer:** Actúa como el motor geoespacial principal. Publica los datos catastrales almacenados en PostGIS a través de estándares OGC como **WMS** (para la visualización de capas) y **WFS** (para consultas de datos vectoriales).
+    *   **Servidor de Ortofotos (XYZ):** Un servicio dedicado a servir teselas (tiles) de ortofotos históricas, optimizado para un alto rendimiento en la visualización de imágenes aéreas.
+
+*   **Servicios de Datos Legacy:**
+    *   **API de Fichas (ASP):** Una API existente que provee acceso a información detallada de los predios (fichas) y a recursos como las fotografías de dron. El visor se integra con este sistema para mantener la continuidad del negocio.
+
+*   **Fuentes de Datos Externas:**
+    *   **Google Maps API y OpenStreetMap:** Proveen las capas base de mapa satelital y de calles, respectivamente, enriqueciendo el contexto geográfico del visor.
+
+*   **Base de Datos:**
+    *   **PostGIS / BD Catastral:** Es el repositorio central de la información geoespacial. Utiliza PostgreSQL con la extensión PostGIS para almacenar y gestionar de forma eficiente los datos de lotes, vías, y otra información territorial.
 
 ```mermaid
 graph TB
-  %% =========================
-  %% COMPONENTES
-  %% =========================
-  subgraph L1[Frontend]
-    direction LR
+  subgraph "Cliente Web"
     FRONT[Visor Geográfico (Angular)]
   end
 
-  subgraph L2[Servicios Geoespaciales]
-    direction LR
+  subgraph "Servicios Geoespaciales"
     GEOSERVER[GeoServer]
     ORTOFOTOS[Servidor de Ortofotos (XYZ)]
   end
 
-  subgraph L3[Servicios de Datos Legacy]
-    direction LR
+  subgraph "Servicios de Datos"
     LEGACY_API[API de Fichas (ASP)]
   end
 
-  subgraph L4[Fuentes de Datos Externas]
-    direction LR
+  subgraph "Fuentes Externas"
     GOOGLE_MAPS[Google Maps API]
     OSM[OpenStreetMap]
   end
 
-  subgraph L5[Base de Datos]
-    direction LR
+  subgraph "Almacenamiento"
     DB_POSTGIS[(PostGIS / BD Catastral)]
   end
 
-  %% =========================
-  %% RELACIONES
-  %% =========================
-  FRONT -- "WMS/WFS <br/> (Capas, Búsquedas, Consultas)" --> GEOSERVER
-  FRONT -- "XYZ Tiles <br/> (Ortofotos)" --> ORTOFOTOS
-  FRONT -- "HTTP GET <br/> (Ficha de Lote, Fotos Dron)" --> LEGACY_API
-  FRONT -- "XYZ Tiles <br/> (Mapa Satelital)" --> GOOGLE_MAPS
-  FRONT -- "XYZ Tiles <br/> (Mapa de Calles)" --> OSM
-
+  FRONT -- "WMS/WFS (Capas y Consultas)" --> GEOSERVER
+  FRONT -- "XYZ Tiles (Ortofotos)" --> ORTOFOTOS
+  FRONT -- "HTTP GET (Ficha de Lote)" --> LEGACY_API
+  FRONT -- "XYZ Tiles (Mapas Base)" --> GOOGLE_MAPS
+  FRONT -- "XYZ Tiles (Mapas Base)" --> OSM
   GEOSERVER -- "JDBC" --> DB_POSTGIS
 
-  %% =========================
-  %% ESTILOS
-  %% =========================
   classDef front fill:#0f172a,stroke:#334155,stroke-width:1px,color:#fff;
   classDef service fill:#111827,stroke:#374151,stroke-width:1px,color:#fff;
   classDef db fill:#fde68a,stroke:#92400e,stroke-width:1px,color:#111827;
@@ -84,9 +84,7 @@ graph TB
   class DB_POSTGIS db;
 
   linkStyle 0,1,2,3,4 stroke:#60a5fa,stroke-width:2px;
-  linkStyle 5 stroke:#f59e0b,stroke-width:2px,stroke-dasharray:5 3;
-
-  
+  linkStyle 5 stroke:#f59e0b,stroke-width:2px,stroke-dasharray:5 3
 ### 📂 Estructura del Proyecto
 
 ```text

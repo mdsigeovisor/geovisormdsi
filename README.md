@@ -55,5 +55,5 @@ graph TB
 
   class FRONT front;
   class AUTH,GEOSERVER service;
-  class DB1 db;
+  class DB2 db;
 ```

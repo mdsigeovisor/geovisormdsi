@@ -14,7 +14,7 @@ graph TB
   end
 
   subgraph "Bases de Datos"
-    DB1[(BD Catastral - 192.168.40.57)]
+    DB1[(mdsibde - 192.168.40.57)]
   end
 
   subgraph "Servicios Geoespaciales"

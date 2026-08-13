@@ -18,7 +18,7 @@ graph TB
   end
 
   subgraph "Bases de Datos ArcGIS"
-    DB1[(mdsibde - 192.168.40.57:5433)]
+    DB2[(mdsibde - 192.168.40.57:5433)]
   end
   
   subgraph "Servicios Geoespaciales"
@@ -40,9 +40,11 @@ graph TB
   FRONT --> GEOSERVER_PROD
   FRONT --> GEOSERVER_DEV
   FRONT --> ORTOFOTOS
+  FRONT --> ORTOFOTOS
   
-  GEOSERVER_PROD -- "PostgreSQL" --> DB1
-  GEOSERVER_DEV -- "PostgreSQL" --> DB1
+  GEOSERVER_PROD -- "PostgreSQL" --> DB2
+  GEOSERVER_DEV -- "PostgreSQL" --> DB2
+  
 
   %% =========================
   %% ESTILOS

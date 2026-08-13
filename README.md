@@ -16,9 +16,13 @@ graph TB
   subgraph "Bases de Datos"
     DB1[(mdsibde - 192.168.40.57)]
   end
-
+  
   subgraph "Servicios Geoespaciales"
     GEOSERVER[GeoServer]
+  end
+
+  subgraph "Servicios Ortofotos"
+    192.168.40.57[8082]
   end
 
   %% =========================

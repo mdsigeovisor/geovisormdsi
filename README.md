@@ -30,9 +30,7 @@ flowchart TB
 
   subgraph L4[Otros]
     direction LR
-    GEOSERVER[GeoServer]
-    WIKI[wiki.ue003cofopri.gob.pe]
-    GOOGLE[GoogleAnalytics]
+    GEOSERVER[GeoServer]    
   end
 
   %% =========================

@@ -37,9 +37,6 @@ graph TB
   FRONT --> GEOSERVER_DEV
   FRONT --> ORTOFOTOS
   
-
-
-  AUTH --> DB1
   GEOSERVER_PROD -- "PostgreSQL" --> DB1
   GEOSERVER_DEV -- "PostgreSQL" --> DB1
 

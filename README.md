@@ -7,7 +7,7 @@ flowchart TB
   %% =========================
   subgraph L1[Front]
     direction LR
-    FRONT[visor]
+    FRONT[GeoVisorMDSI]
   end
 
   subgraph L2[APIs]

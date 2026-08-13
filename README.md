@@ -21,19 +21,19 @@ graph TB
   end 
 
   subgraph "Auth"
-    AUTH[Auth]
+    AUTH[AUTH]
   end
 
   subgraph "Mapa"
-    MAPA[Mapa]
+    MAPA[MAPA]
   end
 
   subgraph "Bases de Datos PostgreSQL"
-    DB1[(mdsibde - 192.168.40.57:5432)]
+    DB1[(MDSIBDE - 192.168.40.57:5432)]
   end
 
   subgraph "Bases de Datos ArcGIS"
-    DB2[(mdsibde - 192.168.40.57:5433)]
+    DB2[(MDSIBDE - 192.168.40.57:5433)]
   end
   
   subgraph "Servicios Geoespaciales"

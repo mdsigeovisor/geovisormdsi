@@ -74,6 +74,7 @@ graph TB
   class DB1 db;
   class DB2 db;
 ```
+---
 
 ## 🌍 Links de las publicaciones:
 

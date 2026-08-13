@@ -40,7 +40,8 @@ graph TB
 
 
   AUTH --> DB1
-  GEOSERVER -- "PostgreSQL" --> DB1
+  GEOSERVER_PROD -- "PostgreSQL" --> DB1
+  GEOSERVER_DEV -- "PostgreSQL" --> DB1
 
   %% =========================
   %% ESTILOS

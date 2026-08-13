@@ -23,9 +23,7 @@ flowchart TB
 
   subgraph L3[Base de datos]
     direction LR
-    DB3[(SICU_LADM)]
-    DB1[(SEGURIDAD)]
-    DB2[(SICU)]
+    DB1[(192.168.40.57)]    
   end
 
   subgraph L4[Otros]

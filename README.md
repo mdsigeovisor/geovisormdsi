@@ -44,7 +44,7 @@ flowchart TB
   POLI -.->|TCP 5432| DB2
   GEOSERVER -.->|PostgreSQL| DB1
   SYS -.->|TCP 5432| DB1
-  AUTH -.->|TCP 5432| DB1
+  AUTH -.->|TCP 5432| DB2
 
   %% =========================
   %% ESTILOS

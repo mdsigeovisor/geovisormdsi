@@ -27,7 +27,7 @@ flowchart TB
   %% =========================
   %% RELACIONES
   %% =========================
-  FRONT -->|HTTP| EXPO
+  
   FRONT -->|HTTP| REPO
   FRONT -->|HTTP| API
   FRONT -->|HTTP| SYS

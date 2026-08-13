@@ -12,7 +12,7 @@ flowchart TB
 
   subgraph L2[APIs]
     direction LR    
-    AUTH[sicu.oauth2]    
+    AUTH[mdsi-auth]    
   end
 
   subgraph L3[Base de datos]

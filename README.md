@@ -21,11 +21,11 @@ graph TB
   end 
 
   subgraph "Auth"
-    FRONT[Auth]
+    AUTH[Auth]
   end
 
   subgraph "Mapa"
-    FRONT[Mapa]
+    MAPA[Mapa]
   end
 
   subgraph "Bases de Datos PostgreSQL"
@@ -53,13 +53,15 @@ graph TB
   end
 
   subgraph "Capa de Servicios (APIs)"
-    AUTH[Seguridad]
+    SEGURIDAD[Seguridad]
   end  
 
   %% =========================
   %% RELACIONES
   %% =========================
   FRONT --> AUTH
+  FRONT --> MAPA
+  FRONT --> SEGURIDAD
   FRONT --> GEOSERVER_PROD
   FRONT --> GEOSERVER_DEV
   FRONT --> ORTOFOTOS

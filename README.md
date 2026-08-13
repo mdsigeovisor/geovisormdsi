@@ -12,13 +12,7 @@ flowchart TB
 
   subgraph L2[APIs]
     direction LR    
-    AUTH[sicu.oauth2]
-    EXPO
-    REPO
-    API
-    SYS
-    ARM
-    POLI
+    AUTH[sicu.oauth2]    
   end
 
   subgraph L3[Base de datos]
@@ -33,6 +27,13 @@ flowchart TB
   %% =========================
   %% RELACIONES
   %% =========================
+  FRONT -->|HTTP| EXPO
+  FRONT -->|HTTP| REPO
+  FRONT -->|HTTP| API
+  FRONT -->|HTTP| SYS
+  FRONT -->|HTTP| AUTH
+  FRONT -->|HTTP| ARM
+  FRONT -->|HTTP| POLI
   FRONT -->|WMS/WFS| GEOSERVER
   FRONT -->|HTTP| WIKI
   FRONT -->|HTTP| GOOGLE

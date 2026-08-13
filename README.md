@@ -36,11 +36,11 @@ graph TB
     DB2[(MDSIBDE - 192.168.40.57:5433)]
   end
   
-  subgraph "Servicios Geoespaciales"
+  subgraph "Servidor de Mapas"
     GEOSERVER_PROD[GeoServer 3.0 - Produccion]
   end
 
-  subgraph "Servicios Geoespaciales"
+  subgraph "Servidor de Mapas"
     GEOSERVER_DEV[GeoServer 3.0 - Desarrollo]
   end
 

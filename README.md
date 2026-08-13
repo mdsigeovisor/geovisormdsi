@@ -31,8 +31,8 @@ graph TB
   FRONT <-- AUTH
   FRONT <-- GEOSERVER
 
-  AUTH --> DB1
-  GEOSERVER -- "PostgreSQL" --> DB1
+  AUTH <-- DB1
+  GEOSERVER -- "PostgreSQL" <-- DB1
 
   %% =========================
   %% ESTILOS

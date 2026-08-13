@@ -42,7 +42,7 @@ flowchart TB
   API -.->|TCP 5432| DB2
   ARM -.->|TCP 5432| DB2
   POLI -.->|TCP 5432| DB2
-  GEOSERVER -.->|PostgreSQL| DB
+  GEOSERVER -.->|PostgreSQL| DB1
   SYS -.->|TCP 5432| DB1
   AUTH -.->|TCP 5432| DB1
 

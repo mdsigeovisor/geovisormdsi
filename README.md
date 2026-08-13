@@ -1,3 +1,44 @@
+# Aplicativo Visor Geográfico del Visor Municipalidad de San Isidro
+
+Aplicación frontend desarrollada con **Angular 17.2**.
+
+---
+
+## 🚀 Tecnologías
+
+- Angular 20.0.0
+- TypeScript
+- RxJS
+- Angular CLI
+- HTML5 / TAILWIND
+- Node.js ≥ 20
+
+---
+
+## 📦 Requisitos previos
+
+- Node.js 20 o superior
+- npm 9+ o yarn
+- Angular CLI
+
+```bash
+npm install -g @angular/cli
+```
+
+---
+
+
+
+## 🔐 Configuración de entornos
+
+Los entornos se configuran en:
+
+```
+src/environments/
+```
+
+---
+
 ## 📏 Estándares y buenas prácticas
 
 - Arquitectura modular

@@ -5,12 +5,7 @@ export default [
     path: 'map',
     title: 'Mapa',
     loadComponent: () => import('./components/map/map').then(m => m.MapComponent),
-  },
-  {
-    path: 'dashboard',
-    title: 'Dashboard',
-    loadComponent: () => import('./components/dashboard/dashboard').then(m => m.Dashboard),
-  },
+  },  
   {
     path: '',
     redirectTo: 'map',

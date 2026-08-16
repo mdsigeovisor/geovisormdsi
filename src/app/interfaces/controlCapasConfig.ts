@@ -7,6 +7,45 @@ import { ORTOFOTO_YEARS } from './ortofotos';
  */
 export const LAYER_PANEL_SECTIONS: Section[] = [
   {
+    id: 'tusne',
+    title: 'TUSNE',
+    expanded: false,
+    items: [
+      { type: 'layer', id: 'levantTopografico', label: 'Levantamiento Topográfico', visible: true, opacity: 1, showInLegend: false },
+    ],
+  },
+  {
+    id: 'sectorizacion',
+    title: 'Sectorización',
+    expanded: false,
+    items: [
+      { type: 'layer', id: 'sec_catastrales', label: 'Sectores Catastrales', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'sec_vecinal', label: 'Sectores Vecinales', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'hab_urbana', label: 'Urbanizaciones', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'sec_subvecinal', label: 'Sub Sectores - Junta Vecinales', visible: false, opacity: 1, showInLegend: false },
+    ],
+  },
+  {
+    id: 'lotizacion',
+    title: 'Lotización',
+    expanded: false,
+    items: [
+      { type: 'layer', id: 'lote_urbano', label: 'Lote Urbano', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'etiquetas_catastrales', label: 'Código Catastral', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'denominacion_predio', label: 'Denominación del Predio', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'lote-no-delimitado', label: 'Lote No Delimitado', visible: false, opacity: 1, showInLegend: false },
+    ],
+  },
+  {
+    id: 'puntosGeodesicos',
+    title: 'Puntos Geodésicos',
+    expanded: false,
+    items: [
+      { type: 'layer', id: 'puntos_geodesicos', label: 'Puntos Geodésicos', visible: false, opacity: 1, showInLegend: true },
+    ],
+  },
+
+  {
     id: 'catastral',
     title: 'Información Catastral',
     subtitle: 'INFORMACIÓN GPUC',
@@ -15,29 +54,17 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
       {
         type: 'subsection',
         id: 'catastro',
-        title: 'CARTOGRAFIA',        
+        title: 'CARTOGRAFIA',
         expanded: false,
         layers: [
-          { type: 'layer', id: 'etiquetas_catastrales', label: 'Etiquetas Catastrales', visible: true, opacity: 1, showInLegend: false },
+
           { type: 'layer', id: 'num_cuadra', label: 'Cuadra', visible: true, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'construcciones', label: 'Construcciones', visible: true, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'lote', label: 'Lote', visible: true, opacity: 1, showInLegend: false },
-          
+          { type: 'layer', id: 'lote', label: 'Lote', visible: true, opacity: 1, showInLegend: true },
+
           { type: 'layer', id: 'manzana', label: 'Manzana', visible: true, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'veredas', label: 'Veredas', visible: true, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'arearecreativa', label: 'Área Recreativa', visible: true, opacity: 1, showInLegend: false },
-        ],
-      },
-      {
-        type: 'subsection',
-        id: 'sectores',
-        title: 'SECTORIZACIÓN',
-        expanded: false,
-        layers: [
-          { type: 'layer', id: 'hab_urbana', label: 'Habilitación Urbana', visible: false, opacity: 1, showInLegend: false },          
-          { type: 'layer', id: 'sec_catastrales', label: 'Sectores Catastrales', visible: false, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'sec_vecinal', label: 'Sectores Vecinales', visible: false, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'sec_subvecinal', label: 'Sub Sectores - Junta Vecinal', visible: false, opacity: 1, showInLegend: false },
         ],
       },
       {
@@ -47,11 +74,11 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
         expanded: false,
         layers: [
           { type: 'layer', id: 'hab_urbana', label: 'Habilitación Urbana', visible: false, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'lote_urbano', label: 'Lote Urbano', visible: false, opacity: 1, showInLegend: false },
-          
+
+
         ],
       },
-      
+
       {
         type: 'subsection',
         id: 'nom_vias',
@@ -64,14 +91,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
       },
     ],
   },
-  {
-    id: 'puntosGeodesicos',
-    title: 'Puntos Geodésicos',
-    expanded: false,
-    items: [
-      { type: 'layer', id: 'puntos_geodesicos', label: 'Puntos Geodésicos', visible: false, opacity: 1, showInLegend: true },
-    ],
-  },
+
   {
     id: 'imaAereas',
     title: 'Fotográfias Áereas',
@@ -105,7 +125,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
       },
     ],
   },
-   {
+  {
     id: 'normativaUrbana',
     title: 'Normativa Urbana',
     expanded: false,
@@ -116,5 +136,5 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     ],
   },
 
-  
+
 ];

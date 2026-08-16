@@ -420,18 +420,7 @@ export class MapService {
    */
   private setupMapClickHandler(olMap: OlMap): void {
     // Definimos las capas que queremos consultar en un clic y la lógica para cada una.
-    const clickableLayersConfig = [
-      {
-        layerId: 'lote',
-        getLayer: () => this.getLayerById('lote'),
-        handler: (feature: GeoJSONFeature) => {
-          const codigoLote = feature.properties['id_lote'];
-          if (codigoLote) {
-            const infoUrl = `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigoLote}`;
-            this.loteInfoUrl.set(infoUrl);
-          }
-        }
-      },
+    const singleClickLayersConfig = [
       {
         layerId: 'fotos_sin_2018',
         getLayer: () => this.getLayerById('fotos_sin_2018'),
@@ -455,17 +444,17 @@ export class MapService {
         }
       }
     ];
+
     olMap.on('singleclick', (evt) => {
       // Si se está usando una herramienta de dibujo, no hacemos nada.
       if (this.drawMeasureService.isDrawing()) {
         return;
       }
-
       const view = olMap.getView();
       const viewResolution = view.getResolution()!;
       const projection = view.getProjection();
       // Priorizamos la capa visible con el zIndex más alto.
-      const visibleClickableLayers = clickableLayersConfig
+      const visibleClickableLayers = singleClickLayersConfig
         .map(config => ({ config, layer: config.getLayer() }))
         .filter(item => item.layer?.getVisible())
         .sort((a, b) => (b.layer?.getZIndex() ?? 0) - (a.layer?.getZIndex() ?? 0));
@@ -491,6 +480,34 @@ export class MapService {
         }
       };
       queryNextLayer(visibleClickableLayers);
+    });
+
+    olMap.on('dblclick', (evt) => {
+      if (this.drawMeasureService.isDrawing()) {
+        return;
+      }
+
+      const layer = this.getLayerById('lote');
+      if (!layer?.getVisible()) {
+        return;
+      }
+
+      const view = olMap.getView();
+      const source = layer.getSource();
+      const url = source?.getFeatureInfoUrl(evt.coordinate, view.getResolution()!, view.getProjection(), {
+        'INFO_FORMAT': 'application/json',
+        'FEATURE_COUNT': '1'
+      });
+
+      if (url) {
+        this.http.get<WfsResponse>(url).subscribe(response => {
+          if (response?.features?.length > 0) {
+            const codigoLote = response.features[0].properties['id_lote'];
+            const infoUrl = `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigoLote}`;
+            this.loteInfoUrl.set(infoUrl);
+          }
+        });
+      }
     });
   }
   /**

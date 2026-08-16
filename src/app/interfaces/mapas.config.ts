@@ -19,3 +19,5 @@ export const ZOOM_LEVEL_LOCATION = 14;
 export const SAN_ISIDRO_CENTER: [number, number] = [-77.0295427, -12.0972444];
 /** Zoom específico para la vista del distrito */
 export const SAN_ISIDRO_ZOOM = 17;
+/** Extensión geográfica del distrito de San Isidro en EPSG:32718 */
+export const SAN_ISIDRO_EXTENT = [275224.08, 8660213.79, 281557.72, 8663299.55];

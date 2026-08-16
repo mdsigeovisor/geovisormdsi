@@ -10,7 +10,7 @@ import {
   Section,
   WmsLayerConfig,
   GeoJSONFeature,
-  LayerItem,  
+  LayerItem,
   WfsResponse,
   GeoJSONGeometry
 } from '../interfaces/geoLayers';
@@ -23,12 +23,13 @@ import {
   TRAMA_WMS_URL,
   ANIMATION_DURATION,
   SAN_ISIDRO_CENTER,
-  SAN_ISIDRO_ZOOM
+  SAN_ISIDRO_ZOOM,
+  SAN_ISIDRO_EXTENT
 } from '../interfaces/mapas.config';
 import {
   Feature,
   Fill,
-  fromLonLat,  
+  fromLonLat,
   GeoJSON,
   getCenter,
   getDistance,
@@ -58,33 +59,10 @@ export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
   providedIn: 'root'
 })
 export class MapService {
-  cambiarMapaBase(tipoMapaBase: TipoMapaBase): void {
-    this.baseLayerType.set(tipoMapaBase);
-    if (!this.satelliteLayer || !this.streetsLayer) {
-      return;
-    }
-    switch (tipoMapaBase) {
-      case 'satellite':
-        this.satelliteLayer.setVisible(true);
-        this.streetsLayer.setVisible(false);
-        break;
-      case 'streets':
-        this.satelliteLayer.setVisible(false);
-        this.streetsLayer.setVisible(true);
-        break;
-      case 'topo':
-      case 'blanco':
-        this.satelliteLayer.setVisible(false);
-        this.streetsLayer.setVisible(false);
-        break;
-    }
-  }
-
   private readonly http = inject(HttpClient);
   private readonly zone = inject(NgZone);
   private readonly drawMeasureService = inject(DrawMeasureService);
   baseLayerType = signal<TipoMapaBase>('streets');
-
   /** Instancia del mapa OpenLayers */
   private readonly _map = signal<OlMap | undefined>(undefined);
   /** Exposición del mapa como Signal de solo lectura */
@@ -123,6 +101,7 @@ export class MapService {
   /** URL con la información de la foto de dron 2024 para mostrar en un modal. */
   fotoDroneUrl2024 = signal<string | null>(null);
   /** Indica si el mapa está en medio de una animación de navegación programática. */
+  
   isNavigating = signal(false);
   /** Overlay para el marcador de búsqueda */
   private searchMarkerOverlay: Overlay | undefined;
@@ -132,6 +111,28 @@ export class MapService {
    * Permite que un componente registre el elemento HTML que se usará para el marcador de búsqueda.
    * @param element El elemento del marcador.
    */
+
+  cambiarMapaBase(tipoMapaBase: TipoMapaBase): void {
+    this.baseLayerType.set(tipoMapaBase);
+    if (!this.satelliteLayer || !this.streetsLayer) {
+      return;
+    }
+    switch (tipoMapaBase) {
+      case 'satellite':
+        this.satelliteLayer.setVisible(true);
+        this.streetsLayer.setVisible(false);
+        break;
+      case 'streets':
+        this.satelliteLayer.setVisible(false);
+        this.streetsLayer.setVisible(true);
+        break;
+      case 'topo':
+      case 'blanco':
+        this.satelliteLayer.setVisible(false);
+        this.streetsLayer.setVisible(false);
+        break;
+    }
+  }
   registerSearchMarkerElement(element: HTMLElement) {
     this.searchMarkerElement = element;
     if (this.searchMarkerOverlay) {
@@ -189,7 +190,6 @@ export class MapService {
       });
     });
   }
-
   /**
    * Procesa un LayerItem individual para sincronizar su visibilidad y opacidad con OpenLayers.
    * @param layerItem El LayerItem a procesar.
@@ -200,7 +200,6 @@ export class MapService {
       layerItem.olLayer.setOpacity(layerItem.opacity);
     }
   }
-
   /**
    * Procesa una lista de LayerItems (típicamente de una SubSection) para sincronizar
    * su visibilidad y opacidad con OpenLayers.
@@ -280,7 +279,6 @@ export class MapService {
     // Inicializamos las capas catastrales recorriendo la lista
     INITIAL_WMS_LAYERS.forEach(config => this.addWmsLayer(config));
   }
-  
   /**
    * Asegura que el mapa se actualice fuera de la zona de Angular para rendimiento.
    */
@@ -348,7 +346,7 @@ export class MapService {
     const legendUrl = `${url}${url.includes('?') ? '&' : '?'}` +
       `SERVICE=WMS&VERSION=${version}&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${options.layerName}&TRANSPARENT=true`;
     this.updateLayerProperties(options.id, { olLayer: layer, legendUrl });
-  }  
+  }
   /**
    * Método para agregar capas XYZ al mapa.
    * @private
@@ -356,21 +354,18 @@ export class MapService {
   private addXyzLayer(options: { id: string, url: string, maxZoom?: number, zIndex?: number }): void {
     const map = this._map();
     if (!map) return;
-
     const xyzSource = new XYZ({
       url: options.url,
       crossOrigin: 'anonymous',
       maxZoom: options.maxZoom,
       interpolate: true
     });
-
     const layer = new TileLayer({
       source: xyzSource,
       properties: { id: options.id },
       zIndex: options.zIndex,
       visible: false // Por defecto no visible
     });
-
     map.addLayer(layer);
     this.updateLayerInSectionsSignal(options.id, layer);
   }
@@ -383,7 +378,6 @@ export class MapService {
   private updateLayerInSectionsSignal(layerId: string, olLayer: TileLayer): void {
     this.sections.update(sections => sections.map(section => this.processSectionForLayerUpdate(section, layerId, olLayer)));
   }
-
   /**
    * Procesa una sección para actualizar la `olLayer` de una capa específica.
    * @param section La sección a procesar.
@@ -402,7 +396,6 @@ export class MapService {
     });
     return { ...section, items: updatedItems };
   }
-
   /**
    * Actualiza la `olLayer` en un array de capas si encuentra una coincidencia de ID.
    * @param layers El array de `LayerItem` a procesar.
@@ -413,7 +406,6 @@ export class MapService {
   private updateLayersInSubSection(layers: LayerItem[], layerId: string, olLayer: TileLayer): LayerItem[] {
     return layers.map(l => (l.id === layerId ? { ...l, olLayer } : l));
   }
-
   /**
    * Configura el manejador de clics en el mapa para obtener información de las capas WMS.
    * @param olMap Instancia del mapa de OpenLayers.
@@ -627,9 +619,9 @@ export class MapService {
         // Segunda animación: zoom a la ubicación de destino (San Isidro)
         view.animate({
           center: destination,
-        zoom,
+          zoom,
           duration: zoomInDuration,
-        easing: easeOut
+          easing: easeOut
         }, completeCallback);
       });
     } else { // Si estamos cerca, solo nos movemos
@@ -653,8 +645,6 @@ export class MapService {
    * previas que no pasan explícitamente lat/lon.
    */
   goToSanIsidro(duration = 1800, onComplete?: (complete: boolean) => void): void {
-    // Cambiamos el mapa base a blanco como se solicitó.
-    
     // Usamos goToCoordinates para una animación de "vuelo" más suave.
     this.goToCoordinates(SAN_ISIDRO_CENTER[1], SAN_ISIDRO_CENTER[0], SAN_ISIDRO_ZOOM, duration, onComplete);
   }
@@ -666,8 +656,7 @@ export class MapService {
     const map = this._map();
     if (!map) return;
     const view = map.getView();
-    const extent32718 = [275224.08, 8660213.79, 281557.72, 8663299.55];
-    const transformedExtent = transformExtent(extent32718, 'EPSG:32718', view.getProjection());
+    const transformedExtent = transformExtent(SAN_ISIDRO_EXTENT, 'EPSG:32718', view.getProjection());
     this.cambiarMapaBase('blanco');
     view.fit(transformedExtent, { duration, padding: [20, 20, 20, 20] });
   }
@@ -729,7 +718,6 @@ export class MapService {
   setLayerOpacity(sectionId: string, layerId: string, opacity: number) {
     this.updateLayerProperties(layerId, { opacity });
   }
-
   /**
    * Actualiza las propiedades de una capa específica por su ID.
    * @param layerId El ID de la capa a actualizar.
@@ -738,7 +726,6 @@ export class MapService {
   private updateLayerProperties(layerId: string, newProps: Partial<LayerItem> | ((layer: LayerItem) => Partial<LayerItem>)): void {
     this.sections.update(sections => sections.map(section => this.updateSectionItems(section, layerId, newProps)));
   }
-
   /**
    * Itera sobre los items de una sección para actualizar una capa.
    */
@@ -748,7 +735,6 @@ export class MapService {
       items: section.items.map(item => this.updateItem(item, layerId, newProps))
     };
   }
-
   /**
    * Procesa un item (LayerItem o SubSection) para actualizar una capa.
    */
@@ -763,7 +749,6 @@ export class MapService {
     }
     return item;
   }
-
   /**
    * Aplica la actualización a una capa si su ID coincide.
    */
@@ -774,7 +759,6 @@ export class MapService {
     const propsToApply = typeof newProps === 'function' ? newProps(layer) : newProps;
     return { ...layer, ...propsToApply };
   }
-
   toggleAllLayersInSection(sectionId: string, visible: boolean) {
     this.sections.update(s => s.map(sec => sec.id === sectionId
       ? { ...sec, items: sec.items.map(item => 'layers' in item ? { ...item, layers: item.layers.map(l => ({ ...l, visible })) } : { ...item, visible: item.type === 'layer' ? visible : (item as any).visible }) }
@@ -807,7 +791,7 @@ export class MapService {
     // La guarda debe ser más flexible: una geometría es válida si existe y tiene 'coordinates' (para geometrías simples)
     // o 'geometries' (para GeometryCollection).
     if (!map || !geometry || (!geometry.coordinates && !geometry.geometries)) return;
-    
+
     // Limpiamos cualquier resaltado anterior para evitar confusiones
     this.clearHighlightLayer();
 
@@ -934,7 +918,6 @@ export class MapService {
       })
     );
   }
-
   /**
    * Busca manzanas urbanas basadas en una habilitación y un nombre parcial de manzana.
    * @param habilitacion El nombre exacto de la habilitación.
@@ -968,7 +951,6 @@ export class MapService {
       })
     );
   }
-
   /**
    * Busca lotes urbanos basados en una habilitación, una manzana y un número de lote parcial.
    * @param habilitacion El nombre exacto de la habilitación.
@@ -1052,7 +1034,7 @@ export class MapService {
         return null;
       })
     );
-  }  
+  }
   /**
    * Busca y devuelve una capa de OpenLayers por su ID asignado en la configuración.
    * @param id El identificador de la capa.
@@ -1086,12 +1068,10 @@ export class MapService {
     // Normalizamos el query para asegurar que "CA " se convierta en "CA. "
     // Esto soluciona inconsistencias entre el autocompletado y la búsqueda exacta.
     const normalizedQuery = query.trim().toUpperCase().replace(/^CA\s/, 'CA. ').replace(/^CA\./, 'CA.');
-
     const url = environment.geoserver.owsUrl;
     const filter = exactMatch
       ? `etiquetado_ext = '${normalizedQuery}'`
       : `etiquetado_ext ILIKE '%${normalizedQuery}%'`;
-
     let params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
@@ -1100,11 +1080,9 @@ export class MapService {
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:32718')
       .set('cql_filter', filter);
-
     if (propertiesOnly) {
       params = params.set('propertyName', 'etiquetado_ext');
     }
-
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => {
         if (!response?.features) return [];
@@ -1185,7 +1163,6 @@ export class MapService {
     });
     map.addLayer(this.highlightLayer);
   }
-
   /**
    * Desplaza el centro del mapa para compensar la apertura o cierre del sidebar.
    * @param sidebarOpen `true` si el sidebar se está abriendo, `false` si se está cerrando.

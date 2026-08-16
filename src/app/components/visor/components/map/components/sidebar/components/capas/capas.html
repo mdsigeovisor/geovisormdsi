@@ -6,33 +6,41 @@
     <div class="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition-all">
       <!-- Cabecera de Sección -->
       <div class="group relative">
-        <button type="button" (click)="toggleSectionExpanded(section.id)" [attr.aria-expanded]="section.expanded" class="flex w-full items-start justify-between p-3 text-left transition-colors hover:bg-gray-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50">
+        <button type="button" (click)="toggleSectionExpanded(section.id)" [attr.aria-expanded]="section.expanded"
+          [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': section.expanded, 'hover:bg-gray-50': !section.expanded}"
+          class="flex w-full items-start justify-between p-3 text-left transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50">
           <div class="flex items-start gap-3 flex-1 min-w-0">
               <!-- Icono de la sección -->
-              <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-lg flex-shrink-0 mt-0.5">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center text-lg flex-shrink-0 mt-0.5"
+                [ngClass]="{'bg-white/20 text-white': section.expanded, 'bg-primary/10 text-primary': !section.expanded}">
                   <i class="bi bi-stack"></i>
               </div>
               <!-- Título, Subtítulo y Acciones -->
               <div class="flex-1 min-w-0">
-                  <span class="text-[15px] font-bold text-gray-800 leading-tight block truncate">
+                  <span class="text-[15px] font-bold leading-tight block truncate"
+                    [ngClass]="{'text-white': section.expanded, 'text-gray-800': !section.expanded}">
                       {{ section.title }}
                   </span>
                   @if (section.subtitle) {
-                  <p class="text-[13px] text-gray-400 mt-0.5 truncate">{{ section.subtitle }}</p>
+                  <p class="text-[13px] mt-0.5 truncate"
+                    [ngClass]="{'text-white/70': section.expanded, 'text-gray-400': !section.expanded}">{{ section.subtitle }}</p>
                   }
                   <!-- Botones de acción -->
                   <div class="flex items-center gap-1 mt-2">
-                      <button (click)="toggleAllLayersInSection(section.id, true); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-primary transition-all rounded-md" title="Mostrar todas">
+                      <button (click)="toggleAllLayersInSection(section.id, true); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
+                        [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Mostrar todas">
                           <i class="bi bi-eye-fill text-xs"></i>
                       </button>
-                      <button (click)="toggleAllLayersInSection(section.id, false); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-primary transition-all rounded-md" title="Ocultar todas">
+                      <button (click)="toggleAllLayersInSection(section.id, false); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
+                        [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Ocultar todas">
                           <i class="bi bi-eye-slash text-xs"></i>
                       </button>
                   </div>
               </div>
           </div>
           <!-- Chevron -->
-          <div class="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 transition-transform duration-300 mt-1" [class.rotate-180]="section.expanded">
+          <div class="w-6 h-6 rounded-lg flex items-center justify-center transition-transform duration-300 mt-1"
+            [ngClass]="{'text-white/70': section.expanded, 'text-gray-400': !section.expanded}" [class.rotate-180]="section.expanded">
               <i class="bi bi-chevron-down text-xs"></i>
           </div>
         </button>

@@ -62,6 +62,15 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
       { type: 'layer', id: 'num_municipal_2022', label: 'Numeracion municipal 2022', visible: false, opacity: 1, showInLegend: false },
     ],
   },
+    {
+    id: 'arbolado_urbano',
+    title: 'Arbolado Urbano',
+    expanded: false,
+    items: [
+      { type: 'layer', id: 'arbolado_urbano_2024', label: 'Arboles 2024', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'arbolado_urbano_2015', label: 'Arboles 2015', visible: false, opacity: 1, showInLegend: false },
+    ],
+  },
 
   {
     id: 'catastral',

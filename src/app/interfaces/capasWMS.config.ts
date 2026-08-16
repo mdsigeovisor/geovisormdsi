@@ -25,6 +25,9 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   { id: 'num_municipal_2024', layerName: `${workspacePrefix}vw_numeracion_campo_2024`, zIndex: 2, title: 'Numeración Municipal 2024' },
   { id: 'num_municipal_2022', layerName: `${workspacePrefix}vw_numeracion_campo_2022`, zIndex: 2, title: 'Numeración Municipal 2022' },
 
+  // Arbolado Urbano
+  { id: 'arbolado_urbano_2024', layerName: `${workspacePrefix}vw_arboles_2024`, zIndex: 3, title: 'Arboldes 2024'},
+  { id: 'arbolado_urbano', layerName: `${workspacePrefix}vw_arboles_2015`, zIndex: 3, title: 'Arboldes 2015'},
   //* Capas Catastrales
   
   { id: 'construcciones', layerName: `${workspacePrefix}vw_tg_construcciones`, zIndex: 1, title: 'Construcciones' },

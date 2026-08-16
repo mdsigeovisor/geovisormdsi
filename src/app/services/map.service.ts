@@ -100,6 +100,8 @@ export class MapService {
   fotoDroneUrl2018 = signal<string | null>(null);
   /** URL con la información de la foto de dron 2024 para mostrar en un modal. */
   fotoDroneUrl2024 = signal<string | null>(null);
+  /** URL con la información de un punto geodésico para mostrar en un modal. */
+  ptoGeodesicoUrl = signal<string | null>(null);
   /** Indica si el mapa está en medio de una animación de navegación programática. */
   
   isNavigating = signal(false);
@@ -434,7 +436,18 @@ export class MapService {
             this.fotoDroneUrl2024.set(droneUrl);
           }
         }
-      }
+      },
+      {
+        layerId: 'puntos_geodesicos',
+        getLayer: () => this.getLayerById('puntos_geodesicos'),
+        handler: (feature: GeoJSONFeature) => {
+          const ptoId = feature.properties['cod_pto_geodesico'];
+          if (ptoId) {
+            const ptoUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/PtoGeodesico.asp?codigo_i=${ptoId}`;
+            this.ptoGeodesicoUrl.set(ptoUrl);
+          }
+        }
+      },
     ];
 
     olMap.on('singleclick', (evt) => {
@@ -519,6 +532,12 @@ export class MapService {
    */
   clearFotoDroneUrl2024(): void {
     this.fotoDroneUrl2024.set(null);
+  }
+  /**
+   * Limpia la URL del punto geodésico, para cerrar el modal.
+   */
+  clearPtoGeodesicoUrl(): void {
+    this.ptoGeodesicoUrl.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

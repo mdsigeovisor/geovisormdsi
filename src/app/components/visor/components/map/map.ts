@@ -85,6 +85,9 @@ export class MapComponent {
     if (this.mapService.fotoDroneUrl2024()) {
       this.closeFotoDroneModal2024();
     }
+    if (this.mapService.ptoGeodesicoUrl()) {
+      this.closePtoGeodesicoModal();
+    }
   }
   /**
    * Cierra el modal de información del lote.
@@ -105,6 +108,13 @@ export class MapComponent {
    */
   closeFotoDroneModal2024(): void {
     this.mapService.clearFotoDroneUrl2024();
+  }
+
+  /**
+   * Cierra el modal del punto geodésico.
+   */
+  closePtoGeodesicoModal(): void {
+    this.mapService.clearPtoGeodesicoUrl();
   }
 
   /**

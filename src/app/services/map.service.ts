@@ -461,6 +461,17 @@ export class MapService {
           }
         }
       },
+      {
+        layerId: 'cactus_yucca_2015',
+        getLayer: () => this.getLayerById('cactus_yucca_2015'),
+        handler: (feature: GeoJSONFeature) => {
+          const arbolId = feature.properties['codigo'];
+          if (arbolId) {
+            const arbolUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/Cat_Arboles_2014.asp?codigo_i=${arbolId}`;
+            this.arboladoUrbano2015Url.set(arbolUrl);
+          }
+        }
+      },
     ];
 
     olMap.on('singleclick', (evt) => {

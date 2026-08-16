@@ -9,7 +9,7 @@
 </div>
 }
 <app-navbar></app-navbar>
-<app-sidebar></app-sidebar>
+<app-sidebar (onToggle)="handleSidebarToggle($event)"></app-sidebar>
 <div #mapContainer class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
 <app-funciones></app-funciones>
 <!-- Modal para información del lote -->
@@ -31,7 +31,6 @@
   </div>
 </div>
 }
-
 <!-- Modal para foto de dron -->
 @if (mapService.fotoDroneUrl2018(); as url) {
 <div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in" (click)="closeFotoDroneModal2018()" tabindex="-1">

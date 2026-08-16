@@ -115,4 +115,13 @@ export class MapComponent {
   getSafeUrl(url: string): SafeResourceUrl {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
+
+  /**
+   * Maneja el evento de apertura/cierre del sidebar para desplazar el mapa.
+   * @param isOpen El estado de apertura del sidebar.
+   */
+  handleSidebarToggle(isOpen: boolean): void {
+    // El ancho del sidebar es de 400px según su CSS.
+    this.mapService.panMapForSidebar(isOpen, 400);
+  }
 }

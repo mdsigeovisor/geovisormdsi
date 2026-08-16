@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 //Servicio
@@ -32,6 +32,9 @@ export class Sidebar implements OnInit {
   ngOnInit(): void {
     
   }
+  /** Emite el estado de apertura del sidebar (true: abierto, false: cerrado) */
+  @Output() onToggle = new EventEmitter<boolean>();
+
   public mapService = inject(MapService);
   /** Exponemos el signal para que el template sepa cuál está activo visualmente */
   activeTools = this.mapService.activeSidebarTools;
@@ -58,6 +61,7 @@ export class Sidebar implements OnInit {
   }
   toggleSidebar() {
     this.isOpen = !this.isOpen;
+    this.onToggle.emit(this.isOpen);
   }
   toggleTool(toolId: string) {
     console.log('Sidebar: Recibida orden de toggle para', toolId);
@@ -68,15 +72,18 @@ export class Sidebar implements OnInit {
   }
   setActive(toolId: string) {
     const currentActive = this.activeTab;
+    const wasOpen = this.isOpen; // Guardamos el estado anterior
     if (currentActive === toolId) {
       // Si es la misma, cerramos el panel
       this.isOpen = false;
+      if (wasOpen) this.onToggle.emit(false); // Solo emitir si estaba abierto
       this.mapService.toggleSidebarTool(toolId);
     } else {
       // Si hay una activa diferente, primero la quitamos y ponemos la nueva
       if (currentActive) this.mapService.toggleSidebarTool(currentActive);
       this.mapService.toggleSidebarTool(toolId);
       this.isOpen = true;
+      if (!wasOpen) this.onToggle.emit(true); // Solo emitir si estaba cerrado
     }
   }
 }

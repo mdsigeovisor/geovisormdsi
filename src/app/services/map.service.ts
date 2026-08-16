@@ -1168,4 +1168,30 @@ export class MapService {
     });
     map.addLayer(this.highlightLayer);
   }
+
+  /**
+   * Desplaza el centro del mapa para compensar la apertura o cierre del sidebar.
+   * @param sidebarOpen `true` si el sidebar se está abriendo, `false` si se está cerrando.
+   * @param sidebarWidth Ancho en píxeles del sidebar.
+   */
+  panMapForSidebar(sidebarOpen: boolean, sidebarWidth: number): void {
+    const map = this._map();
+    if (!map) return;
+
+    const view = map.getView();
+    const currentCenter = view.getCenter();
+    if (!currentCenter) return;
+
+    const resolution = view.getResolution()!;
+    // El desplazamiento es la mitad del ancho del sidebar para mantener el foco en el centro del área visible.
+    const offset = (sidebarOpen ? -sidebarWidth / 2 : sidebarWidth / 2) * resolution;
+
+    const newCenter = [currentCenter[0] + offset, currentCenter[1]];
+
+    view.animate({
+      center: newCenter,
+      duration: 300, // Coincide con la duración de la animación del sidebar
+      easing: easeOut,
+    });
+  }
 }

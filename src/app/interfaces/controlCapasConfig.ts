@@ -69,6 +69,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     items: [
       { type: 'layer', id: 'arbolado_urbano_2024', label: 'Arboles 2024', visible: false, opacity: 1, showInLegend: false },
       { type: 'layer', id: 'arbolado_urbano_2015', label: 'Arboles 2015', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'cactus_yucca_2015', label: 'Cactus - Yucca 2015', visible: false, opacity: 1, showInLegend: false },
     ],
   },
 

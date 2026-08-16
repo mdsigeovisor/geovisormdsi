@@ -102,6 +102,8 @@ export class MapService {
   fotoDroneUrl2024 = signal<string | null>(null);
   /** URL con la información de un punto geodésico para mostrar en un modal. */
   ptoGeodesicoUrl = signal<string | null>(null);
+  /** URL con la información de un arbol (2015) para mostrar en un modal. */
+  arboladoUrbano2015Url = signal<string | null>(null);
   /** Indica si el mapa está en medio de una animación de navegación programática. */
   
   isNavigating = signal(false);
@@ -448,6 +450,17 @@ export class MapService {
           }
         }
       },
+      {
+        layerId: 'arbolado_urbano_2015',
+        getLayer: () => this.getLayerById('arbolado_urbano_2015'),
+        handler: (feature: GeoJSONFeature) => {
+          const arbolId = feature.properties['codigo'];
+          if (arbolId) {
+            const arbolUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/Cat_Arboles_2014.asp?codigo_i=${arbolId}`;
+            this.arboladoUrbano2015Url.set(arbolUrl);
+          }
+        }
+      },
     ];
 
     olMap.on('singleclick', (evt) => {
@@ -538,6 +551,12 @@ export class MapService {
    */
   clearPtoGeodesicoUrl(): void {
     this.ptoGeodesicoUrl.set(null);
+  }
+  /**
+   * Limpia la URL del arbolado urbano 2015, para cerrar el modal.
+   */
+  clearArboladoUrbano2015Url(): void {
+    this.arboladoUrbano2015Url.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

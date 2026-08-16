@@ -88,6 +88,9 @@ export class MapComponent {
     if (this.mapService.ptoGeodesicoUrl()) {
       this.closePtoGeodesicoModal();
     }
+    if (this.mapService.arboladoUrbano2015Url()) {
+      this.closeArboladoUrbano2015Modal();
+    }
   }
   /**
    * Cierra el modal de información del lote.
@@ -115,6 +118,13 @@ export class MapComponent {
    */
   closePtoGeodesicoModal(): void {
     this.mapService.clearPtoGeodesicoUrl();
+  }
+
+  /**
+   * Cierra el modal del arbolado urbano 2015.
+   */
+  closeArboladoUrbano2015Modal(): void {
+    this.mapService.clearArboladoUrbano2015Url();
   }
 
   /**

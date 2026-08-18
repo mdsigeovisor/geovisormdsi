@@ -49,12 +49,15 @@
               <app-leyenda *ngSwitchCase="'legend'" (onClose)="toggleSidebar()"></app-leyenda>
               <app-coordenadas *ngSwitchCase="'coordenadas'" (onClose)="toggleSidebar()"></app-coordenadas>
               <app-imprimir *ngSwitchCase="'print'" (onClose)="toggleSidebar()"></app-imprimir>
+              <app-about *ngSwitchCase="'about'" (onClose)="toggleSidebar()"></app-about>
               <app-descargaspdf *ngSwitchCase="'downloads'" (onClose)="toggleSidebar()"></app-descargaspdf>
               <!-- Mensaje para herramientas sin componente aún -->
               <div *ngSwitchDefault class="flex flex-col items-center justify-center h-full text-gray-400">
                 <span class="material-icons text-5xl mb-2">construction</span>
                 <p>Módulo en desarrollo</p>
               </div>
+              <!-- Componente por defecto o para herramientas sin componente aún -->
+              <app-about *ngSwitchDefault (onClose)="toggleSidebar()"></app-about>
             </ng-container>
           </div>
         } @else {

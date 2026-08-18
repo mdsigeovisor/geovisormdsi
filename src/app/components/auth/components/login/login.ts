@@ -1,18 +1,20 @@
+import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core'; // Removed inject, Router
+import { AuthService } from '../../../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './login.html',
-  styleUrl: './login.css',
+  styleUrl: './login.css'
 })
 export class Login {
-  @Output() close = new EventEmitter<void>(); // Emit event to close modal
+  @Output() close = new EventEmitter<void>();
+  private readonly authService = inject(AuthService);
 
   handleLogin(): void {
-    console.log('Iniciando sesión...');
-    this.close.emit(); // Emit close event after simulated login
+    this.authService.login(); // Cambia el estado de autenticación
+    this.close.emit(); // Emite el evento para cerrar el modal
   }
 }

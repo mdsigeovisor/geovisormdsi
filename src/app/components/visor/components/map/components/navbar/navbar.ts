@@ -1,7 +1,7 @@
 import { Component, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../../../services/auth.service';
-import { Subscription } from 'rxjs';
+
 
 @Component({
   selector: 'app-navbar',
@@ -26,14 +26,12 @@ export class Navbar {
       this.login.emit();
     }
   }
-
   confirmLogout(): void {
     this.authService.logout();
     this.showLogoutModal.set(false);
     // Opcional: Redirigir a la página de inicio o recargar.
     // window.location.reload();
   }
-
   cancelLogout(): void {
     this.showLogoutModal.set(false);
   }

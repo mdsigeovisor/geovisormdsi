@@ -13,6 +13,8 @@ export { default as OlMap } from 'ol/Map';
 export { default as View } from 'ol/View';
 export { default as TileLayer } from 'ol/layer/Tile';
 export { default as ImageLayer } from 'ol/layer/Image';
+export { default as Layer } from 'ol/layer/Layer';
+export { default as BaseLayer } from 'ol/layer/Base';
 export { default as VectorLayer } from 'ol/layer/Vector';
 export { default as Overlay } from 'ol/Overlay';
 export type { Positioning as OverlayPositioning } from 'ol/Overlay';
@@ -30,4 +32,3 @@ export { default as WKT } from 'ol/format/WKT';
 export { getCenter } from 'ol/extent';
 export { getDistance } from 'ol/sphere';
 export { createXYZ } from 'ol/tilegrid';
-

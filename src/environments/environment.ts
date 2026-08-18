@@ -6,9 +6,8 @@ export const environment = {
   // --- CONFIGURACIÓN DE GEOSERVER ---
   geoserver: {
     // Servidor MSI proporcionado
-    serverUrl: 'http://192.168.40.58:8080/geoserver',
-    serverUrlViejo: 'http://192.168.41.147:8080/geoserver',
-    serverImpresionLocal: 'http://172.16.16.67:8080/geoserver',
+    serverUrl: 'http://192.168.40.58:8080/geoserver',    
+    serverImpresionLocal: 'http://192.168.40.58:8080/geoserver',
     // Workspace compartido para todas las capas y consultas OGC
 
     workspace: 'WEB_GIS',

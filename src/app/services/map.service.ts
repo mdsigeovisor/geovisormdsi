@@ -34,6 +34,8 @@ import {
   getCenter,
   getDistance,
   ImageLayer,
+  Layer,
+  BaseLayer,
   ImageWMS,
   OlMap,
   Overlay,
@@ -1236,5 +1238,110 @@ export class MapService {
       duration: 300, // Coincide con la duración de la animación del sidebar
       easing: easeOut,
     });
+  }
+
+  /**
+   * Genera y descarga un PDF del mapa utilizando el servicio de impresión de GeoServer.
+   * @param options Opciones de impresión como formato, resolución y decoraciones.
+   */
+  async printMap(options: {
+    format: 'A4' | 'A3' | 'A2';
+    resolution: 72 | 150 | 300;
+    includeGrid: boolean;
+    includeFrame: boolean;
+  }): Promise<void> {
+    const map = this._map();
+    if (!map) {
+      throw new Error('El mapa no está inicializado.');
+    }
+
+    const view = map.getView();
+    const projection = view.getProjection()?.getCode() ?? 'EPSG:3857';
+    const extent = view.calculateExtent(map.getSize());
+    const center = getCenter(extent);
+
+    // Construye la lista de capas visibles para la impresión.
+    const layers: ({ type: 'WMS', layers: any[], baseURL: string, format: string } | { type: 'XYZ' })[] = [];
+    map.getLayers().forEach((layer: BaseLayer) => {
+      // Usamos 'instanceof Layer' para asegurar que la capa tiene el método getSource()
+      if (layer.getVisible() && layer instanceof Layer) {
+        const source = layer.getSource();
+        if (source instanceof ImageWMS) {
+          const url = source.getUrl();
+          if (!url) {
+            return;
+          }
+
+          const params = source.getParams();
+          layers.push({
+            type: 'WMS',
+            layers: [params.LAYERS],
+            baseURL: url,
+            format: 'image/png',
+          });
+        } else if (source instanceof XYZ) {
+          // El módulo de impresión de GeoServer puede no soportar XYZ directamente.
+          // Una alternativa es usar un WMS equivalente o una capa base soportada.
+          // Aquí asumimos que el servicio de impresión tiene una capa base configurada.
+        }
+      }
+    });
+
+    // Define las decoraciones basadas en las opciones del usuario.
+    const decorations = [];
+    if (options.includeFrame) {
+      decorations.push({
+        type: 'mapgrid',
+        label: true, // Muestra las coordenadas
+      });
+    }
+    if (options.includeGrid) {
+      decorations.push({
+        type: 'grid',
+        numberOfLines: [5, 5],
+        style: {
+          stroke: 'black',
+          strokeWidth: 0.5,
+          strokeDashstyle: 'dot',
+        },
+      });
+    }
+
+    // Cuerpo de la solicitud para el servicio de impresión de GeoServer.
+    const printSpec = {
+      layout: options.format,
+      srs: projection,
+      units: 'm',
+      dpi: options.resolution,
+      layers: layers,
+      pages: [{
+        center: center,
+        scale: map.getView().getResolution()! * 72 * 39.37, // Aproximación de escala
+        decorations: decorations,
+      }],
+    };
+
+    // URL del servicio de impresión (ajustar según tu configuración)
+    const printUrl = `${environment.geoserver.serverImpresionLocal}/pdf/print.pdf`;
+
+    const response = await fetch(printUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(printSpec),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error del servidor de impresión: ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `mapa-san-isidro-${new Date().toISOString().slice(0, 10)}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
   }
 }

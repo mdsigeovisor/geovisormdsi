@@ -75,8 +75,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
 
   {
     id: 'catastral',
-    title: 'Información Catastral',
-    subtitle: 'INFORMACIÓN GPUC',
+    title: 'Información Catastral',    
     expanded: false,
     items: [
       {
@@ -108,8 +107,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
 
   {
     id: 'imaAereas',
-    title: 'Fotográfias Áereas',
-    subtitle: 'INFORMACIÓN DE ORTOFOTOS',
+    title: 'Fotográfias Áereas',    
     expanded: false,
     items: [
       {
@@ -149,6 +147,4 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
       { type: 'layer', id: 'amUrbHomogeneo', label: 'Ambito Urbano Homogéneo', visible: false, opacity: 1, showInLegend: false },
     ],
   },
-
-
 ];

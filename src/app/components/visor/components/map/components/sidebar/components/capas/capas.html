@@ -17,25 +17,27 @@
               </div>
               <!-- Título, Subtítulo y Acciones -->
               <div class="flex-1 min-w-0">
-                  <span class="text-[15px] font-bold leading-tight block truncate"
-                    [ngClass]="{'text-white': section.expanded, 'text-gray-800': !section.expanded}">
-                      {{ section.title }}
-                  </span>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-[13px] font-bold leading-tight block truncate"
+                      [ngClass]="{'text-white': section.expanded, 'text-gray-800': !section.expanded}">
+                        {{ section.title }}
+                    </span>
+                    <!-- Botones de acción -->
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button (click)="toggleAllLayersInSection(section.id, true); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
+                          [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Mostrar todas">
+                            <i class="bi bi-eye-fill text-xs"></i>
+                        </button>
+                        <button (click)="toggleAllLayersInSection(section.id, false); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
+                          [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Ocultar todas">
+                            <i class="bi bi-eye-slash text-xs"></i>
+                        </button>
+                    </div>
+                  </div>
                   @if (section.subtitle) {
                   <p class="text-[13px] mt-0.5 truncate"
                     [ngClass]="{'text-white/70': section.expanded, 'text-gray-400': !section.expanded}">{{ section.subtitle }}</p>
                   }
-                  <!-- Botones de acción -->
-                  <div class="flex items-center gap-1 mt-2">
-                      <button (click)="toggleAllLayersInSection(section.id, true); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
-                        [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Mostrar todas">
-                          <i class="bi bi-eye-fill text-xs"></i>
-                      </button>
-                      <button (click)="toggleAllLayersInSection(section.id, false); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
-                        [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Ocultar todas">
-                          <i class="bi bi-eye-slash text-xs"></i>
-                      </button>
-                  </div>
               </div>
           </div>
           <!-- Chevron -->
@@ -56,12 +58,12 @@
               <button type="button" class="w-full text-left flex items-center gap-2 px-4 py-2.5 bg-gray-100/50 cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 (click)="toggleSubSectionExpanded(section.id, item.id)" [attr.aria-expanded]="item.expanded">
                 <i class="bi text-primary text-xs" [class.bi-chevron-down]="!item.expanded" [class.bi-chevron-up]="item.expanded"></i>
-                <span class="text-[12px] font-bold text-gray-600 uppercase">{{ item.title }}</span>
+                <span class="text-[10px] font-bold text-gray-600 uppercase">{{ item.title }}</span>
               </button>
               @if(item.expanded) {
                 <div class="divide-y divide-gray-50">
                   @for(layer of item.layers; track layer.id) {
-                  <div class="flex flex-col gap-2 pl-8 pr-4 py-3 transition-colors hover:bg-white group/item">
+                  <div class="flex flex-col gap-2 pl-8 pr-4 py-2.5 transition-colors hover:bg-white group/item">
                     <app-layer-item [layer]="layer" [sectionId]="section.id" (toggleVisibility)="toggleLayerVisibility(section.id, layer.id)" (opacityChange)="onOpacityChange(section.id, layer.id, $event)"></app-layer-item>
                   </div>
                   }
@@ -70,7 +72,7 @@
             </div>
           } @else if (item.type === 'layer') {
             <!-- CAPA NORMAL -->
-            <div class="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-white group/item border-b border-gray-50">
+            <div class="flex flex-col gap-2 px-4 py-2.5 transition-colors hover:bg-white group/item border-b border-gray-50">
               <app-layer-item [layer]="item" [sectionId]="section.id" (toggleVisibility)="toggleLayerVisibility(section.id, item.id)" (opacityChange)="onOpacityChange(section.id, item.id, $event)"></app-layer-item>
             </div>
           }

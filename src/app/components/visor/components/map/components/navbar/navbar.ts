@@ -1,40 +1,39 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../../../../../services/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })
-export class Navbar implements OnInit, OnDestroy {
-  showLogoutModal = signal(false);
-  visitCount = 1234;
-  private intervalId: any;
-  constructor(private readonly router: Router) {}
-  ngOnInit(): void {
-    this.intervalId = setInterval(() => {
-      if (this.visitCount < 2000) {
-        this.visitCount++;
-      } else {
-        clearInterval(this.intervalId);
-      }
-    }, 10);
-  }
-  ngOnDestroy(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
+export class Navbar {
+  login = output<void>();
+  logout = output<void>();
+
+  private readonly authService = inject(AuthService);
+  public isAuthenticated = this.authService.isAuthenticated;
+  public visitCount = this.authService.visitCount;
+  public showLogoutModal = signal(false);
+
+  onLoginClick(): void {
+    if (this.isAuthenticated()) {
+      this.showLogoutModal.set(true);
+    } else {
+      this.login.emit();
     }
   }
-  openLogoutModal(): void {
-    this.showLogoutModal.set(true);
-  }
+
   confirmLogout(): void {
+    this.authService.logout();
     this.showLogoutModal.set(false);
-    this.router.navigate(['/auth']);
+    // Opcional: Redirigir a la página de inicio o recargar.
+    // window.location.reload();
   }
+
   cancelLogout(): void {
     this.showLogoutModal.set(false);
   }

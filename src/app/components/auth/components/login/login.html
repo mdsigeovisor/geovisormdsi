@@ -1,2 +1,53 @@
-<h2>Para programar</h2>
-
+<div class="fixed inset-0 z-[1050] flex items-center justify-center animate-fade-in" (click)="close.emit()">
+  <div class="flex max-w-4xl w-full rounded-lg shadow-2xl animate-scale-in m-4" (click)="$event.stopPropagation()">
+    <!-- Columna de la Imagen (visible en md y superior) -->
+    <div class="hidden md:block md:w-1/2">
+      <img src="assets/images/fondo.jpg" alt="Visor MSI" class="w-full h-full object-cover rounded-l-lg">
+    </div>
+    <!-- Columna del Formulario -->
+    <div class="w-full md:w-1/2 bg-white rounded-lg md:rounded-l-none md:rounded-r-lg">
+      <!-- Encabezado del Modal -->
+      <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6">
+        <h3 class="text-lg font-semibold leading-6 text-gray-900" id="modal-title">Iniciar Sesión</h3>
+        <button (click)="close.emit()" class="text-gray-400 hover:text-gray-600">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+      <!-- Cuerpo del Modal -->
+      <div class="px-4 py-5 sm:p-6">
+        <div class="space-y-4">
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Usuario o Correo Electrónico</label>
+            <div class="mt-1">
+              <input type="email" name="email" id="email" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" placeholder="usuario@dominio.com">
+            </div>
+          </div>
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+            <div class="mt-1">
+              <input type="password" name="password" id="password" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" placeholder="••••••••">
+            </div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary">
+              <label for="remember-me" class="ml-2 block text-sm text-gray-900">Recordarme</label>
+            </div>
+            <div class="text-sm">
+              <a href="#" class="font-medium text-primary hover:text-secondary">¿Olvidó su contraseña?</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Pie del Modal -->
+      <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 rounded-b-lg md:rounded-bl-none">
+        <button type="button" class="inline-flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-secondary sm:ml-3 sm:w-auto" (click)="handleLogin()">
+          Acceder
+        </button>
+        <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" (click)="close.emit()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

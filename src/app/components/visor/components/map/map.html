@@ -12,7 +12,7 @@
   </div>
 </div>
 }
-<app-navbar></app-navbar>
+<app-navbar (login)="openLoginModal()"></app-navbar>
 <app-sidebar (onToggle)="handleSidebarToggle($event)"></app-sidebar>
 <div #mapContainer class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
 <app-funciones></app-funciones>
@@ -106,5 +106,9 @@
     </div>
   </div>
 </div>
+}
+<!-- Modal para Login -->
+@if (showLoginModal()) {
+  <app-login (close)="closeLoginModal()"></app-login>
 }
 <app-coordinate-info></app-coordinate-info>

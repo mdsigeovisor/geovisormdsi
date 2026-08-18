@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect, HostListener } from '@angular/core';
+import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 // Servicios y módulos
@@ -9,6 +9,7 @@ import { Navbar } from './components/navbar/navbar';
 import { Sidebar } from './components/sidebar/sidebar';
 import { Funciones } from './components/functions/functions';
 import { Spinner } from '../../../../animations/spinner/spinner';
+import { Login } from '../../../auth/components/login/login'; // Import Login component
 import { CoordinateInfo } from './components/coordinate-info/coordinate-info';
 /**
  * Componente principal de la interfaz del mapa.
@@ -23,6 +24,7 @@ import { CoordinateInfo } from './components/coordinate-info/coordinate-info';
     Navbar,
     Sidebar,    
     Funciones,
+    Login, // Add Login to imports
     Spinner,
     CoordinateInfo,
   ],
@@ -35,6 +37,8 @@ export class MapComponent {
 
   /** Referencia al componente de funciones para invocar sus métodos. */
   @ViewChild(Funciones) funcionesComponent!: Funciones;
+
+  public showLoginModal = signal(false);
 
   public readonly mapService = inject(MapService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -125,6 +129,19 @@ export class MapComponent {
    */
   closeArboladoUrbano2015Modal(): void {
     this.mapService.clearArboladoUrbano2015Url();
+  }
+
+  /**
+   * Abre el modal de inicio de sesión.
+   */
+  openLoginModal(): void {
+    this.showLoginModal.set(true);
+  }
+  /**
+   * Cierra el modal de inicio de sesión.
+   */
+  closeLoginModal(): void {
+    this.showLoginModal.set(false);
   }
 
   /**

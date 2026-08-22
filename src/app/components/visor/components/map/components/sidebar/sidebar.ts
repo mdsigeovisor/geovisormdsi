@@ -7,7 +7,7 @@ import { MapService } from '../../../../../../services/map.service';
 import { CapasComponent } from './components/capas/capas';
 import { Consultas } from './components/consultas/consultas';
 import { Leyenda } from './components/leyenda/leyenda';
-import { About } from './components/about/about';
+import { About } from '../../../about/about';
 import { Descargaspdf } from './components/descargaspdf/descargaspdf';
 import { Imprimir } from './components/imprimir/imprimir';
 import { UbicacionCoordenadas } from './components/coordenadas/coordenadas';

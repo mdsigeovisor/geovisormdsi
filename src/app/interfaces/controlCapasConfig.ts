@@ -58,8 +58,8 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     title: 'Numeración Municipal',
     expanded: false,
     items: [
-      { type: 'layer', id: 'num_municipal_2024', label: 'Numeracion municipal 2024', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'num_municipal_2022', label: 'Numeracion municipal 2022', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'num_municipal_2024', label: 'Numeracion municipal 2024', visible: false, opacity: 1, showInLegend: true },
+      { type: 'layer', id: 'num_municipal_2022', label: 'Numeracion municipal 2022', visible: false, opacity: 1, showInLegend: true },
     ],
   },
     {
@@ -67,12 +67,11 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     title: 'Arbolado Urbano',
     expanded: false,
     items: [
-      { type: 'layer', id: 'arbolado_urbano_2024', label: 'Arboles 2024', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'arbolado_urbano_2015', label: 'Arboles 2015', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'cactus_yucca_2015', label: 'Cactus - Yucca 2015', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'arbolado_urbano_2024', label: 'Arboles 2024', visible: false, opacity: 1, showInLegend: true },
+      { type: 'layer', id: 'arbolado_urbano_2015', label: 'Arboles 2015', visible: false, opacity: 1, showInLegend: true },
+      { type: 'layer', id: 'cactus_yucca_2015', label: 'Cactus - Yucca 2015', visible: false, opacity: 1, showInLegend: true },
     ],
   },
-
   {
     id: 'catastral',
     title: 'Información Catastral',    
@@ -84,7 +83,6 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
         title: 'CARTOGRAFIA',
         expanded: false,
         layers: [
-
           { type: 'layer', id: 'num_cuadra', label: 'Cuadra', visible: true, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'construcciones', label: 'Construcciones', visible: true, opacity: 1, showInLegend: true },
           { type: 'layer', id: 'lote', label: 'Lote', visible: true, opacity: 1, showInLegend: true },

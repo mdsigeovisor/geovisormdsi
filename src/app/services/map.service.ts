@@ -1404,6 +1404,35 @@ export class MapService {
   }
 
   /**
+   * Compone todos los canvas de las capas del mapa en un único lienzo
+   * (con fondo blanco), respetando el orden visual. Usado para exportar
+   * el mapa a imágenes/PDF sin dependencias externas de rasterizado.
+   * @returns Lienzo compuesto o `null` si el mapa no está inicializado.
+   */
+  getMapCanvas(): HTMLCanvasElement | null {
+    const map = this._map();
+    if (!map) return null;
+    // Forzamos un render síncrono para que los tiles pendientes se pinten
+    map.renderSync();
+    const size = map.getSize() ?? [0, 0];
+    const target = document.createElement('canvas');
+    target.width = size[0];
+    target.height = size[1];
+    const ctx = target.getContext('2d');
+    if (!ctx) return null;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, target.width, target.height);
+    // Dibujamos cada canvas de capa en orden (el orden DOM refleja el apilado)
+    const canvases = map.getViewport().querySelectorAll('canvas');
+    canvases.forEach(canvas => {
+      const cssW = parseFloat((canvas as HTMLCanvasElement).style.width) || canvas.width;
+      const cssH = parseFloat((canvas as HTMLCanvasElement).style.height) || canvas.height;
+      ctx.drawImage(canvas, 0, 0, cssW, cssH);
+    });
+    return target;
+  }
+
+  /**
    * Genera y descarga un PDF del mapa utilizando el servicio de impresión de GeoServer.
    * @param options Opciones de impresión como formato, resolución y decoraciones.
    */

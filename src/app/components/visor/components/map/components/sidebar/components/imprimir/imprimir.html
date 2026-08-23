@@ -1,56 +1,107 @@
-<div class="p-6">
-  <div class="border-b border-gray-200 pb-4 mb-6">
-    <h3 class="text-lg font-semibold leading-6 text-gray-900">Imprimir Mapa</h3>
-    <p class="mt-1 text-sm text-gray-500">
-      Selecciona el formato y la resolución para exportar la vista actual del mapa a un archivo PDF.
+<div class="p-5 font-sans">
+  <!-- Encabezado del panel -->
+  <div class="border-b border-gray-200 pb-3 mb-4">
+    <h3 class="text-base font-semibold text-gray-900 flex items-center gap-2">
+      <i class="bi bi-printer text-primary"></i>
+      Imprimir / Exportar
+    </h3>
+    <p class="mt-1 text-xs text-gray-500">
+      Genera un PDF o envía a la impresora la vista actual del mapa, con título,
+      logo institucional y fecha/hora de impresión.
     </p>
   </div>
 
-  <div class="space-y-6">
-    <div class="space-y-2">
-      <label for="formato" class="block text-sm font-medium text-gray-700">Formato de Papel</label>
-      <select id="formato" name="formato" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-primary focus:outline-none focus:ring-primary sm:text-sm" [ngModel]="formato()" (ngModelChange)="formato.set($event)">
-        <option value="A4">A4</option>
-        <option value="A3">A3</option>
-        <option value="A2">A2</option>
-      </select>
-    </div>
-
+  <div class="space-y-4">
+    <!-- Título del plano -->
     <div>
-      <label for="resolucion" class="block text-sm font-medium text-gray-700">Resoluci&oacute;n (DPI)</label>
-      <select id="resolucion" name="resolucion" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-primary focus:outline-none focus:ring-primary sm:text-sm" [ngModel]="resolucion()" (ngModelChange)="setResolucion($event)">
-        <option value="72">72 dpi (Baja)</option>
-        <option value="150">150 dpi (Media)</option>
-        <option value="300">300 dpi (Alta)</option>
-      </select>
+      <label for="print-titulo" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+        Título del plano
+      </label>
+      <input id="print-titulo" type="text" [(ngModel)]="titulo" maxlength="90"
+        placeholder="Escriba el título..."
+        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
     </div>
 
-    <fieldset class="space-y-3">
-      <legend class="text-sm font-medium text-gray-700">Opciones Adicionales</legend>
-      <div class="relative flex items-start">
-        <div class="flex h-6 items-center">
-          <input id="marco" aria-describedby="marco-description" name="marco" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" [ngModel]="incluirMarco()" (ngModelChange)="incluirMarco.set($event)">
-        </div>
-        <div class="ml-3 text-sm leading-6">
-          <label for="marco" class="font-medium text-gray-900">Incluir Marco y Coordenadas</label>
-        </div>
+    <!-- Orientación y papel -->
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label for="print-orientacion" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+          Orientación
+        </label>
+        <select id="print-orientacion" [(ngModel)]="orientacion"
+          class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+          <option value="vertical">Vertical</option>
+          <option value="horizontal">Horizontal</option>
+        </select>
       </div>
-      <div class="relative flex items-start">
-        <div class="flex h-6 items-center">
-          <input id="cuadricula" aria-describedby="cuadricula-description" name="cuadricula" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" [ngModel]="incluirCuadricula()" (ngModelChange)="incluirCuadricula.set($event)">
-        </div>
-        <div class="ml-3 text-sm leading-6">
-          <label for="cuadricula" class="font-medium text-gray-900">Incluir Cuadr&iacute;cula</label>
-        </div>
+      <div>
+        <label for="print-formato" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+          Papel
+        </label>
+        <select id="print-formato" [(ngModel)]="formato"
+          class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+          <option value="a4">A4</option>
+          <option value="a3">A3</option>
+        </select>
       </div>
-    </fieldset>
+    </div>
 
-    <button type="button" class="flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:cursor-not-allowed" (click)="imprimirMapa()" [disabled]="imprimiendo()">
-      @if (imprimiendo()) {
-        <span class="animate-pulse">Generando PDF...</span>
-      } @else {
-        <span>Imprimir</span>
-      }
-    </button>
+    <!-- Información que se estampará -->
+    <div class="rounded-lg bg-gray-50 border border-gray-200 p-2.5 text-[11px] text-gray-600 flex items-center gap-2">
+      <i class="bi bi-calendar-event text-primary shrink-0"></i>
+      <span>Se estampará la fecha y hora de impresión:
+        <strong class="text-gray-800">{{ fechaHora }}</strong>
+      </span>
+    </div>
+
+    <!-- Acciones -->
+    <div class="space-y-2 pt-1">
+      <button type="button" (click)="generarPdf()" [disabled]="generando()"
+        class="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        @if (generando()) {
+          <span class="animate-pulse">Generando PDF...</span>
+        } @else {
+          <i class="bi bi-file-earmark-pdf"></i>
+          <span>Generar PDF</span>
+        }
+      </button>
+
+      <button type="button" (click)="enviarAImpresora()" [disabled]="generando()"
+        class="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-gray-300 px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <i class="bi bi-printer"></i>
+        <span>Enviar a impresora</span>
+      </button>
+    </div>
+
+    <!-- Error -->
+    @if (error()) {
+      <p class="text-xs text-red-600 flex items-start gap-1.5" role="alert">
+        <i class="bi bi-exclamation-circle mt-0.5"></i>
+        {{ error() }}
+      </p>
+    }
+  </div>
+</div>
+
+<!-- Hoja de impresión: oculta en pantalla, visible solo en @media print -->
+<div id="msi-print-overlay" aria-hidden="true">
+  <div class="msi-sheet">
+    <div class="msi-head">
+      <!-- <img class="msi-logo" src="assets/images/logo_visor.png" alt="Municipalidad de San Isidro" /> -->
+      <div class="msi-head-texts">
+        <h1>{{ titulo() }}</h1>
+        <p>Municipalidad de San Isidro · Visor Cartográfico Catastral</p>
+        <p class="msi-date">Fecha de impresión: {{ fechaHora }}</p>
+      </div>
+    </div>
+
+    @if (imagenMapa()) {
+      <img class="msi-map" [src]="imagenMapa()" alt="Vista del mapa" />
+    }
+
+    <div class="msi-foot">
+      <span>Subgerencia de Planeamiento Urbano y Catastro</span>
+      <span>Impreso: {{ fechaHora }}</span>
+    </div>
   </div>
 </div>

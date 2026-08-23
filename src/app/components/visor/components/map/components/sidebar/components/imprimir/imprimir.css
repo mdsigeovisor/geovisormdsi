@@ -1,0 +1,96 @@
+/*
+ * Estilos del componente Imprimir.
+ * El componente usa ViewEncapsulation.None para que las reglas @media print
+ * afecten al documento completo; por ello todos los selectores llevan el
+ * prefijo único "msi-print-" para evitar colisiones.
+*/
+
+/* La hoja de impresión permanece oculta en pantalla */
+#msi-print-overlay {
+  display: none;
+}
+
+@media print {
+  /* Ocultamos todo el visor... */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* ...y mostramos únicamente la hoja de impresión */
+  #msi-print-overlay {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    z-index: 2147483000;
+  }
+
+  #msi-print-overlay * {
+    visibility: visible !important;
+    box-sizing: border-box;
+  }
+
+  .msi-sheet {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 5mm;
+    padding: 2mm; /* El margen real lo define @page (8mm) */
+    background: #ffffff;
+    color: #111111;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .msi-head {
+    display: flex;
+    align-items: center;
+    gap: 7mm;
+    border-bottom: 0.8mm solid #46570f;
+    padding-bottom: 3mm;
+  }
+
+  .msi-logo {
+    height: 16mm;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .msi-head-texts h1 {
+    margin: 0;
+    font-size: 17pt;
+    line-height: 1.15;
+    font-weight: bold;
+    color: #1b2a4e;
+  }
+
+  .msi-head-texts p {
+    margin: 1mm 0 0;
+    font-size: 9pt;
+    color: #555555;
+  }
+
+  .msi-head-texts .msi-date {
+    font-weight: bold;
+    color: #333333;
+  }
+
+  .msi-map {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    object-fit: contain;
+    border: 0.35mm solid #1b2a4e;
+    background: #ffffff;
+  }
+
+  .msi-foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 5mm;
+    font-size: 8pt;
+    color: #444444;
+    border-top: 0.2mm solid #cccccc;
+    padding-top: 2mm;
+  }
+}

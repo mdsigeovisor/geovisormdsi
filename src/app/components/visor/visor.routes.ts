@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export default [
   {
     path: 'map',
-    title: 'Visor Cartográfico Catastral',
+    title: 'Geovisor Catastral',
     loadComponent: () => import('./components/map/map').then(m => m.MapComponent),
   },  
   {

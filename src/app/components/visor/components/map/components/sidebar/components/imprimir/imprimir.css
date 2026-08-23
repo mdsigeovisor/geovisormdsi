@@ -93,4 +93,68 @@
     border-top: 0.2mm solid #cccccc;
     padding-top: 2mm;
   }
+
+  /* Bloque inferior: tabla cualitativa + registro fotográfico */
+  .msi-bottom {
+    display: flex;
+    gap: 4mm;
+    align-items: stretch;
+  }
+
+  .msi-table {
+    flex: 1 1 auto;
+    border-collapse: collapse;
+    font-size: 8pt;
+    width: 100%;
+  }
+
+  .msi-table th,
+  .msi-table td {
+    border: 0.2mm solid #d1d5db;
+    padding: 1.4mm 2mm;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .msi-table th {
+    background: #f3f4f6;
+    color: #374151;
+    font-weight: bold;
+    width: 34%;
+  }
+
+  .msi-side {
+    width: 42mm;
+    display: flex;
+    flex-direction: column;
+    gap: 2mm;
+  }
+
+  .msi-side-title {
+    margin: 0;
+    font-size: 7pt;
+    font-weight: bold;
+    color: #1b2a4e;
+  }
+
+  .msi-photo {
+    width: 100%;
+    max-height: 42mm;
+    object-fit: contain;
+    border: 0.25mm solid #1b2a4e;
+    background: #ffffff;
+  }
+
+  .msi-nofoto {
+    margin: 0;
+    font-size: 7pt;
+    color: #777777;
+    font-style: italic;
+  }
+
+  .msi-link {
+    font-size: 6.8pt;
+    color: #143ca0;
+    word-break: break-all;
+  }
 }

@@ -113,6 +113,23 @@ export class MapService {
   activeSidebarTools = signal<Set<string>>(new Set());
   /** Ventanas flotantes con la información de lotes (varias abiertas, sin bloquear el mapa) */
   loteInfoWindows = signal<LoteInfoWindow[]>([]);
+  /** Modo selección: el próximo clic sobre la capa "Lote Catastral" lo asigna al módulo de impresión */
+  pickLoteActivo = signal(false);
+  /** Código catastral (id_lote) seleccionado en el mapa para imprimir */
+  loteSeleccionadoCodigo = signal<string | null>(null);
+
+  /** Activa el modo de selección de lote sobre el mapa */
+  activarPickLote(): void {
+    this.pickLoteActivo.set(true);
+  }
+  /** Cancela el modo de selección de lote */
+  cancelarPickLote(): void {
+    this.pickLoteActivo.set(false);
+  }
+  /** Quita el lote seleccionado para impresión */
+  limpiarLoteSeleccionado(): void {
+    this.loteSeleccionadoCodigo.set(null);
+  }
   /** URL con la información de la foto de dron 2018 para mostrar en un modal. */
   fotoDroneUrl2018 = signal<string | null>(null);
   /** URL con la información de la foto de dron 2024 para mostrar en un modal. */
@@ -520,6 +537,27 @@ export class MapService {
     olMap.on('singleclick', (evt) => {
       // Si se está usando una herramienta de dibujo, no hacemos nada.
       if (this.drawMeasureService.isDrawing()) {
+        return;
+      }
+      // Modo "seleccionar lote para imprimir": capturamos el lote clicado y salimos.
+      if (this.pickLoteActivo()) {
+        const loteLayer = this.getLayerById('lote');
+        const source = loteLayer?.getSource();
+        const view = olMap.getView();
+        const infoUrl = loteLayer?.getVisible()
+          ? source?.getFeatureInfoUrl(evt.coordinate, view.getResolution()!, view.getProjection(), { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': '1' })
+          : undefined;
+        if (infoUrl) {
+          this.http.get<WfsResponse>(infoUrl).subscribe(resp => {
+            const codigo = resp?.features?.[0]?.properties?.['id_lote'];
+            this.zone.run(() => {
+              if (codigo) this.loteSeleccionadoCodigo.set(String(codigo).trim());
+              this.pickLoteActivo.set(false);
+            });
+          });
+        } else {
+          this.zone.run(() => this.pickLoteActivo.set(false));
+        }
         return;
       }
       const view = olMap.getView();

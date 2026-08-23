@@ -38,12 +38,10 @@ export class Consultas {
   private readonly nombreHabilitacionSubject = new Subject<string>();
   habilitacionSuggestions: GeoJSONFeature[] = [];
   showHabilitacionSuggestions = false;
-  private readonly manzanaUrbanaSubject = new Subject<string>();
   manzanaSuggestions: string[] = [];
-  showManzanaSuggestions = false;
-  private readonly loteUrbanoSubject = new Subject<string>();
   loteSuggestions: string[] = [];
-  showLoteSuggestions = false;
+  /** Última habilitación confirmada desde las sugerencias; permite detectar cambios de texto */
+  private habilitacionConfirmada = '';
 
   // -----------------------------------------
   nombreHabilitacion = '';
@@ -97,24 +95,6 @@ export class Consultas {
       this.habilitacionSuggestions = suggestions || [];
       this.showHabilitacionSuggestions = (suggestions?.length ?? 0) > 0;
     });
-
-    this.manzanaUrbanaSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(partialManzana => this.mapService.searchManzanasByHabilitacion(this.nombreHabilitacion, partialManzana))
-    ).subscribe(suggestions => {
-      this.manzanaSuggestions = suggestions || [];
-      this.showManzanaSuggestions = (suggestions?.length ?? 0) > 0;
-    });
-
-    this.loteUrbanoSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(partialLote => this.mapService.searchLotesByHabilitacionManzana(this.nombreHabilitacion, this.manzanaUrbana, partialLote))
-    ).subscribe(suggestions => {
-      this.loteSuggestions = suggestions || [];
-      this.showLoteSuggestions = (suggestions?.length ?? 0) > 0;
-    });
   }
 
   onNombreViaInput(event: Event) {
@@ -129,24 +109,34 @@ export class Consultas {
 
   onNombreHabilitacionInput(event: Event) {
     const value = (event.target as HTMLInputElement).value;
+    // Si el texto deja de coincidir con la habilitación confirmada,
+    // invalidamos los filtros dependientes para evitar valores residuales.
+    if (value.trim() !== this.habilitacionConfirmada) {
+      this.resetDependenciasHabilitacion();
+    }
     this.nombreHabilitacionSubject.next(value);
   }
 
-  onManzanaUrbanaInput(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.manzanaUrbanaSubject.next(value);
+  /**
+   * Al cambiar la manzana se reinicia el lote y su lista (evita que queden
+   * lotes residuales de la manzana anterior) y se cargan los lotes nuevos.
+   */
+  onManzanaChange(_event: Event) {
+    this.loteUrbano = '';
+    this.loteSuggestions = [];
+    this.loadLotes();
   }
 
-  onLoteUrbanoInput(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.loteUrbanoSubject.next(value);
-  }
-
-  onManzanaChange(event: Event) {
-    const selectedManzana = (event.target as HTMLSelectElement).value;
-    this.manzanaUrbana = selectedManzana;
-    this.loteUrbano = ''; // Reseteamos el lote
-    this.loadLotes(); // Cargamos los lotes para la nueva manzana
+  /**
+   * Limpia los filtros dependientes de la habilitación (confirmación,
+   * manzana y lote), evitando que queden valores de búsquedas anteriores.
+   */
+  private resetDependenciasHabilitacion(): void {
+    this.habilitacionConfirmada = '';
+    this.manzanaUrbana = '';
+    this.loteUrbano = '';
+    this.manzanaSuggestions = [];
+    this.loteSuggestions = [];
   }
 
   /** Formatea el código catastral mientras el usuario escribe (XXXX-XXX-XXX) */
@@ -179,11 +169,8 @@ export class Consultas {
       },
       habilitacion: () => {
         this.nombreHabilitacion = '';
-        this.manzanaUrbana = '';
-        this.loteUrbano = '';
         this.habilitacionSuggestions = [];
-        this.manzanaSuggestions = [];
-        this.loteSuggestions = [];
+        this.resetDependenciasHabilitacion();
       },
       titular: () => this.codigoTitular = '',
       denominacion: () => this.denominacionPredio = '',
@@ -253,54 +240,40 @@ export class Consultas {
     setTimeout(() => this.showHabilitacionSuggestions = false, 200);
   }
 
-  onManzanaUrbanaBlur() {
-    setTimeout(() => this.showManzanaSuggestions = false, 200);
-  }
-
-  onLoteUrbanoBlur() {
-    setTimeout(() => this.showLoteSuggestions = false, 200);
-  }
-
   selectHabilitacionSuggestion(suggestion: GeoJSONFeature) {
-    this.nombreHabilitacion = suggestion.properties['urbanizaci'];
+    const nombre = String(suggestion.properties['urbanizaci'] ?? '').trim();
+    this.nombreHabilitacion = nombre;
+    this.habilitacionConfirmada = nombre;
     this.showHabilitacionSuggestions = false;
-    this.showHabilitacionSuggestions = false;    
-    // Resaltamos la geometría del parque seleccionado y centramos el mapa en él.
-    this.mapService.fitToGeometry(suggestion.geometry, 'EPSG:32718', undefined, true);
-    this.Close.emit(); // Cerramos el panel para una mejor visualización.
     this.habilitacionSuggestions = [];
-    this.manzanaUrbana = ''; // Limpiamos la manzana
-    this.loteUrbano = ''; // Limpiamos el lote
-    this.manzanaSuggestions = []; // Limpiamos las sugerencias de manzana
-    this.loteSuggestions = []; // Limpiamos las sugerencias de lote
-    // Cargamos las manzanas para la habilitación seleccionada
+    // Reiniciamos los filtros dependientes y cargamos las manzanas
+    // disponibles de esta habilitación.
+    this.manzanaUrbana = '';
+    this.loteUrbano = '';
+    this.loteSuggestions = [];
     this.loadManzanas();
   }
 
-  selectManzanaSuggestion(suggestion: string) {
-    this.manzanaUrbana = suggestion;
-    this.showManzanaSuggestions = false;
-    this.manzanaSuggestions = [];
-    this.loteUrbano = ''; // Reseteamos el lote
-    this.loadLotes(); // Cargamos los lotes para la nueva manzana
-  }
-
-  selectLoteSuggestion(suggestion: string) {
-    this.loteUrbano = suggestion;
-    this.showLoteSuggestions = false;
-    this.loteSuggestions = [];
-  }
-
+  /** Carga las manzanas disponibles para la habilitación confirmada */
   private loadManzanas() {
+    if (!this.nombreHabilitacion) return;
     this.mapService.searchManzanasByHabilitacion(this.nombreHabilitacion, '')
       .pipe(take(1))
-      .subscribe(manzanas => this.manzanaSuggestions = manzanas);
+      .subscribe({
+        next: manzanas => this.manzanaSuggestions = manzanas || [],
+        error: () => this.searchError.set('No se pudieron cargar las manzanas de la habilitación.')
+      });
   }
 
+  /** Carga los lotes disponibles para la manzana seleccionada */
   private loadLotes() {
+    if (!this.nombreHabilitacion || !this.manzanaUrbana) return;
     this.mapService.searchLotesByHabilitacionManzana(this.nombreHabilitacion, this.manzanaUrbana, '')
       .pipe(take(1))
-      .subscribe(lotes => this.loteSuggestions = lotes);
+      .subscribe({
+        next: lotes => this.loteSuggestions = lotes || [],
+        error: () => this.searchError.set('No se pudieron cargar los lotes de la manzana.')
+      });
   }
 
   /**
@@ -490,6 +463,11 @@ export class Consultas {
         }
       });
     } else if (this.activeTab === 'habilitacion') {
+      // Solo consultamos cuando los tres filtros están completos
+      if (!this.nombreHabilitacion.trim() || !this.manzanaUrbana.trim() || !this.loteUrbano.trim()) {
+        this.searchError.set('Complete habilitación, manzana y lote para consultar.');
+        return;
+      }
       this.loading.set(true);
       this.searchError.set(null);
       this.mapService.searchLoteByHabilitacion(this.nombreHabilitacion, this.manzanaUrbana, this.loteUrbano)

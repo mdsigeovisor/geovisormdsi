@@ -16,22 +16,33 @@
 <app-sidebar (onToggle)="handleSidebarToggle($event)"></app-sidebar>
 <div #mapContainer class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
 <app-funciones></app-funciones>
-<!-- Modal para información del lote -->
-@if (mapService.loteInfoUrl(); as url) {
-<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in" (click)="closeLoteModal()" tabindex="-1">
-  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[682px] h-[85%] animate-scale-in" (click)="$event.stopPropagation()">
-    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-      <h3 class="m-0 text-lg font-semibold text-gray-800">Información del Lote</h3>
-      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200" (click)="closeLoteModal()" title="Cerrar">&times;</button>
+<!-- Ventanas flotantes de información del lote (no bloquean el mapa; varias pueden estar abiertas) -->
+@for (win of mapService.loteInfoWindows(); track win.id) {
+<div class="fixed z-[1040] flex flex-col bg-white rounded-lg shadow-2xl border border-gray-300 w-[620px] max-w-[92vw] h-[70vh] animate-scale-in overflow-hidden"
+     [style.left.px]="win.x" [style.top.px]="win.y"
+     (pointerdown)="focusLote(win)">
+  <!-- Barra de título arrastrable -->
+  <div class="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50 cursor-move select-none touch-none"
+       (pointerdown)="startLoteDrag($event, win)"
+       (pointermove)="dragLote($event)"
+       (pointerup)="endLoteDrag()"
+       (pointercancel)="endLoteDrag()">
+    <h3 class="m-0 text-sm font-semibold text-gray-800 flex items-center gap-2">
+      <i class="bi bi-building text-primary"></i>
+      <span>Información del Lote</span>
+      <span class="text-primary">{{ win.id }}</span>
+    </h3>
+    <button class="w-8 h-8 rounded-full flex items-center justify-center bg-transparent border-none text-2xl leading-none cursor-pointer transition-colors hover:bg-gray-200"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="closeLoteWindow(win.id)"
+            title="Cerrar">&times;</button>
+  </div>
+  <div class="flex-grow p-0 overflow-hidden relative">
+    <!-- Indicador de carga para el iframe -->
+    <div class="absolute inset-0 flex items-center justify-center bg-white/50">
+      <app-spinner size="h-32 w-32" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
     </div>
-    <div class="flex-grow p-0 overflow-hidden relative">
-      <!-- Indicador de carga para el iframe -->
-      <div class="absolute inset-0 flex items-center justify-center bg-white/50 rounded-b-lg">
-        <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
-      </div>
-      <!-- El iframe se mostrará por encima del spinner una vez cargado -->
-      <iframe class="relative w-full h-full border-0 rounded-b-lg" [src]="getSafeUrl(url)" frameborder="0"></iframe>
-    </div>
+    <iframe class="relative w-full h-full border-0" [src]="getSafeUrl(win.url)" frameborder="0"></iframe>
   </div>
 </div>
 }

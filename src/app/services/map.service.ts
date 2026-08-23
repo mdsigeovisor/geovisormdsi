@@ -54,6 +54,20 @@ import {
 
 export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
 /**
+ * Ventana flotante con la información de un lote.
+ * Varias pueden estar abiertas simultáneamente sin bloquear el mapa.
+ */
+export interface LoteInfoWindow {
+  /** Código catastral del lote (identificador único de la ventana) */
+  id: string;
+  /** URL de la ficha del lote */
+  url: string;
+  /** Posición horizontal (px) respecto al viewport */
+  x: number;
+  /** Posición vertical (px) respecto al viewport */
+  y: number;
+}
+/**
  * Servicio de Angular para la gestión del mapa OpenLayers.
  * Encapsula toda la lógica relacionada con la inicialización, manipulación
  * y gestión de elementos del mapa, como capas, controles y overlays.
@@ -97,8 +111,8 @@ export class MapService {
   userCoords = signal<{ lon: number, lat: number } | null>(null);
   /** Herramientas del sidebar activas. */
   activeSidebarTools = signal<Set<string>>(new Set());
-  /** URL con la información de un lote para mostrar en un modal. */
-  loteInfoUrl = signal<string | null>(null);
+  /** Ventanas flotantes con la información de lotes (varias abiertas, sin bloquear el mapa) */
+  loteInfoWindows = signal<LoteInfoWindow[]>([]);
   /** URL con la información de la foto de dron 2018 para mostrar en un modal. */
   fotoDroneUrl2018 = signal<string | null>(null);
   /** URL con la información de la foto de dron 2024 para mostrar en un modal. */
@@ -560,19 +574,64 @@ export class MapService {
       if (url) {
         this.http.get<WfsResponse>(url).subscribe(response => {
           if (response?.features?.length > 0) {
-            const codigoLote = response.features[0].properties['id_lote'];
-            const infoUrl = `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigoLote}`;
-            this.loteInfoUrl.set(infoUrl);
+            const codigoLote = String(response.features[0].properties['id_lote']);
+            if (codigoLote && codigoLote !== 'undefined') {
+              this.openLoteInfoWindow(codigoLote);
+            }
           }
         });
       }
     });
   }
   /**
-   * Limpia la URL de información del lote, para cerrar el modal.
+   * Abre una nueva ventana flotante con la información del lote indicado,
+   * o la trae al frente si ya se encuentra abierta. Las ventanas conviven
+   * entre sí y no bloquean la interacción con el mapa.
+   * @param codigo Código catastral del lote (id_lote).
    */
-  clearLoteInfo(): void {
-    this.loteInfoUrl.set(null);
+  openLoteInfoWindow(codigo: string): void {
+    const existente = this.loteInfoWindows().find(w => w.id === codigo);
+    if (existente) {
+      this.bringLoteToFront(codigo);
+      return;
+    }
+    const index = this.loteInfoWindows().length;
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+    // Escalonamos cada ventana nueva para que no queden exactamente superpuestas
+    const x = Math.min(96 + index * 36, Math.max(vw - 660, 20));
+    const y = Math.min(88 + index * 30, Math.max(vh - 240, 20));
+    const url = `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigo}`;
+    this.loteInfoWindows.update(wins => [...wins, { id: codigo, url, x, y }]);
+  }
+  /**
+   * Cierra la ventana flotante del lote indicado.
+   */
+  closeLoteWindow(id: string): void {
+    this.loteInfoWindows.update(wins => wins.filter(w => w.id !== id));
+  }
+  /**
+   * Cierra la última ventana abierta (la superior). Usado por la tecla Escape.
+   */
+  closeLastLoteWindow(): void {
+    this.loteInfoWindows.update(wins => wins.slice(0, -1));
+  }
+  /**
+   * Mueve una ventana flotante a la posición indicada (arrastre).
+   */
+  moveLoteWindow(id: string, x: number, y: number): void {
+    this.loteInfoWindows.update(wins => wins.map(w => (w.id === id ? { ...w, x, y } : w)));
+  }
+  /**
+   * Trae la ventana indicada al frente de las demás (reordenando el arreglo,
+   * el último elemento se renderiza encima al compartir z-index).
+   */
+  bringLoteToFront(id: string): void {
+    this.loteInfoWindows.update(wins => {
+      const win = wins.find(w => w.id === id);
+      if (!win || wins[wins.length - 1].id === id) return wins;
+      return [...wins.filter(w => w.id !== id), win];
+    });
   }
   /**
    * Limpia la URL de la foto de dron de 2018, para cerrar el modal.

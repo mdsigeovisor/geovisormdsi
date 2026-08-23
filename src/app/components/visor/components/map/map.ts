@@ -2,7 +2,7 @@ import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetect
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 // Servicios y módulos
-import { MapService } from '../../../../services/map.service';
+import { LoteInfoWindow, MapService } from '../../../../services/map.service';
 import { DrawMeasureService } from '../../../../services/draw.service';
 // Componentes relacionados
 import { Navbar } from './components/navbar/navbar';
@@ -82,8 +82,8 @@ export class MapComponent {
    */
   @HostListener('document:keydown.escape', ['$event'])
   onKeydownHandler(event: KeyboardEvent) {
-    if (this.mapService.loteInfoUrl()) {
-      this.closeLoteModal();
+    if (this.mapService.loteInfoWindows().length > 0) {
+      this.mapService.closeLastLoteWindow();
     }
     if (this.mapService.fotoDroneUrl2018()) {
       this.closeFotoDroneModal2018();
@@ -104,11 +104,48 @@ export class MapComponent {
       this.mapService.closeTermsModal();
     }
   }
+  /** Estado interno del arrastre de una ventana de lote */
+  private loteDragState: { id: string; startX: number; startY: number; originX: number; originY: number } | null = null;
+
   /**
-   * Cierra el modal de información del lote.
+   * Inicia el arrastre de una ventana flotante desde su barra de título.
    */
-  closeLoteModal(): void {
-    this.mapService.clearLoteInfo();
+  startLoteDrag(event: PointerEvent, win: LoteInfoWindow): void {
+    if (event.button !== 0) return;
+    event.preventDefault(); // Evita seleccionar texto durante el arrastre
+    this.loteDragState = { id: win.id, startX: event.clientX, startY: event.clientY, originX: win.x, originY: win.y };
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  /**
+   * Arrastra la ventana siguiendo el movimiento del puntero.
+   */
+  dragLote(event: PointerEvent): void {
+    if (!this.loteDragState) return;
+    const x = this.loteDragState.originX + (event.clientX - this.loteDragState.startX);
+    const y = this.loteDragState.originY + (event.clientY - this.loteDragState.startY);
+    this.mapService.moveLoteWindow(this.loteDragState.id, x, y);
+  }
+
+  /**
+   * Finaliza el arrastre de la ventana.
+   */
+  endLoteDrag(): void {
+    this.loteDragState = null;
+  }
+
+  /**
+   * Trae la ventana al frente cuando el usuario interactúa con ella.
+   */
+  focusLote(win: LoteInfoWindow): void {
+    this.mapService.bringLoteToFront(win.id);
+  }
+
+  /**
+   * Cierra una ventana flotante de información del lote.
+   */
+  closeLoteWindow(id: string): void {
+    this.mapService.closeLoteWindow(id);
   }
 
   /**

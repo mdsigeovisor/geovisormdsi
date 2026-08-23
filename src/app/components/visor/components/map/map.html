@@ -16,6 +16,13 @@
 <app-sidebar (onToggle)="handleSidebarToggle($event)"></app-sidebar>
 <div #mapContainer class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
 <app-funciones></app-funciones>
+
+<!-- Logo institucional del visor: esquina inferior izquierda,
+     desplazado a la derecha del sidebar (w-12) para no superponerse -->
+<img src="/assets/images/logo_visor.png"
+     alt="Logo San Isidro"
+     draggable="false"
+     class="absolute left-16 bottom-6 z-[5] h-20 w-auto pointer-events-none select-none [filter:drop-shadow(0_0_12px_rgba(255,255,255,0.7))]" />
 <!-- Ventanas flotantes de información del lote (no bloquean el mapa; varias pueden estar abiertas) -->
 @for (win of mapService.loteInfoWindows(); track win.id) {
 <div class="fixed z-[1040] flex flex-col bg-white rounded-lg shadow-2xl border border-gray-300 w-[620px] max-w-[92vw] h-[70vh] animate-scale-in overflow-hidden"

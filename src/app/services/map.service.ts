@@ -1277,7 +1277,7 @@ export class MapService {
       .set('service', 'WFS')
       .set('version', '1.1.0')
       .set('request', 'GetFeature')
-      .set('typeName', 'mdsibde2026:vw_tg_via')
+      .set('typeName', `${environment.geoserver.workspacePrefix}vw_tg_via`)
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:32718')
       .set('cql_filter', filter);
@@ -1351,15 +1351,28 @@ export class MapService {
     if (!map) return;
     this.highlightLayer = new VectorLayer({
       source: new VectorSource(),
-      style: new Style({
-        stroke: new Stroke({
-          color: '#46570f', // Borde verde oscuro
-          width: 3,
-        }),
-        fill: new Fill({
-          color: 'rgba(70, 87, 15, 0.2)', // Relleno verde semi-transparente
-        }),
-      }),
+      // Estilo según el tipo de geometría:
+      // - Líneas (vías): trazo ámbar sólido sobre un halo translúcido más ancho,
+      //   para que la vía encontrada destaque claramente sobre la cartografía.
+      // - Polígonos (lotes, habilitaciones): borde y relleno verdes institucionales.
+      style: feature => {
+        const geometryType = feature.getGeometry()?.getType();
+        if (geometryType === 'LineString' || geometryType === 'MultiLineString') {
+          return [
+            new Style({ stroke: new Stroke({ color: 'rgba(255, 193, 7, 0.45)', width: 12 }) }),
+            new Style({ stroke: new Stroke({ color: '#ff8f00', width: 5 }) }),
+          ];
+        }
+        return new Style({
+          stroke: new Stroke({
+            color: '#46570f', // Borde verde oscuro
+            width: 3,
+          }),
+          fill: new Fill({
+            color: 'rgba(70, 87, 15, 0.2)', // Relleno verde semi-transparente
+          }),
+        });
+      },
       zIndex: 1000, // Asegura que esté por encima de otras capas
     });
     map.addLayer(this.highlightLayer);

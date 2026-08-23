@@ -313,39 +313,17 @@ export class Consultas {
     }
     this.loading.set(true);
     this.searchError.set(null);
-    console.log('[handleBuscarByDireccion] Iniciando búsqueda para:', this.nombreVia);
     this.mapService.searchVias(this.nombreVia, true, false)
       .pipe(take(1))
       .subscribe({
         next: (features) => {
-          this.loading.set(false);
-          console.log('[handleBuscarByDireccion] Features recibidos:', features);
-          if (features && features.length > 0) {            
-            // Para resaltar la vía completa, que puede consistir en varios segmentos (LineString),
-            // los agrupamos en una única geometría MultiLineString.
-            const multiLineString: GeoJSONGeometry = {
-              type: 'MultiLineString',
-              // Usamos flatMap para manejar tanto LineString (que tiene un array de coordenadas)
-              // como MultiLineString (que tiene un array de arrays de coordenadas).
-              // Esto asegura que siempre obtengamos un array plano de coordenadas de líneas.
-              coordinates: features.flatMap(f => 
-                f.geometry.type === 'LineString'
-                  ? [f.geometry.coordinates] // Si es LineString, envolvemos sus coordenadas: [[lon, lat], ...] -> [[[lon, lat], ...]]
-                  : f.geometry.coordinates   // Si ya es MultiLineString, sus coordenadas ya tienen la estructura correcta: [[[lon, lat], ...]]
-              )
-            };            
-            console.log('[handleBuscarByDireccion] Geometría MultiLineString creada:', JSON.stringify(multiLineString, null, 2));
-
-            // Ajustamos el mapa para que todas las geometrías de la vía sean visibles.
-            // La capa de resaltado se encargará de dibujar todos los segmentos.
-            console.log('[handleBuscarByDireccion] Llamando a fitToGeometry...');
-            this.mapService.fitToGeometry(multiLineString, 'EPSG:32718', undefined, true);
-            // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
-            this.Close.emit(); // Cerramos el panel de búsqueda
-            console.log('[handleBuscarByDireccion] Búsqueda completada y panel cerrado.');
-          } else {
-            this.searchError.set('No se encontraron vías con los criterios ingresados.');
+          if (!features || features.length === 0) {
+            // La coincidencia exacta puede fallar por pequeñas diferencias de
+            // escritura; reintentamos con búsqueda parcial (ILIKE).
+            this.buscarViaParcial();
+            return;
           }
+          this.procesarViasEncontradas(features);
         },
         error: (err) => {
           console.error('Error en la búsqueda por dirección:', err);
@@ -353,6 +331,50 @@ export class Consultas {
           this.loading.set(false);
         }
       });
+  }
+
+  /**
+   * Segundo intento de búsqueda por dirección usando coincidencia parcial.
+   */
+  private buscarViaParcial(): void {
+    this.mapService.searchVias(this.nombreVia, false, false)
+      .pipe(take(1))
+      .subscribe({
+        next: (features) => {
+          if (!features || features.length === 0) {
+            this.loading.set(false);
+            this.searchError.set('No se encontraron vías con los criterios ingresados.');
+            return;
+          }
+          this.procesarViasEncontradas(features);
+        },
+        error: () => {
+          this.loading.set(false);
+          this.searchError.set('Error de conexión con el servicio de vías.');
+        }
+      });
+  }
+
+  /**
+   * Agrupa todos los segmentos encontrados de la(s) vía(s) en una única
+   * geometría MultiLineString, la resalta en el mapa (capa de resaltado,
+   * color ámbar para líneas) y ajusta la vista a su extensión completa.
+   */
+  private procesarViasEncontradas(features: GeoJSONFeature[]): void {
+    const multiLineString: GeoJSONGeometry = {
+      type: 'MultiLineString',
+      // Usamos flatMap para manejar tanto LineString (un array de coordenadas)
+      // como MultiLineString (un array de arrays de coordenadas).
+      coordinates: features.flatMap(f =>
+        f.geometry.type === 'LineString'
+          ? [f.geometry.coordinates]
+          : f.geometry.coordinates
+      )
+    };
+    // fitToGeometry resalta la geometría y ajusta la vista a su extensión
+    this.mapService.fitToGeometry(multiLineString, 'EPSG:32718', undefined, true);
+    this.loading.set(false);
+    this.Close.emit(); // Cerramos el panel para una mejor visualización
   }
 
   private handleBuscarByParque() {
@@ -562,3 +584,4 @@ export class Consultas {
     this.SearchResult.emit(result);
   }
 }
+

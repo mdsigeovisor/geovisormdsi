@@ -7,11 +7,24 @@ import { ORTOFOTO_YEARS } from './ortofotos';
  */
 export const LAYER_PANEL_SECTIONS: Section[] = [
   {
-    id: 'tusne',
-    title: 'TUSNE',
+    id: 'catastral',
+    title: 'Información Catastral',    
     expanded: false,
     items: [
-      { type: 'layer', id: 'levantTopografico', label: 'Levantamiento Topográfico', visible: true, opacity: 1, showInLegend: false },
+      {
+        type: 'subsection',
+        id: 'catastro',
+        title: 'CARTOGRAFIA',
+        expanded: false,
+        layers: [
+          { type: 'layer', id: 'num_cuadra', label: 'Cuadra', visible: true, opacity: 1, showInLegend: false },
+          { type: 'layer', id: 'construcciones', label: 'Construcciones', visible: true, opacity: 1, showInLegend: true },
+          { type: 'layer', id: 'lote', label: 'Lote', visible: true, opacity: 1, showInLegend: true },
+          { type: 'layer', id: 'manzana', label: 'Manzana', visible: true, opacity: 1, showInLegend: true },
+          { type: 'layer', id: 'veredas', label: 'Veredas', visible: true, opacity: 1, showInLegend: false },
+          { type: 'layer', id: 'arearecreativa', label: 'Área Recreativa', visible: true, opacity: 1, showInLegend: false },
+        ],
+      },      
     ],
   },
   {
@@ -54,12 +67,13 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     ],
   },
   {
-    id: 'numeracion_municipal',
-    title: 'Numeración Municipal',
+    id: 'numeracion_campo',
+    title: 'Numeración de Campo',
     expanded: false,
     items: [
-      { type: 'layer', id: 'num_municipal_2024', label: 'Numeracion municipal 2024', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'num_municipal_2022', label: 'Numeracion municipal 2022', visible: false, opacity: 1, showInLegend: true },
+      { type: 'layer', id: 'num_municipal_2024', label: 'Numeración de campo 2024', visible: false, opacity: 1, showInLegend: true },
+      { type: 'layer', id: 'num_municipal_2022', label: 'Numeración de campo 2022', visible: false, opacity: 1, showInLegend: true },
+      { type: 'layer', id: 'puertas2024', label: 'Puertas 2024', visible: false, opacity: 1, showInLegend: true },      
     ],
   },
     {
@@ -72,37 +86,6 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
       { type: 'layer', id: 'cactus_yucca_2015', label: 'Cactus - Yucca 2015', visible: false, opacity: 1, showInLegend: true },
     ],
   },
-  {
-    id: 'catastral',
-    title: 'Información Catastral',    
-    expanded: false,
-    items: [
-      {
-        type: 'subsection',
-        id: 'catastro',
-        title: 'CARTOGRAFIA',
-        expanded: false,
-        layers: [
-          { type: 'layer', id: 'num_cuadra', label: 'Cuadra', visible: true, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'construcciones', label: 'Construcciones', visible: true, opacity: 1, showInLegend: true },
-          { type: 'layer', id: 'lote', label: 'Lote', visible: true, opacity: 1, showInLegend: true },
-          { type: 'layer', id: 'manzana', label: 'Manzana', visible: true, opacity: 1, showInLegend: true },
-          { type: 'layer', id: 'veredas', label: 'Veredas', visible: true, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'arearecreativa', label: 'Área Recreativa', visible: true, opacity: 1, showInLegend: false },
-        ],
-      },      
-      {
-        type: 'subsection',
-        id: 'nom_vias',
-        title: 'VIAS',
-        expanded: false,
-        layers: [
-          { type: 'layer', id: 'puertas', label: 'Puertas', visible: false, opacity: 1, showInLegend: true },
-        ],
-      },
-    ],
-  },
-
   {
     id: 'imaAereas',
     title: 'Fotográfias Áereas',    
@@ -141,8 +124,16 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     expanded: false,
     items: [
       { type: 'layer', id: 'etiq_zonificacion', label: 'Etiqueta Zonificación', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'zonificacion', label: 'Zonificación', visible: false, opacity: 1, showInLegend: true },
+      { type: 'layer', id: 'zonificacion', label: 'Zonificación', visible: true, opacity: 1, showInLegend: true },      
       { type: 'layer', id: 'amUrbHomogeneo', label: 'Ambito Urbano Homogéneo', visible: false, opacity: 1, showInLegend: false },
+    ],
+  },
+  {
+    id: 'tusne',
+    title: 'TUSNE',
+    expanded: false,
+    items: [
+      { type: 'layer', id: 'tusne', label: 'Levantamiento Topográfico', visible: false, opacity: 1, showInLegend: true },
     ],
   },
 ];

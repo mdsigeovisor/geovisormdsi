@@ -97,6 +97,9 @@ export class MapComponent {
     if (this.mapService.arboladoUrbano2015Url()) {
       this.closeArboladoUrbano2015Modal();
     }
+    if (this.mapService.tusneUrl()) {
+      this.closeTusneModal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -134,6 +137,13 @@ export class MapComponent {
    */
   closeArboladoUrbano2015Modal(): void {
     this.mapService.clearArboladoUrbano2015Url();
+  }
+
+  /**
+   * Cierra el modal del levantamiento topográfico (TUSNE).
+   */
+  closeTusneModal(): void {
+    this.mapService.clearTusneUrl();
   }
 
   /**

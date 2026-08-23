@@ -107,6 +107,8 @@ export class MapService {
   ptoGeodesicoUrl = signal<string | null>(null);
   /** URL con la información de un arbol (2015) para mostrar en un modal. */
   arboladoUrbano2015Url = signal<string | null>(null);
+  /** URL del PDF de levantamiento topográfico (TUSNE) para mostrar en un modal. */
+  tusneUrl = signal<string | null>(null);
   /** Controla la visibilidad del modal global de Términos y Condiciones */
   showTermsModal = signal(false);
   /** Términos aceptados por el usuario durante esta sesión (no vuelve a mostrarse automáticamente) */
@@ -487,6 +489,18 @@ export class MapService {
           }
         }
       },
+      {
+        layerId: 'tusne',
+        getLayer: () => this.getLayerById('tusne'),
+        handler: (feature: GeoJSONFeature) => {
+          // Los planos TUSNE se nombran con el identificador del predio: <id_lote>.pdf
+          const tusneId = feature.properties['id_lote'] ?? feature.properties['codigo'] ?? feature.properties['id'];
+          if (tusneId) {
+            const tusnePdfUrl = `http://192.168.41.61/DataGIS_WGS84/32_LEVANTAMIENTO_TOPOGRAFICO_(TUSNE)/${tusneId}.pdf`;
+            this.tusneUrl.set(tusnePdfUrl);
+          }
+        }
+      },
     ];
 
     olMap.on('singleclick', (evt) => {
@@ -583,6 +597,12 @@ export class MapService {
    */
   clearArboladoUrbano2015Url(): void {
     this.arboladoUrbano2015Url.set(null);
+  }
+  /**
+   * Limpia la URL del levantamiento topográfico (TUSNE), para cerrar el modal.
+   */
+  clearTusneUrl(): void {
+    this.tusneUrl.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

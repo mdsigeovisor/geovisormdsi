@@ -7,7 +7,7 @@ import { MapService } from '../../../../../../services/map.service';
 import { CapasComponent } from './components/capas/capas';
 import { Consultas } from './components/consultas/consultas';
 import { Leyenda } from './components/leyenda/leyenda';
-import { About } from '../../../about/about';
+import { About } from './components/about/about';
 import { Descargaspdf } from './components/descargaspdf/descargaspdf';
 import { Imprimir } from './components/imprimir/imprimir';
 import { UbicacionCoordenadas } from './components/coordenadas/coordenadas';
@@ -67,6 +67,21 @@ export class Sidebar  {
     if (item) this.setActive(item.id);
   }
   setActive(toolId: string) {
+    // "Acerca de" se muestra como tarjeta flotante sobre el mapa,
+    // por lo que no debe abrir el panel lateral deslizable.
+    if (toolId === 'about') {
+      const previous = this.activeTab;
+      if (previous && previous !== 'about') {
+        // Si había otra herramienta activa, la cerramos junto con el panel
+        this.mapService.toggleSidebarTool(previous);
+        if (this.isOpen) {
+          this.isOpen = false;
+          this.onToggle.emit(false);
+        }
+      }
+      this.mapService.toggleSidebarTool('about');
+      return;
+    }
     const currentActive = this.activeTab;
     const wasOpen = this.isOpen; // Guardamos el estado anterior
     if (currentActive === toolId) {
@@ -81,5 +96,9 @@ export class Sidebar  {
       this.isOpen = true;
       if (!wasOpen) this.onToggle.emit(true); // Solo emitir si estaba cerrado
     }
+  }
+  /** Cierra la tarjeta flotante de "Acerca de" */
+  closeAbout() {
+    this.mapService.toggleSidebarTool('about');
   }
 }

@@ -3,7 +3,6 @@
   display: block;
   position: relative;
   width: 100%;
-  min-height: 100vh;
 }
 
 /* Estilos para la imagen inyectada en el HTML */

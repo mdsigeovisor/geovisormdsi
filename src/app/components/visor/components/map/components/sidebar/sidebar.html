@@ -49,15 +49,12 @@
               <app-leyenda *ngSwitchCase="'legend'" (onClose)="toggleSidebar()"></app-leyenda>
               <app-coordenadas *ngSwitchCase="'coordenadas'" (onClose)="toggleSidebar()"></app-coordenadas>
               <app-imprimir *ngSwitchCase="'print'" (onClose)="toggleSidebar()"></app-imprimir>
-              <app-about *ngSwitchCase="'about'" (onClose)="toggleSidebar()"></app-about>
               <app-descargaspdf *ngSwitchCase="'downloads'" (onClose)="toggleSidebar()"></app-descargaspdf>
               <!-- Mensaje para herramientas sin componente aún -->
               <div *ngSwitchDefault class="flex flex-col items-center justify-center h-full text-gray-400">
                 <span class="material-icons text-5xl mb-2">construction</span>
                 <p>Módulo en desarrollo</p>
               </div>
-              <!-- Componente por defecto o para herramientas sin componente aún -->
-              <app-about *ngSwitchDefault (onClose)="toggleSidebar()"></app-about>
             </ng-container>
           </div>
         } @else {
@@ -71,3 +68,24 @@
     </aside>
   </div>
 </div>
+
+<!-- PANEL FLOTANTE "ACERCA DE" (tarjeta superpuesta al mapa) -->
+@if (activeTab === 'about') {
+  <div class="fixed left-[60px] top-[76px] z-40 font-sans animate-panel-fade-in">
+    <div class="w-80 max-h-[calc(100vh-96px)] flex flex-col bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-panel-scale-in">
+      <!-- Encabezado de la tarjeta -->
+      <div class="bg-primary p-4 text-white shadow-md flex justify-between items-center shrink-0 rounded-t-xl">
+        <h2 class="font-bold text-lg tracking-wide uppercase">{{ activeTitle }}</h2>
+        <button (click)="closeAbout()"
+                title="Cerrar"
+                class="text-white hover:bg-white/20 rounded-full p-1.5 transition-colors">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <!-- Contenido del componente About -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar">
+        <app-about></app-about>
+      </div>
+    </div>
+  </div>
+}

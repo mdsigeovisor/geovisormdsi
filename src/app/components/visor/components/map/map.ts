@@ -11,6 +11,7 @@ import { Funciones } from './components/functions/functions';
 import { Spinner } from '../../../../animations/spinner/spinner';
 import { Login } from '../../../auth/components/login/login'; // Import Login component
 import { CoordinateInfo } from './components/coordinate-info/coordinate-info';
+import { TermsModal } from './components/terms-modal/terms-modal';
 /**
  * Componente principal de la interfaz del mapa.
  * Coordina la visualización de la barra de herramientas, barra lateral y los controles
@@ -27,6 +28,7 @@ import { CoordinateInfo } from './components/coordinate-info/coordinate-info';
     Login, // Add Login to imports
     Spinner,
     CoordinateInfo,
+    TermsModal,
   ],
   templateUrl: './map.html',
   styleUrl: './map.css',
@@ -94,6 +96,9 @@ export class MapComponent {
     }
     if (this.mapService.arboladoUrbano2015Url()) {
       this.closeArboladoUrbano2015Modal();
+    }
+    if (this.mapService.showTermsModal()) {
+      this.mapService.closeTermsModal();
     }
   }
   /**

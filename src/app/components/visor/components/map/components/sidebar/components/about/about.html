@@ -1,0 +1,28 @@
+<div class="p-4 font-sans text-gray-800">
+  <div class="text-center">
+    <img src="assets/images/logo.png" alt="Logo Visor" class="mx-auto h-24 w-auto mb-4">
+    <h3 class="text-lg font-bold text-primary">Visor Cartográfico Catastral de la Municipalidad de San Isidro</h3>
+    <p class="text-sm text-gray-500"></p>
+    <p class="mt-2 text-xs text-gray-400">Versión 1.0.0</p>
+  </div>
+  <hr class="my-6 border-gray-200">
+  <div class="space-y-4 text-sm">
+    <p>Este sistema proporciona acceso a la información geoespacial, cartografía oficial y datos técnicos de los predios del distrito.</p>
+    <div class="mt-4 space-y-2">
+      <!-- El modal se gestiona globalmente en app-terms-modal vía MapService -->
+      <button
+        (click)="openTerms()"
+        class="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+        <i class="bi bi-file-text"></i>
+        <span>Ver Términos y Condiciones</span>
+      </button>
+      <a
+        href="https://test.munisanisidro.gob.pe/WebObservatorioUrbano/"
+        target="_blank"
+        class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
+        <i class="bi bi-box-arrow-up-right"></i>
+        <span>Ir al Observatorio Urbano</span>
+      </a>
+    </div>
+  </div>
+</div>

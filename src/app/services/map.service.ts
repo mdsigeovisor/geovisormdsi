@@ -24,7 +24,8 @@ import {
   ANIMATION_DURATION,
   SAN_ISIDRO_CENTER,
   SAN_ISIDRO_ZOOM,
-  SAN_ISIDRO_EXTENT
+  SAN_ISIDRO_EXTENT,
+  TERMS_ZOOM_DISTRICTO
 } from '../interfaces/mapas.config';
 import {
   Feature,
@@ -106,6 +107,16 @@ export class MapService {
   ptoGeodesicoUrl = signal<string | null>(null);
   /** URL con la información de un arbol (2015) para mostrar en un modal. */
   arboladoUrbano2015Url = signal<string | null>(null);
+  /** Controla la visibilidad del modal global de Términos y Condiciones */
+  showTermsModal = signal(false);
+  /** Términos aceptados por el usuario durante esta sesión (no vuelve a mostrarse automáticamente) */
+  termsAccepted = signal(false);
+  /**
+   * Bandera interna: el aviso de términos se dispara una vez por cada "entrada"
+   * al distrito (zoom >= TERMS_ZOOM_DISTRICTO con vista sobre SAN_ISIDRO_EXTENT).
+   * Se rearma al salir del área o bajar del zoom mínimo.
+   */
+  private termsTriggerArmed = true;
   /** Indica si el mapa está en medio de una animación de navegación programática. */
   
   isNavigating = signal(false);
@@ -178,6 +189,8 @@ export class MapService {
     this.setupHighlightLayer();
     this.handleInitialRender(olMap);
     this.setupMapClickHandler(olMap);
+    // Detección de zoom sobre el distrito para mostrar Términos y Condiciones
+    this.setupTermsOnZoom(olMap);
     return olMap;
   }
   /**
@@ -710,6 +723,64 @@ export class MapService {
     const transformedExtent = transformExtent(SAN_ISIDRO_EXTENT, 'EPSG:32718', view.getProjection());
     this.cambiarMapaBase('blanco');
     view.fit(transformedExtent, { duration, padding: [20, 20, 20, 20] });
+  }
+  /**
+   * Muestra el modal global de Términos y Condiciones.
+   */
+  openTermsModal(): void {
+    this.showTermsModal.set(true);
+  }
+  /**
+   * Cierra el modal de Términos y Condiciones sin registrar aceptación.
+   */
+  closeTermsModal(): void {
+    this.showTermsModal.set(false);
+  }
+  /**
+   * Registra la aceptación de los términos y cierra el modal.
+   * Durante la sesión activa no volverá a mostrarse automáticamente.
+   */
+  acceptTerms(): void {
+    this.termsAccepted.set(true);
+    this.showTermsModal.set(false);
+  }
+  /**
+   * Escucha el evento 'moveend' del mapa y muestra el modal de Términos y
+   * Condiciones cuando el usuario hace zoom sobre el distrito de San Isidro:
+   * zoom >= TERMS_ZOOM_DISTRICTO y la vista intersecta SAN_ISIDRO_EXTENT.
+   * El aviso se dispara una vez por cada entrada al área (se rearma al salir).
+   * @param olMap Instancia del mapa de OpenLayers.
+   */
+  private setupTermsOnZoom(olMap: OlMap): void {
+    olMap.on('moveend', () => {
+      if (this.termsAccepted()) {
+        return;
+      }
+      const view = olMap.getView();
+      const zoom = view.getZoom();
+      const size = olMap.getSize();
+      let sobreDistrito = false;
+      if (zoom !== undefined && size && zoom >= TERMS_ZOOM_DISTRICTO) {
+        // Extensión visible transformada al sistema UTM oficial del distrito (EPSG:32718)
+        const extentUTM = transformExtent(view.calculateExtent(size), view.getProjection(), 'EPSG:32718');
+        // Intersección de bounding boxes ([oeste, sur, este, norte])
+        sobreDistrito =
+          extentUTM[0] <= SAN_ISIDRO_EXTENT[2] &&
+          extentUTM[2] >= SAN_ISIDRO_EXTENT[0] &&
+          extentUTM[1] <= SAN_ISIDRO_EXTENT[3] &&
+          extentUTM[3] >= SAN_ISIDRO_EXTENT[1];
+      }
+      if (!sobreDistrito) {
+        // Al alejarse o salir del área se rearma para el próximo ingreso
+        this.termsTriggerArmed = true;
+        return;
+      }
+      if (this.termsTriggerArmed) {
+        this.termsTriggerArmed = false;
+        // Los callbacks de OpenLayers corren fuera de Angular: restauramos la zona
+        this.zone.run(() => this.showTermsModal.set(true));
+      }
+    });
   }
   /**
    * Métodos para actualizar el estado de las secciones desde la UI

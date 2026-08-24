@@ -20,6 +20,9 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 *   **Módulo de Impresión (PDF):**
     *   Se aumentó el alto de la parte gráfica del plano (~75% del cuerpo, antes 62%) compactando el bloque de tabla cualitativa/fotografía y el pie de página.
+    *   **Recuadro del mapa duplicado:** nuevo layout de dos paneles — el mapa ocupa todo el alto del cuerpo (panel izquierdo) y la tabla/fotografía pasan a una columna derecha; además la captura se adapta al aspecto exacto del recuadro (150 dpi), eliminando bandas vacías.
+    *   **Cuadrícula UTM-18S:** líneas de cuadrícula eventuales con etiquetas Este/Norte estampadas solo durante la captura del plano.
+    *   **Barra de escala gráfica:** barra vectorial de 4 segmentos dentro del recuadro, calculada con la resolución real de la captura y redondeada a valores legibles (m/km).
     *   **Corrección (SRS):** el resaltado rojo y las medidas no aparecían porque el GetFeatureInfo devuelve la geometría en la proyección de la vista (EPSG:3857) y se interpretaba como UTM 18S. Ahora se detecta el SRS real del GeoJSON (miembro `crs` o proyección de la vista), las medidas se calculan siempre sobre coordenadas UTM 18S y existe una red de seguridad que recupera la geometría vía WFS al generar el PDF/impresión si no estuviera dibujada.
 
 ---

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { jsPDF } from 'jspdf';
 import { firstValueFrom } from 'rxjs';
-import { GeoJSON, getCenter } from '@app/modules/openlayers.module';
+import { GeoJSON, getCenter, OlMap } from '@app/modules/openlayers.module';
 import { MapService } from '../../../../../../../../services/map.service';
 import { GeoJSONFeature } from '@app/interfaces/geoLayers';
 
@@ -51,6 +51,8 @@ export class Imprimir {
   /** Dimensiones reales (px) del último mapa capturado */
   private mapaAnchoPx = 1;
   private mapaAltoPx = 1;
+  /** Resolución de la última captura (metros reales por píxel) para la barra de escala */
+  private resolucionCapturaMpx = 0;
   private estiloPagina?: HTMLStyleElement;
 
   /** Formatea una fecha como DD/MM/YYYY HH:mm:ss (es-PE) */
@@ -70,9 +72,69 @@ export class Imprimir {
   }
 
   /**
-   * Captura la vista actual del mapa y la devuelve como DataURL JPEG.
+   * Captura el mapa adaptándolo temporalmente al aspecto del recuadro destino
+   * del plano: el lienzo se redimensiona a las proporciones exactas de la caja
+   * del PDF (150 dpi), de modo que la imagen llene por completo el marco sin
+   * bandas vacías. Activa además la cuadrícula UTM-18S durante la toma y
+   * restaura tamaño/vista originales al terminar.
    */
-  private async capturarMapa(): Promise<string> {
+  private async capturarMapa(cajaMm: { w: number; h: number }): Promise<string> {
+    const olMap = this.mapService.map();
+    if (!olMap) return this.capturarMapaSimple();
+
+    const dpi = 150;
+    const pxW = Math.max(360, Math.round((cajaMm.w / 25.4) * dpi));
+    const pxH = Math.max(360, Math.round((cajaMm.h / 25.4) * dpi));
+
+    const sizeOriginal = olMap.getSize()?.slice() as number[] | undefined;
+    const view = olMap.getView();
+    const centroOriginal = view.getCenter()?.slice() as number[] | undefined;
+    const resolucionOriginal = view.getResolution() ?? undefined;
+
+    try {
+      // Cuadrícula UTM-18S eventual (solo durante la captura)
+      this.mapService.activarCuadriculaUtm();
+
+      // Adaptamos el lienzo del mapa al aspecto del recuadro del plano
+      olMap.setSize([pxW, pxH]);
+      await new Promise(res => setTimeout(res, 80));
+
+      // Encuadre según la escala elegida (usa el nuevo ancho en píxeles)
+      if (this.mapService.loteSeleccionadoCodigo()) {
+        await this.prepararVista(cajaMm.w);
+      } else {
+        await new Promise(res => setTimeout(res, 120));
+      }
+
+      // Esperamos a que terminen de pintarse todas las capas
+      await this.esperarRenderCompleto(olMap);
+
+      const canvas = this.mapService.getMapCanvas();
+      if (!canvas || !canvas.width) {
+        throw new Error('El mapa aún no está listo para exportarse.');
+      }
+      this.mapaAnchoPx = canvas.width;
+      this.mapaAltoPx = canvas.height;
+      this.resolucionCapturaMpx = view.getResolution() ?? 0;
+      return canvas.toDataURL('image/jpeg', 0.92);
+    } finally {
+      this.mapService.desactivarCuadriculaUtm();
+      // Restauramos tamaño y vista originales del visor
+      if (sizeOriginal && sizeOriginal.length === 2) {
+        olMap.setSize(sizeOriginal);
+      } else {
+        olMap.updateSize();
+      }
+      if (centroOriginal && resolucionOriginal) {
+        view.setCenter(centroOriginal);
+        view.setResolution(resolucionOriginal);
+      }
+      await new Promise(res => setTimeout(res, 60));
+    }
+  }
+
+  /** Captura simple (sin adaptación de recuadro): respaldo si no hay mapa OL. */
+  private async capturarMapaSimple(): Promise<string> {
     // Pequeña espera para que terminen de cargar los tiles en curso
     await new Promise(res => setTimeout(res, 300));
     const canvas = this.mapService.getMapCanvas();
@@ -81,7 +143,23 @@ export class Imprimir {
     }
     this.mapaAnchoPx = canvas.width;
     this.mapaAltoPx = canvas.height;
+    this.resolucionCapturaMpx = this.mapService.map()?.getView().getResolution() ?? 0;
     return canvas.toDataURL('image/jpeg', 0.92);
+  }
+
+  /** Resuelve cuando el mapa termina de renderizar (con tope de espera). */
+  private esperarRenderCompleto(olMap: OlMap): Promise<void> {
+    return new Promise(res => {
+      let listo = false;
+      const fin = () => {
+        if (!listo) {
+          listo = true;
+          res();
+        }
+      };
+      olMap.once('rendercomplete', fin);
+      setTimeout(fin, 900);
+    });
   }
 
   /**
@@ -215,9 +293,9 @@ export class Imprimir {
    * Ajusta la vista antes de capturar:
    * - "Automática": encuadra el lote completo.
    * - Escala fija (1/500 o 1/250): centra el lote y calcula la resolución
-   *   equivalente a esa escala de impresión según el ancho del papel.
+   *   equivalente a esa escala de impresión según el ancho real del recuadro.
    */
-  private async prepararVista(): Promise<void> {
+  private async prepararVista(anchoCajaMm?: number): Promise<void> {
     const olMap = this.mapService.map();
     if (!olMap || !this.featureLote) return;
     const view = olMap.getView();
@@ -235,7 +313,7 @@ export class Imprimir {
         ? { v: 297, h: 420 }
         : { v: 210, h: 297 };
       const anchoPapelMm = horizontal ? base.h : base.v;
-      const anchoMapaMm = anchoPapelMm - 22; // márgenes + marco
+      const anchoMapaMm = anchoCajaMm ?? (anchoPapelMm - 22); // ancho real del recuadro impreso
       const cssWidth = olMap.getSize()?.[0] ?? 1;
       // denominadorEscala = metrosRealesRepresentados / metrosEnPapel
       const resolucion = (Number(eleccion) * (anchoMapaMm / 1000)) / cssWidth;
@@ -258,14 +336,6 @@ export class Imprimir {
     this.error.set(null);
     this.fechaHora.set(this.formatearFecha(new Date()));
     try {
-      // Ajustamos la vista según la escala elegida antes de capturar
-      if (this.mapService.loteSeleccionadoCodigo()) {
-        // Red de seguridad: garantiza el resaltado rojo y las medidas antes de capturar
-        this.mapService.asegurarResaltadoLoteSeleccionado();
-        await this.prepararVista();
-      }
-      const imagenMapa = await this.capturarMapa();
-
       const horizontal = this.orientacion() === 'horizontal';
       const pdf = new jsPDF({
         orientation: horizontal ? 'landscape' : 'portrait',
@@ -275,6 +345,41 @@ export class Imprimir {
       const ancho = pdf.internal.pageSize.getWidth();
       const alto = pdf.internal.pageSize.getHeight();
       const margen = 10;
+
+      // --- Geometría del cuerpo (se calcula antes de capturar para adaptar
+      //     el lienzo del mapa al aspecto exacto del recuadro del plano) ---
+      const yLinea = margen + 16;          // línea separadora (se dibuja más abajo)
+      const areaY = yLinea + 4;
+      const areaW = ancho - margen * 2;
+      const areaH = alto - areaY - 7;      // pie compacto
+
+      const filas = this.filasTabla();
+      const tieneTabla = filas.length > 0 && !!this.mapService.loteSeleccionadoCodigo();
+      const foto = this.fotoLote();
+
+      // Recuadro del mapa: con lote ocupa TODO el alto del cuerpo (panel izquierdo),
+      // duplicando el área útil visible respecto al layout anterior apilado.
+      let mapaX = margen, mapaY = areaY, mapaW = areaW, mapaH = areaH;
+      let tablaX = 0, tablaW = 0, tablaH = 0;
+      let fotoX = 0, fotoY = 0, fotoW = 0, fotoH = 0;
+      if (tieneTabla) {
+        const gapPanel = 3;
+        const colDerecha = 62;
+        mapaW = areaW - colDerecha - gapPanel;
+        tablaX = margen + mapaW + gapPanel;
+        tablaW = colDerecha;
+        fotoW = colDerecha;
+        fotoH = Math.min(52, Math.round(areaH * 0.22));
+        fotoX = tablaX;
+        fotoY = areaY + areaH - fotoH;
+        tablaH = areaH - fotoH - gapPanel;
+      }
+
+      // Red de seguridad: garantiza resaltado rojo + medidas antes de capturar
+      if (this.mapService.loteSeleccionadoCodigo()) {
+        this.mapService.asegurarResaltadoLoteSeleccionado();
+      }
+      const imagenMapa = await this.capturarMapa({ w: mapaW, h: mapaH });
 
       // --- Logo institucional ---
       try {
@@ -300,35 +405,22 @@ export class Imprimir {
       pdf.text(`Fecha de impresión: ${this.fechaHora()}   ·   Escala: ${this.etiquetaEscala()}`, ancho / 2, margen + 13, { align: 'center' });
 
       // --- Línea separadora ---
-      const yLinea = margen + 16;
       pdf.setDrawColor(...COLOR_VERDE);
       pdf.setLineWidth(0.6);
       pdf.line(margen, yLinea, ancho - margen, yLinea);
 
-      // --- Distribución del cuerpo ---
-      const areaY = yLinea + 4;
-      const altoPie = 7; // Pie compacto: deja más alto disponible para la gráfica
-      const areaW = ancho - margen * 2;
-      const areaH = alto - areaY - altoPie;
-
-      const filas = this.filasTabla();
-      const tieneTabla = filas.length > 0 && !!this.mapService.loteSeleccionadoCodigo();
-      const foto = this.fotoLote();
-
       if (tieneTabla) {
-        // Con lote seleccionado: el mapa ocupa la mayor parte del cuerpo (~75%,
-        // antes 62%) para ver más gráfica. El bloque inferior agrupa de forma
-        // compacta la tabla cualitativa (izquierda) y la fotografía (derecha).
-        const gapBloques = 3;
-        const altoInferior = Math.min(areaH * 0.30, filas.length * 5.2 + 8);
-        const mapaH = areaH - altoInferior - gapBloques;
-
-        this.dibujarMapa(pdf, imagenMapa, margen, areaY, areaW, mapaH);
-        this.dibujarTabla(pdf, filas, margen, areaY + mapaH + gapBloques, foto ? areaW - 36 : areaW, altoInferior);
-        this.dibujarFoto(pdf, foto, margen + areaW - 34, areaY + mapaH + gapBloques, 34, altoInferior);
+        // Panel izquierdo: mapa a alto completo del cuerpo (recuadro duplicado)
+        this.dibujarMapa(pdf, imagenMapa, mapaX, mapaY, mapaW, mapaH);
+        // Barra de escala dentro del recuadro (abajo-izquierda)
+        this.dibujarBarraEscala(pdf, mapaX, mapaY + mapaH, mapaW);
+        // Panel derecho: tabla cualitativa arriba y fotografía abajo
+        this.dibujarTabla(pdf, filas, tablaX, areaY, tablaW, tablaH);
+        this.dibujarFoto(pdf, foto, fotoX, fotoY, fotoW, fotoH);
       } else {
         // Sin lote: el mapa ocupa todo el cuerpo
-        this.dibujarMapa(pdf, imagenMapa, margen, areaY, areaW, areaH);
+        this.dibujarMapa(pdf, imagenMapa, mapaX, mapaY, mapaW, mapaH);
+        this.dibujarBarraEscala(pdf, mapaX, mapaY + mapaH, mapaW);
       }
 
       // --- Pie de página ---
@@ -364,7 +456,7 @@ export class Imprimir {
         this.mapService.asegurarResaltadoLoteSeleccionado();
         await this.prepararVista();
       }
-      this.imagenMapa.set(await this.capturarMapa());
+      this.imagenMapa.set(await this.capturarMapaSimple());
 
       // Definimos tamaño/orientación de la hoja de impresión
       this.estiloPagina?.remove();
@@ -416,7 +508,7 @@ export class Imprimir {
    */
   private dibujarTabla(pdf: jsPDF, filas: [string, string][], x: number, y: number, w: number, h: number): void {
     const rowH = Math.min(7, Math.max((h - 6) / filas.length, 4.5));
-    const colClave = w * 0.36;
+    const colClave = w * 0.45; // columna de etiquetas más ancha (tabla en panel estrecho)
     let cursorY = y + 5; // espacio para el título del bloque
 
     pdf.setFont('helvetica', 'bold');
@@ -491,6 +583,77 @@ export class Imprimir {
       pdf.setTextColor(20, 60, 160);
       pdf.textWithLink('Ver ficha completa en línea', x, y + h - 1, { url: this.fichaUrl()! });
     }
+  }
+
+  /**
+   * Dibuja una barra de escala gráfica dentro del recuadro del mapa
+   * (abajo-izquierda): 4 segmentos alternados con etiquetas de distancia,
+   * calculada con la resolución real (m/px) de la última captura.
+   */
+  private dibujarBarraEscala(pdf: jsPDF, xRecuadro: number, yBaseRecuadro: number, anchoRecuadroMm: number): void {
+    if (this.resolucionCapturaMpx <= 0 || this.mapaAnchoPx <= 1 || anchoRecuadroMm <= 10) return;
+    // Metros reales representados por cada milímetro de papel en el recuadro
+    const metrosPorMm = this.resolucionCapturaMpx * (this.mapaAnchoPx / anchoRecuadroMm);
+    if (!isFinite(metrosPorMm) || metrosPorMm <= 0) return;
+
+    // Barra objetivo ≈ 38 mm redondeada a un valor legible (1/2/5 × 10^n)
+    const distancia = this.numeroAgradable(metrosPorMm * 38);
+    const largoMm = distancia / metrosPorMm;
+    if (distancia <= 0 || largoMm < 8 || largoMm > anchoRecuadroMm - 6) return;
+
+    const x = xRecuadro + 3;              // margen interior izquierdo
+    const y = yBaseRecuadro - 8;          // margen interior inferior
+    const seg = largoMm / 4;
+
+    // Fondo blanco para legibilidad sobre cualquier parte del mapa
+    pdf.setFillColor(255, 255, 255);
+    pdf.setDrawColor(30, 30, 30);
+    pdf.setLineWidth(0.15);
+    pdf.rect(x - 1.5, y - 4.4, largoMm + 3, 7.6, 'FD');
+
+    // Segmentos alternados negro/blanco
+    for (let i = 0; i < 4; i++) {
+      const sx = x + i * seg;
+      if (i % 2 === 0) {
+        pdf.setFillColor(30, 30, 30);
+        pdf.rect(sx, y - 2, seg, 2.6, 'F');
+      } else {
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(sx, y - 2, seg, 2.6, 'FD');
+      }
+    }
+    // Contorno general de la barra
+    pdf.setDrawColor(30, 30, 30);
+    pdf.rect(x, y - 2, largoMm, 2.6);
+
+    // Etiquetas de los ticks
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(5.6);
+    pdf.setTextColor(25, 25, 25);
+    pdf.text('0', x, y - 2.7, { align: 'center' });
+    pdf.text(this.formatearDistanciaM(distancia / 2), x + largoMm / 2, y - 2.7, { align: 'center' });
+    pdf.text(this.formatearDistanciaM(distancia), x + largoMm, y - 2.7, { align: 'left' });
+  }
+
+  /** Redondea un valor positivo al "número agradable" (1/2/5 × 10^n) inmediato inferior. */
+  private numeroAgradable(valor: number): number {
+    if (valor <= 0) return 0;
+    const base = Math.pow(10, Math.floor(Math.log10(valor)));
+    for (const factor of [5, 2, 1]) {
+      const candidato = factor * base;
+      if (candidato <= valor * 1.001) return candidato;
+    }
+    return base;
+  }
+
+  /** Formatea una distancia para las etiquetas de la barra de escala. */
+  private formatearDistanciaM(metros: number): string {
+    if (metros >= 1000) {
+      const km = metros / 1000;
+      const texto = Number.isInteger(km) ? String(km) : km.toFixed(km < 10 ? 2 : 1);
+      return `${texto} km`;
+    }
+    return `${Math.round(metros)} m`;
   }
 }
 

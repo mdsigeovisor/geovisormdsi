@@ -38,6 +38,7 @@ import {
   Layer,
   BaseLayer,
   ImageWMS,
+  LineString,
   OlMap,
   Overlay,
   Point,
@@ -1472,6 +1473,139 @@ export class MapService {
   /** Limpia el resaltado rojo y las medidas eventuales del lote seleccionado. */
   private limpiarResaltadoLoteSeleccionado(): void {
     this.loteSeleccionLayer?.getSource()?.clear();
+  }
+
+  /** Capa de cuadrícula UTM-18S (eventual: visible solo durante la captura del plano) */
+  private cuadriculaUtm?: VectorLayer<any>;
+
+  /**
+   * Activa la cuadrícula de coordenadas UTM zona 18S sobre el mapa.
+   * Las líneas se generan manualmente a múltiplos "agradables" de metros
+   * (1/2/5 × 10ⁿ) según el zoom actual, con etiquetas Este/Norte. Se usa de
+   * manera eventual al capturar el plano (PDF) y debe desactivarse después.
+   */
+  activarCuadriculaUtm(): void {
+    const map = this._map();
+    if (!map) return;
+    if (!this.cuadriculaUtm) {
+      this.cuadriculaUtm = new VectorLayer({
+        source: new VectorSource(),
+        zIndex: 998,
+        style: this.estiloCuadriculaUtm(),
+      });
+      map.addLayer(this.cuadriculaUtm);
+    }
+    this.cuadriculaUtm.setVisible(true);
+    this.actualizarCuadriculaUtm();
+  }
+
+  /** Desactiva la cuadrícula UTM-18S tras la captura del plano. */
+  desactivarCuadriculaUtm(): void {
+    this.cuadriculaUtm?.setVisible(false);
+  }
+
+  /** Estilo de la cuadrícula: líneas punteadas finas + etiquetas Este/Norte. */
+  private estiloCuadriculaUtm(): (feature: any) => Style[] {
+    const estiloLinea = new Style({
+      stroke: new Stroke({ color: 'rgba(27, 42, 78, 0.35)', width: 0.8, lineDash: [5, 4] }),
+    });
+    return feature => {
+      if (feature?.getGeometry()?.getType() === 'Point') {
+        return [new Style({
+          text: new Text({
+            text: (feature.get('etiqueta') as string) ?? '',
+            font: 'bold 9px Helvetica, Arial, sans-serif',
+            fill: new Fill({ color: '#1b2a4e' }),
+            stroke: new Stroke({ color: 'rgba(255, 255, 255, 0.85)', width: 2.5 }),
+            overflow: true,
+          }),
+        })];
+      }
+      return [estiloLinea];
+    };
+  }
+
+  /** Redondea un valor positivo al "número agradable" (1/2/5 × 10ⁿ) inmediato superior. */
+  private numeroAgradableSuperior(valor: number): number {
+    if (valor <= 0) return 1;
+    const base = Math.pow(10, Math.floor(Math.log10(valor)));
+    for (const factor of [1, 2, 5, 10]) {
+      const candidato = factor * base;
+      if (candidato >= valor) return candidato;
+    }
+    return 10 * base;
+  }
+
+  /**
+   * Reconstruye las líneas de la cuadrícula UTM-18S para la extensión actual
+   * de la vista: convierte los límites del viewport a metros UTM, elige un
+   * paso de cuadrilla legible y traza las verticales (Este) y horizontales
+   * (Norte) muestreadas para respetar su leve curvatura en la vista web.
+   */
+  private actualizarCuadriculaUtm(): void {
+    const layer = this.cuadriculaUtm;
+    const map = this._map();
+    if (!layer || !map || !layer.getVisible()) return;
+    const source = layer.getSource();
+    const size = map.getSize();
+    if (!source || !size || size[0] < 2 || size[1] < 2) return;
+
+    const vista = map.getView();
+    const proyeccionVista = vista.getProjection()?.getCode() ?? 'EPSG:3857';
+    const extension = vista.calculateExtent(size);
+
+    // Límites del viewport en metros UTM-18S
+    const esquinaMin = transform([extension[0], extension[1]], proyeccionVista, 'EPSG:32718');
+    const esquinaMax = transform([extension[2], extension[3]], proyeccionVista, 'EPSG:32718');
+    const xMin = Math.min(esquinaMin[0], esquinaMax[0]);
+    const xMax = Math.max(esquinaMin[0], esquinaMax[0]);
+    const yMin = Math.min(esquinaMin[1], esquinaMax[1]);
+    const yMax = Math.max(esquinaMin[1], esquinaMax[1]);
+    if (![xMin, xMax, yMin, yMax].every(Number.isFinite)) return;
+
+    // Paso de cuadrilla: una línea aprox. cada ~130 píxeles de pantalla
+    const resolucion = vista.getResolution() ?? 1;
+    const paso = this.numeroAgradableSuperior(resolucion * 130);
+    const muestras = 9; // puntos por línea para seguir la curvatura
+
+    const aVista = (coordenadaUtm: number[]): number[] =>
+      transform(coordenadaUtm, 'EPSG:32718', proyeccionVista);
+
+    const agregarLineas = (
+      inicioFijo: number,
+      finVariable: number,
+      esVertical: boolean,
+    ): void => {
+      const desde = Math.ceil(Math.min(inicioFijo, finVariable) / paso) * paso;
+      const hasta = Math.max(inicioFijo, finVariable);
+      for (let valor = desde; valor <= hasta + 1e-6; valor += paso) {
+        const coordenadas: number[] = [];
+        let etiquetaPuntoUtm: number[] | undefined;
+        for (let i = 0; i < muestras; i++) {
+          const fraccion = i / (muestras - 1);
+          const variable = yMin + fraccion * (yMax - yMin);
+          const puntoUtm = esVertical ? [valor, variable] : [variable, valor];
+          coordenadas.push(...aVista(puntoUtm));
+          if (i === 0) etiquetaPuntoUtm = puntoUtm;
+        }
+        source.addFeature(new Feature(new LineString(coordenadas)));
+        if (etiquetaPuntoUtm) {
+          const desplazamientoX = (xMax - xMin) * 0.012;
+          const desplazamientoY = (yMax - yMin) * 0.018;
+          const puntoEtiqueta = esVertical
+            ? aVista([valor + desplazamientoX, yMax - desplazamientoY])
+            : aVista([xMin + desplazamientoX, valor + desplazamientoY]);
+          const etiqueta = new Feature(new Point(puntoEtiqueta));
+          etiqueta.set('etiqueta', `${Math.round(valor)} ${esVertical ? 'E' : 'N'}`);
+          source.addFeature(etiqueta);
+        }
+        if (!isFinite(valor + paso)) break;
+      }
+    };
+
+    source.clear();
+    agregarLineas(yMin, xMax, false); // Horizontales: valores Norte constantes
+    agregarLineas(xMin, xMax, true);  // Verticales: valores Este constantes
   }
 
   /**

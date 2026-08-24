@@ -16,6 +16,7 @@ export { default as ImageLayer } from 'ol/layer/Image';
 export { default as Layer } from 'ol/layer/Layer';
 export { default as BaseLayer } from 'ol/layer/Base';
 export { default as VectorLayer } from 'ol/layer/Vector';
+export { default as Graticule } from 'ol/layer/Graticule';
 export { default as Overlay } from 'ol/Overlay';
 export type { Positioning as OverlayPositioning } from 'ol/Overlay';
 export { default as XYZ } from 'ol/source/XYZ';

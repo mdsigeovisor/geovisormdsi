@@ -40,8 +40,10 @@ import {
   ImageWMS,
   OlMap,
   Overlay,
+  Point,
   Stroke,
   Style,
+  Text,
   TileLayer,
   transform,
   transformExtent,
@@ -91,6 +93,8 @@ export class MapService {
   public streetsLayer?: TileLayer;
   /** Capa para resaltar geometrías de búsqueda */
   private highlightLayer: VectorLayer<any> | undefined;
+  /** Capa para resaltar el lote seleccionado para impresión (borde rojo grueso + medidas) */
+  private loteSeleccionLayer: VectorLayer<any> | undefined;
   /**
    * Configuración centralizada para las capas de ortofotos.
    * Esta será la única fuente de verdad para generar tanto los
@@ -129,6 +133,8 @@ export class MapService {
   /** Quita el lote seleccionado para impresión */
   limpiarLoteSeleccionado(): void {
     this.loteSeleccionadoCodigo.set(null);
+    // Retiramos también el resaltado rojo y las medidas eventuales del mapa
+    this.limpiarResaltadoLoteSeleccionado();
   }
   /** URL con la información de la foto de dron 2018 para mostrar en un modal. */
   fotoDroneUrl2018 = signal<string | null>(null);
@@ -220,6 +226,7 @@ export class MapService {
     this.setupInitialWmsLayers();
     this.handleMapResizing(olMap);
     this.setupHighlightLayer();
+    this.setupLoteSeleccionLayer();
     this.handleInitialRender(olMap);
     this.setupMapClickHandler(olMap);
     // Detección de zoom sobre el distrito para mostrar Términos y Condiciones
@@ -549,9 +556,14 @@ export class MapService {
           : undefined;
         if (infoUrl) {
           this.http.get<WfsResponse>(infoUrl).subscribe(resp => {
-            const codigo = resp?.features?.[0]?.properties?.['id_lote'];
+            const loteFeature = resp?.features?.[0];
+            const codigo = loteFeature?.properties?.['id_lote'];
             this.zone.run(() => {
-              if (codigo) this.loteSeleccionadoCodigo.set(String(codigo).trim());
+              if (codigo) {
+                this.loteSeleccionadoCodigo.set(String(codigo).trim());
+                // Resaltamos el lote en rojo y estampamos sus medidas perimetrales
+                this.resaltarLoteSeleccionado(loteFeature);
+              }
               this.pickLoteActivo.set(false);
             });
           });
@@ -1415,6 +1427,223 @@ export class MapService {
     });
     map.addLayer(this.highlightLayer);
   }
+
+  /**
+   * Configura la capa dedicada al lote seleccionado para impresión:
+   * borde rojo grueso (con halo blanco para contraste sobre ortofotos)
+   * y etiquetas eventuales con la medida en metros de cada arista.
+   * Se dibuja sobre la capa de resaltado de búsquedas (zIndex superior).
+   */
+  private setupLoteSeleccionLayer(): void {
+    const map = this._map();
+    if (!map) return;
+    this.loteSeleccionLayer = new VectorLayer({
+      source: new VectorSource(),
+      // Estilo según el tipo de geometría:
+      // - Puntos: etiquetas de texto con la medida de cada arista del lote.
+      // - Polígonos: línea roja gruesa + relleno rojo muy tenue.
+      style: feature => {
+        const geometryType = feature.getGeometry()?.getType();
+        if (geometryType === 'Point') {
+          return new Style({
+            text: new Text({
+              text: (feature.get('etiqueta') as string) ?? '',
+              font: 'bold 11px Helvetica, Arial, sans-serif',
+              fill: new Fill({ color: '#b71c1c' }),
+              stroke: new Stroke({ color: 'rgba(255, 255, 255, 0.9)', width: 3 }),
+              overflow: true,
+            }),
+          });
+        }
+        return [
+          // Halo blanco bajo la línea roja para que destaque sobre cualquier fondo
+          new Style({ stroke: new Stroke({ color: 'rgba(255, 255, 255, 0.85)', width: 9 }) }),
+          new Style({
+            stroke: new Stroke({ color: '#e00b0b', width: 5 }),
+            fill: new Fill({ color: 'rgba(224, 11, 11, 0.07)' }),
+          }),
+        ];
+      },
+      zIndex: 1001,
+    });
+    map.addLayer(this.loteSeleccionLayer);
+  }
+
+  /** Limpia el resaltado rojo y las medidas eventuales del lote seleccionado. */
+  private limpiarResaltadoLoteSeleccionado(): void {
+    this.loteSeleccionLayer?.getSource()?.clear();
+  }
+
+  /**
+   * Resalta el lote seleccionado con una línea roja gruesa y estampa sobre
+   * el mapa la medida (distancia en metros) de cada arista real de su
+   * polígono. Las etiquetas son eventuales: permanecen solo mientras el
+   * lote siga seleccionado y quedan incluidas en la captura del PDF/impresión.
+   *
+   * Importante: el GetFeatureInfo se solicita en la proyección de la vista
+   * (EPSG:3857), así que las coordenadas del feature llegan en ese SRS; se
+   * detecta el SRS real (miembro `crs` del GeoJSON o la vista) y las medidas
+   * se calculan siempre sobre coordenadas UTM 18S (metros verdaderos).
+   * @param feature Feature GeoJSON del lote devuelto por GetFeatureInfo.
+   */
+  resaltarLoteSeleccionado(feature: GeoJSONFeature | null): void {
+    const map = this._map();
+    if (!map || !feature) return;
+    // Por defecto asumimos el SRS en que se solicitó el GetFeatureInfo: la vista
+    this.aplicarResaltadoLote(feature, map.getView().getProjection()?.getCode());
+  }
+
+  /**
+   * Red de seguridad para la generación del PDF/impresión: si hay un lote
+   * seleccionado pero su resaltado rojo no está dibujado (p. ej. porque el
+   * GetFeatureInfo no devolvió geometría), lo recupera vía WFS (siempre en
+   * EPSG:32718) y lo dibuja antes de capturar el mapa.
+   */
+  asegurarResaltadoLoteSeleccionado(): void {
+    const codigo = this.loteSeleccionadoCodigo();
+    const capaSinDibujo = !this.loteSeleccionLayer?.getSource()?.getFeatures().length;
+    if (!codigo || !capaSinDibujo) return;
+    this.searchLoteByCodigoCatastral(codigo).subscribe({
+      next: feature => {
+        if (feature && this.loteSeleccionadoCodigo()) {
+          this.aplicarResaltadoLote(feature, 'EPSG:32718');
+        }
+      },
+      error: err => console.error('No se pudo recuperar la geometría del lote:', err),
+    });
+  }
+
+  /**
+   * Dibuja el polígono del lote (línea roja gruesa) y sus medidas por arista.
+   * @param feature Feature GeoJSON del lote.
+   * @param srsPorDefecto SRS asumido cuando el GeoJSON no declara `crs`.
+   */
+  private aplicarResaltadoLote(feature: GeoJSONFeature, srsPorDefecto?: string): void {
+    const map = this._map();
+    if (!map) return;
+    if (!feature?.geometry) {
+      // Sin geometría (respuesta incompleta): la recuperamos vía WFS en UTM 18S
+      const codigo = feature?.properties?.['id_lote'] ?? this.loteSeleccionadoCodigo();
+      if (codigo) {
+        this.searchLoteByCodigoCatastral(String(codigo)).subscribe({
+          next: f => { if (f) this.aplicarResaltadoLote(f, 'EPSG:32718'); },
+          error: err => console.error('No se pudo resaltar el lote seleccionado:', err),
+        });
+      }
+      return;
+    }
+    this.limpiarResaltadoLoteSeleccionado();
+
+    const source = this.loteSeleccionLayer?.getSource();
+    const proyeccionVista = map.getView().getProjection();
+    if (!source || !proyeccionVista) return;
+
+    try {
+      const formato = new GeoJSON();
+      const srsOrigen = this.detectarSrsOrigen(feature)
+        ?? srsPorDefecto
+        ?? proyeccionVista.getCode();
+
+      // Geometría reproyectada a la vista del mapa (para dibujar)
+      const geometria = formato.readGeometry(feature.geometry, {
+        dataProjection: srsOrigen,
+        featureProjection: proyeccionVista,
+      });
+      if (!geometria) return;
+      source.addFeature(new Feature({ geometry: geometria }));
+
+      // Anillos del polígono convertidos a UTM 18S (metros reales) para medir
+      const geometriaUtm = formato.readGeometry(feature.geometry, {
+        dataProjection: srsOrigen,
+        featureProjection: 'EPSG:32718',
+      });
+      if (!geometriaUtm) return;
+      let anillosUtm: number[][][] = [];
+      if (geometriaUtm.getType() === 'Polygon') {
+        anillosUtm = (geometriaUtm as unknown as { getCoordinates(): number[][][] }).getCoordinates();
+      } else if (geometriaUtm.getType() === 'MultiPolygon') {
+        const poligonos = (geometriaUtm as unknown as { getCoordinates(): number[][][][] }).getCoordinates();
+        anillosUtm = poligonos.flat();
+      }
+
+      // Medidas por arista -> etiquetas en el punto medio (proyectadas a la vista)
+      this.calcularMedidasDeAnillos(anillosUtm).forEach(medida => {
+        const puntoVista = transform(medida.punto as [number, number], 'EPSG:32718', proyeccionVista);
+        const etiqueta = new Feature(new Point(puntoVista));
+        etiqueta.set('etiqueta', medida.texto);
+        source.addFeature(etiqueta);
+      });
+    } catch (err) {
+      console.error('No se pudo resaltar el lote seleccionado:', err);
+    }
+  }
+
+  /** Extrae el código EPSG declarado en el miembro `crs` del GeoJSON (si existe). */
+  private detectarSrsOrigen(feature: GeoJSONFeature): string | undefined {
+    const nombre = feature.crs?.properties?.name?.trim() ?? '';
+    const coincidencia = /(\d{4,5})$/.exec(nombre);
+    return coincidencia ? `EPSG:${coincidencia[1]}` : undefined;
+  }
+
+  /**
+   * Calcula las aristas reales de un conjunto de anillos de polígono y su
+   * longitud en metros (coordenadas UTM). Los vértices casi colineales se
+   * fusionan para que cada etiqueta corresponda a un lado verdadero del
+   * lote y no a segmentos intermedios de la digitalización.
+   */
+  private calcularMedidasDeAnillos(anillos: number[][][]): { punto: number[]; texto: string }[] {
+    const umbralAnguloRad = (8 * Math.PI) / 180;
+    const medidas: { punto: number[]; texto: string }[] = [];
+
+    anillos.forEach(anillo => {
+      // Eliminamos vértices consecutivos duplicados
+      const limpio: number[][] = [];
+      for (const coord of anillo) {
+        const previa = limpio[limpio.length - 1];
+        if (!previa || Math.hypot(coord[0] - previa[0], coord[1] - previa[1]) > 1e-4) {
+          limpio.push([coord[0], coord[1]]);
+        }
+      }
+      // Eliminamos el punto de cierre duplicado
+      if (limpio.length > 2) {
+        const primera = limpio[0];
+        const ultima = limpio[limpio.length - 1];
+        if (Math.hypot(primera[0] - ultima[0], primera[1] - ultima[1]) < 1e-4) limpio.pop();
+      }
+      if (limpio.length < 3) return;
+
+      // Esquinas: vértices donde la dirección cambia más que el umbral
+      const total = limpio.length;
+      const esquinas: number[][] = [];
+      for (let i = 0; i < total; i++) {
+        const anterior = limpio[(i - 1 + total) % total];
+        const actual = limpio[i];
+        const siguiente = limpio[(i + 1) % total];
+        const v1x = actual[0] - anterior[0];
+        const v1y = actual[1] - anterior[1];
+        const v2x = siguiente[0] - actual[0];
+        const v2y = siguiente[1] - actual[1];
+        const angulo = Math.atan2(v1x * v2y - v1y * v2x, v1x * v2x + v1y * v2y);
+        if (Math.abs(angulo) >= umbralAnguloRad) esquinas.push(actual);
+      }
+      // Fallback: sin esquinas claras (polígono curvo) usamos todos los vértices
+      const referencia = esquinas.length >= 3 ? esquinas : limpio;
+
+      // Medimos cada arista entre esquinas consecutivas
+      for (let i = 0; i < referencia.length; i++) {
+        const a = referencia[i];
+        const b = referencia[(i + 1) % referencia.length];
+        const distancia = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        if (distancia < 0.05) continue; // Aristas despreciables
+        medidas.push({
+          punto: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
+          texto: `${distancia.toFixed(2).replace('.', ',')} m`,
+        });
+      }
+    });
+
+    return medidas;
+  }
   /**
    * Desplaza el centro del mapa para compensar la apertura o cierre del sidebar.
    * @param sidebarOpen `true` si el sidebar se está abriendo, `false` si se está cerrando.
@@ -1575,3 +1804,4 @@ export class MapService {
     window.URL.revokeObjectURL(downloadUrl);
   }
 }
+

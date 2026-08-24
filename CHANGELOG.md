@@ -5,6 +5,25 @@ Este documento registra todos los cambios notables realizados en el "Visor Geogr
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ---
+---
+
+## [1.1.0] - 2026-08-24
+
+### ✨ Added (Nuevas Características)
+
+*   **Selección de Lote para Impresión Mejorada:**
+    *   Al hacer clic sobre un lote en modo selección, ahora se **resalta con una línea roja gruesa** (con halo blanco para visibilidad sobre ortofotos).
+    *   **Medidas perimetrales eventuales:** se estampan sobre la gráfica las distancias en metros de cada arista real del polígono (fusionando vértices casi colineales), visibles en el mapa e incluidas automáticamente en el PDF/impresión.
+    *   El resaltado y las medidas desaparecen al quitar o cambiar la selección del lote.
+
+### 🔧 Changed (Cambios)
+
+*   **Módulo de Impresión (PDF):**
+    *   Se aumentó el alto de la parte gráfica del plano (~75% del cuerpo, antes 62%) compactando el bloque de tabla cualitativa/fotografía y el pie de página.
+    *   **Corrección (SRS):** el resaltado rojo y las medidas no aparecían porque el GetFeatureInfo devuelve la geometría en la proyección de la vista (EPSG:3857) y se interpretaba como UTM 18S. Ahora se detecta el SRS real del GeoJSON (miembro `crs` o proyección de la vista), las medidas se calculan siempre sobre coordenadas UTM 18S y existe una red de seguridad que recupera la geometría vía WFS al generar el PDF/impresión si no estuviera dibujada.
+
+---
+
 
 ## [1.0.0] - 2026-08-12
 

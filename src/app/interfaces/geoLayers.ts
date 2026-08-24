@@ -15,6 +15,8 @@ export interface GeoJSONGeometry {
 export interface GeoJSONFeature {
   type: 'Feature';
   id?: string;
+  /** Sistema de referencia declarado por GeoServer (p. ej. en respuestas GetFeatureInfo) */
+  crs?: { type: string; properties: { name: string } };
   geometry: GeoJSONGeometry;
   properties: Record<string, any>;
 }

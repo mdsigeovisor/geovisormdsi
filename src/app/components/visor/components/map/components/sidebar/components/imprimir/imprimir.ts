@@ -260,6 +260,8 @@ export class Imprimir {
     try {
       // Ajustamos la vista según la escala elegida antes de capturar
       if (this.mapService.loteSeleccionadoCodigo()) {
+        // Red de seguridad: garantiza el resaltado rojo y las medidas antes de capturar
+        this.mapService.asegurarResaltadoLoteSeleccionado();
         await this.prepararVista();
       }
       const imagenMapa = await this.capturarMapa();
@@ -305,7 +307,7 @@ export class Imprimir {
 
       // --- Distribución del cuerpo ---
       const areaY = yLinea + 4;
-      const altoPie = 9;
+      const altoPie = 7; // Pie compacto: deja más alto disponible para la gráfica
       const areaW = ancho - margen * 2;
       const areaH = alto - areaY - altoPie;
 
@@ -314,10 +316,11 @@ export class Imprimir {
       const foto = this.fotoLote();
 
       if (tieneTabla) {
-        // Con lote seleccionado: mapa arriba (62%) y bloque inferior con la
-        // tabla cualitativa a la izquierda y la fotografía a la derecha.
-        const gapBloques = 4;
-        const altoInferior = Math.min(areaH * 0.42, filas.length * 6.2 + 10);
+        // Con lote seleccionado: el mapa ocupa la mayor parte del cuerpo (~75%,
+        // antes 62%) para ver más gráfica. El bloque inferior agrupa de forma
+        // compacta la tabla cualitativa (izquierda) y la fotografía (derecha).
+        const gapBloques = 3;
+        const altoInferior = Math.min(areaH * 0.30, filas.length * 5.2 + 8);
         const mapaH = areaH - altoInferior - gapBloques;
 
         this.dibujarMapa(pdf, imagenMapa, margen, areaY, areaW, mapaH);
@@ -357,6 +360,8 @@ export class Imprimir {
     try {
       // Ajustamos la vista según la escala elegida antes de capturar
       if (this.mapService.loteSeleccionadoCodigo()) {
+        // Red de seguridad: garantiza el resaltado rojo y las medidas antes de imprimir
+        this.mapService.asegurarResaltadoLoteSeleccionado();
         await this.prepararVista();
       }
       this.imagenMapa.set(await this.capturarMapa());
@@ -488,3 +493,4 @@ export class Imprimir {
     }
   }
 }
+

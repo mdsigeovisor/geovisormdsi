@@ -31,7 +31,7 @@ const AMBIENTAL_LAYERS: WmsLayerConfig[] = [
   { id: 'arbolado_urbano_2024', layerName: `${wp}vw_arboles_2024`, zIndex: 3, title: 'Árboles 2024' },
   { id: 'arbolado_urbano_2015', layerName: `${wp}vw_arboles_2015`, zIndex: 3, title: 'Árboles 2015' },
   { id: 'cactus_yucca_2015', layerName: `${wp}vw_arboles_2015_cactus`, zIndex: 3, title: 'Cactus - Yucca 2015' },
-  { id: 'arearecreativa', layerName: `${wp}gc_area_verde`, zIndex: 0, title: 'Área Recreativa' },
+  { id: 'arearecreativa', layerName: `${wp}gc_area_verde`, zIndex: 3, title: 'Área Recreativa' },
 ];
 
 const CATASTRALES_LAYERS: WmsLayerConfig[] = [
@@ -56,7 +56,7 @@ const VUELOS_LAYERS: WmsLayerConfig[] = [
 
 const NORMATIVA_LAYERS: WmsLayerConfig[] = [
   { id: 'etiq_zonificacion', layerName: `${wp}vw_nor_zonificacion_poligono_puntos`, zIndex: 2, title: 'Etiqueta Zonificación' },
-  { id: 'zonificacion', layerName: `${wp}gcZonificacion`, zIndex: 1, title: 'Zonificación' },
+  { id: 'zonificacion', layerName: `${wp}gcZonificacion`, zIndex: 5, title: 'Zonificación' },
   { id: 'amUrbHomogeneo', layerName: `${wp}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 1, title: 'Ámbito Urbano Homogéneo' },
   { id: 'tusne', layerName: `${wp}vw_tg_tusne`, zIndex: 2, title: 'Levantamiento Topográfico' },
 ];

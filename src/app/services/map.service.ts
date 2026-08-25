@@ -1566,10 +1566,15 @@ export class MapService {
     // Paso de cuadrilla: una línea aprox. cada ~130 píxeles de pantalla
     const resolucion = vista.getResolution() ?? 1;
     let paso = this.numeroAgradableSuperior(resolucion * 130);
-    // Seguridad: nunca más de ~120 líneas por eje (evita bucles pesados si la
-    // resolución o la extensión toman valores patológicos entre impresiones)
+    // Seguridad #1: valores patológicos (NaN/Infinity) de la resolución o de
+    // la extensión durante la impresión invalidan la cuadrícula completa y
+    // derivaban en "RangeError: Invalid array length".
+    if (!Number.isFinite(paso) || paso <= 0) return;
+    // Seguridad #2: nunca más de ~120 líneas por eje (evita bucles pesados y
+    // arrays gigantes si la resolución o la extensión toman valores extremos)
     while ((yMax - yMin) / paso > 120 || (xMax - xMin) / paso > 120) {
       paso *= 2;
+      if (!Number.isFinite(paso) || paso <= 0) return;
     }
     const muestras = 9; // puntos por línea para seguir la curvatura
 
@@ -1582,17 +1587,26 @@ export class MapService {
     // Regeneramos la cuadrícula desde cero en cada activación
     source.clear();
 
-    // Verticales: Este constante, el Norte recorre [yMin..yMax]
+    // Verticales: Este constante, el Norte recorre [yMin..yMax].
+    // Tope defensivo de líneas: aunque el cálculo de `paso` falle, jamás se
+    // intentará crear un array de coordenadas gigante/inválido.
+    let verticales = 0;
     for (
       let este = Math.ceil(xMin / paso) * paso;
-      este <= xMax + 1e-6;
+      este <= xMax + 1e-6 && verticales < 160;
       este += paso
     ) {
+      verticales++;
       const coordenadas: number[] = [];
       for (let i = 0; i < muestras; i++) {
         const norte = yMin + ((yMax - yMin) * i) / (muestras - 1);
-        coordenadas.push(...aVista([este, norte]));
+        const punto = aVista([este, norte]);
+        // Una muestra corrupta (NaN/Infinity) rompe la línea completa:
+        // la descartamos en lugar de construir geometrías inválidas.
+        if (!Number.isFinite(punto[0]) || !Number.isFinite(punto[1])) break;
+        coordenadas.push(punto[0], punto[1]);
       }
+      if (coordenadas.length < muestras * 2) continue;
       source.addFeature(new Feature(new LineString(coordenadas)));
 
       const etiqueta = new Feature(
@@ -1603,16 +1617,22 @@ export class MapService {
     }
 
     // Horizontales: Norte constante, el Este recorre [xMin..xMax]
+    // (mismos blindajes que las verticales)
+    let horizontales = 0;
     for (
       let norte = Math.ceil(yMin / paso) * paso;
-      norte <= yMax + 1e-6;
+      norte <= yMax + 1e-6 && horizontales < 160;
       norte += paso
     ) {
+      horizontales++;
       const coordenadas: number[] = [];
       for (let i = 0; i < muestras; i++) {
         const este = xMin + ((xMax - xMin) * i) / (muestras - 1);
-        coordenadas.push(...aVista([este, norte]));
+        const punto = aVista([este, norte]);
+        if (!Number.isFinite(punto[0]) || !Number.isFinite(punto[1])) break;
+        coordenadas.push(punto[0], punto[1]);
       }
+      if (coordenadas.length < muestras * 2) continue;
       source.addFeature(new Feature(new LineString(coordenadas)));
 
       const etiqueta = new Feature(

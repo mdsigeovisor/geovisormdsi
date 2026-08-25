@@ -105,15 +105,24 @@ export class Imprimir {
 
     try {
       console.time('[Imprimir] captura');
-      // Cuadrícula UTM-18S eventual (solo durante la captura)
-      this.mapService.activarCuadriculaUtm();
+      // Cuadrícula UTM-18S eventual (solo durante la captura). Es decorativa:
+      // un fallo en su generación (p. ej. RangeError con vistas patológicas
+      // tras el redimensionado) NUNCA debe abortar la toma del mapa ni la
+      // generación del PDF.
+      try {
+        this.mapService.activarCuadriculaUtm();
+      } catch (errCuadricula) {
+        console.warn('[Imprimir] Cuadrícula UTM omitida:', errCuadricula);
+      }
 
       // Adaptamos el lienzo del mapa al aspecto del recuadro del plano
       const sizeActual = olMap.getSize();
       if (!sizeActual || sizeActual[0] !== pxW || sizeActual[1] !== pxH) {
         olMap.setSize([pxW, pxH]);
       }
-      await new Promise(res => setTimeout(res, 80));
+      // Margen mayor de estabilización tras el redimensionado del lienzo
+      // (los servicios WMS necesitan re-planificar sus peticiones)
+      await new Promise(res => setTimeout(res, 120));
 
       // Encuadre según la escala elegida (usa el nuevo ancho en píxeles)
       if (this.mapService.loteSeleccionadoCodigo()) {
@@ -176,7 +185,12 @@ export class Imprimir {
         }
       };
       olMap.once('rendercomplete', fin);
-      setTimeout(fin, 900);
+      // Tope generoso: 'rendercomplete' solo se emite cuando TODOS los tiles
+      // (ortofoto/WMS) están cargados y compuestos. El tope anterior (900 ms)
+      // recortaba la espera en redes lentas y producía capturas con solo un
+      // "pedazo" de la fotografía aérea en lotes grandes. 3 s cubre el caso
+      // normal; si aun así no termina, se captura lo disponible.
+      setTimeout(fin, 3000);
     });
   }
 
@@ -584,8 +598,9 @@ export class Imprimir {
     } else {
       view.fit(geometria.getExtent(), { padding: [80, 80, 80, 80], duration: 0 });
     }
-    // Esperamos al repintado tras el cambio de vista/resolución
-    await new Promise(res => setTimeout(res, 450));
+    // Esperamos al repintado tras el cambio de vista/resolución (margen mayor
+    // para dar tiempo a que los nuevos tiles de ortofoto lleguen a solicitarse)
+    await new Promise(res => setTimeout(res, 650));
   }
 
   /**
@@ -635,14 +650,13 @@ export class Imprimir {
         mapaH = areaH - altoInferior - gapBloques;
         yInferior = mapaY + mapaH + gapBloques;
 
+        // Fotografía al DOBLE del ancho anterior (32 → 64 mm) ocupando todo
+        // el espacio sobrante del cuerpo inferior; el reparto exacto entre
+        // los tres marcos lo calcula calcularRepartoInferior().
         fotoX = margen;
-        fotoW = 32;
-
+        ({ fotoW, tablaW, infoW } = this.calcularRepartoInferior(areaW, gapBloques));
         tablaX = fotoX + fotoW + gapBloques;
-        tablaW = Math.min(92, Math.round(areaW * 0.36));
-
         infoX = tablaX + tablaW + gapBloques;
-        infoW = margen + areaW - infoX; // hasta el borde derecho útil
       }
 
       // Red de seguridad: garantiza resaltado rojo + medidas antes de capturar
@@ -803,6 +817,42 @@ export class Imprimir {
 
   /** Proporción (ancho/alto) de la última fotografía cargada */
   private fotoProporcion = 4 / 3;
+
+  /** Ancho del marco de fotografía: el DOBLE del diseño original (32 mm) */
+  private static readonly FOTO_ANCHO_MM = 64;
+  /** Anchos mínimo/máximo garantizados de los marcos contiguos (mm) */
+  private static readonly TABLA_MIN_MM = 52;
+  private static readonly TABLA_MAX_MM = 84;
+  private static readonly INFO_MIN_MM = 44;
+
+  /**
+   * Reparte el ancho útil del cuerpo inferior del plano entre los tres marcos:
+   * fotografía (prioritaria, al doble del ancho original), tabla de datos
+   * cualitativos y ficha pública. La fotografía ocupa el espacio sobrante y
+   * se garantiza un mínimo legible para las dos columnas de texto.
+   * @param areaW Ancho útil total del cuerpo (mm).
+   * @param gapBloques Separación entre marcos (mm).
+   */
+  calcularRepartoInferior(
+    areaW: number,
+    gapBloques: number,
+  ): { fotoW: number; tablaW: number; infoW: number } {
+    const fotoW = Imprimir.FOTO_ANCHO_MM;
+    const disponible = areaW - fotoW - gapBloques * 2;
+    let tablaW = Math.max(
+      Imprimir.TABLA_MIN_MM,
+      Math.min(Imprimir.TABLA_MAX_MM, Math.round(disponible * 0.55)),
+    );
+    let infoW = disponible - tablaW;
+
+    // Red de seguridad: si la ficha pública quedara demasiado estrecha,
+    // cedemos milímetros a la columna cualitativa (nunca bajo su mínimo).
+    if (infoW < Imprimir.INFO_MIN_MM && tablaW > Imprimir.TABLA_MIN_MM) {
+      tablaW -= Imprimir.INFO_MIN_MM - infoW;
+      infoW = disponible - tablaW;
+    }
+    return { fotoW, tablaW, infoW };
+  }
 
   /**
    * Dibuja la imagen del mapa ajustada (contain) dentro del área dada,

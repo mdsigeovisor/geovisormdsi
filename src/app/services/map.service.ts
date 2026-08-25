@@ -1444,7 +1444,9 @@ export class MapService {
       // - Puntos: etiquetas de texto con la medida de cada arista del lote.
       // - Polígonos: línea roja gruesa + relleno rojo muy tenue.
       style: feature => {
-        const geometryType = feature.getGeometry()?.getType();
+        // Features sin geometría válida nunca deben dibujarse
+        if (!feature?.getGeometry()) return [];
+        const geometryType = feature.getGeometry()!.getType();
         if (geometryType === 'Point') {
           return new Style({
             text: new Text({
@@ -1510,7 +1512,10 @@ export class MapService {
       stroke: new Stroke({ color: 'rgba(27, 42, 78, 0.35)', width: 0.8, lineDash: [5, 4] }),
     });
     return feature => {
-      if (feature?.getGeometry()?.getType() === 'Point') {
+      // Features sin geometría válida nunca deben dibujarse (evita errores en
+      // el pipeline de renderizado de OpenLayers)
+      if (!feature?.getGeometry()) return [];
+      if (feature.getGeometry()!.getType() === 'Point') {
         return [new Style({
           text: new Text({
             text: (feature.get('etiqueta') as string) ?? '',
@@ -1597,16 +1602,18 @@ export class MapService {
       este += paso
     ) {
       verticales++;
-      const coordenadas: number[] = [];
+      const coordenadas: number[][] = [];
       for (let i = 0; i < muestras; i++) {
         const norte = yMin + ((yMax - yMin) * i) / (muestras - 1);
         const punto = aVista([este, norte]);
-        // Una muestra corrupta (NaN/Infinity) rompe la línea completa:
-        // la descartamos en lugar de construir geometrías inválidas.
         if (!Number.isFinite(punto[0]) || !Number.isFinite(punto[1])) break;
-        coordenadas.push(punto[0], punto[1]);
+        // IMPORTANTE: LineString espera PARES [[x,y],...]. Pasar un array
+        // plano [x,y,x,y…] hacía que OpenLayers detectara stride=undefined,
+        // vaciaba las flatCoordinates y provocaba
+        // "RangeError: Invalid array length" en douglasPeucker al renderizar.
+        coordenadas.push([punto[0], punto[1]]);
       }
-      if (coordenadas.length < muestras * 2) continue;
+      if (coordenadas.length < muestras) continue;
       source.addFeature(new Feature(new LineString(coordenadas)));
 
       const etiqueta = new Feature(
@@ -1625,14 +1632,14 @@ export class MapService {
       norte += paso
     ) {
       horizontales++;
-      const coordenadas: number[] = [];
+      const coordenadas: number[][] = [];
       for (let i = 0; i < muestras; i++) {
         const este = xMin + ((xMax - xMin) * i) / (muestras - 1);
         const punto = aVista([este, norte]);
         if (!Number.isFinite(punto[0]) || !Number.isFinite(punto[1])) break;
-        coordenadas.push(punto[0], punto[1]);
+        coordenadas.push([punto[0], punto[1]]);
       }
-      if (coordenadas.length < muestras * 2) continue;
+      if (coordenadas.length < muestras) continue;
       source.addFeature(new Feature(new LineString(coordenadas)));
 
       const etiqueta = new Feature(

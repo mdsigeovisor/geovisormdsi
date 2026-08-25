@@ -213,8 +213,8 @@ export class Imprimir {
   }
 
   // --- Selección e información del lote ---
-  /** Escala del plano: fija (1/500, 1/250) o automática según la vista */
-  escala = signal<'auto' | '500' | '250'>('auto');
+  /** Escala del plano: fija (1/250 … 1/2000) o automática según la vista */
+  escala = signal<'auto' | '250' | '500' | '750' | '1000' | '1250' | '2000'>('auto');
   /** Propiedades cualitativas del lote seleccionado (WFS vw_tg_lote) */
   datosLote = signal<Record<string, unknown> | null>(null);
   /** Filas [etiqueta, valor] de la tabla cualitativa para el PDF */
@@ -809,8 +809,12 @@ export class Imprimir {
   /** Etiqueta legible de la escala elegida */
   private etiquetaEscala(): string {
     switch (this.escala()) {
-      case '500': return '1/500';
       case '250': return '1/250';
+      case '500': return '1/500';
+      case '750': return '1/750';
+      case '1000': return '1/1000';
+      case '1250': return '1/1250';
+      case '2000': return '1/2000';
       default: return 'Automática';
     }
   }

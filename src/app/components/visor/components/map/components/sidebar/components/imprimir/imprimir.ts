@@ -220,10 +220,6 @@ export class Imprimir {
   // --- Selección e información del lote ---
   /** Escala del plano: fija (1/250 … 1/2000) o automática según la vista */
   escala = signal<'auto' | '250' | '500' | '750' | '1000' | '1250' | '2000'>('auto');
-  /** Propiedades cualitativas del lote seleccionado (WFS vw_tg_lote) */
-  datosLote = signal<Record<string, unknown> | null>(null);
-  /** Filas [etiqueta, valor] de la tabla cualitativa para el PDF */
-  filasTabla = signal<[string, string][]>([]);
   /** Fotografía del lote obtenida de la ficha en línea (DataURL) o null */
   fotoLote = signal<string | null>(null);
   /** Indica si se están cargando los datos del lote */
@@ -244,8 +240,6 @@ export class Imprimir {
         void this.cargarDatosLote(codigo);
       } else {
         this.featureLote = null;
-        this.datosLote.set(null);
-        this.filasTabla.set([]);
         this.fotoLote.set(null);
         this.fichaUrl.set(null);
         this.infoPublicaFilas.set([]);
@@ -254,17 +248,16 @@ export class Imprimir {
   }
 
   /**
-   * Carga los atributos cualitativos del lote (WFS) y su fotografía.
+   * Carga la geometría WFS del lote (necesaria para encuadrar) y su fotografía.
    */
   private async cargarDatosLote(codigo: string): Promise<void> {
     this.cargandoDatos.set(true);
     this.error.set(null);
     try {
+      // El WFS aporta la GEOMETRÍA del lote (imprescindible para prepararVista);
+      // sus atributos cualitativos ya NO se muestran en el plano.
       const feature = await firstValueFrom(this.mapService.searchLoteByCodigoCatastral(codigo));
       this.featureLote = feature ?? null;
-      const props = (feature?.properties ?? {}) as Record<string, unknown>;
-      this.datosLote.set(feature ? props : null);
-      this.filasTabla.set(feature ? this.construirFilas(props, codigo) : [['Código Catastral', codigo], ['Estado', 'Sin datos cualitativos disponibles']]);
       this.fichaUrl.set(`http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigo}`);
       // La fotografía es opcional: si falla (p. ej. CORS), se usa un enlace en el PDF
       this.fotoLote.set(await this.obtenerFotoLote(codigo));
@@ -275,25 +268,6 @@ export class Imprimir {
     } finally {
       this.cargandoDatos.set(false);
     }
-  }
-
-  /**
-   * Construye las filas cualitativas de la tabla a partir de los
-   * atributos del feature WFS (con fallbacks defensivos).
-   */
-  private construirFilas(p: Record<string, unknown>, codigo: string): [string, string][] {
-    const texto = (clave: string): string => String(p[clave] ?? '').trim();
-    const filas: [string, string][] = [
-      ['Código Catastral', texto('id_lote') || codigo],
-      ['Dirección', texto('direccion') || texto('ubicacion')],
-      ['Titular / Propietario', texto('propietario') || 'Información reservada'],
-      ['Área de terreno', p['area_lote'] != null && p['area_lote'] !== '' ? `${p['area_lote']} m²` : ''],
-      ['Zonificación', texto('zonificacion')],
-      ['N° de pisos', p['pisos'] != null && p['pisos'] !== '' ? String(p['pisos']) : ''],
-      ['Urb. / Habilitación', texto('urbanizaci') || texto('habilitacion')],
-      ['Manzana - Lote urb.', [texto('mzaurb'), texto('loteurb')].filter(Boolean).join(' - ')],
-    ];
-    return filas.filter(fila => fila[1].length > 0);
   }
 
   /**
@@ -637,32 +611,28 @@ export class Imprimir {
       const areaW = ancho - margen * 2;    // 190 (A4 vertical) · 400 (A3 horizontal)
       const areaH = (alto - margen) - areaY - 9; // pie reservado DENTRO del área útil
 
-      const filas = this.filasTabla();
-      const tieneTabla = filas.length > 0 && !!this.mapService.loteSeleccionadoCodigo();
-      const filasInfo = tieneTabla ? this.infoPublicaFilas() : [];
+      const tieneLote = !!this.mapService.loteSeleccionadoCodigo();
+      const filasInfo = tieneLote ? this.infoPublicaFilas() : [];
       const foto = this.fotoLote();
 
-      // Mapa a TODO el ancho útil; en la parte inferior, tres marcos:
-      // fotografía · datos cualitativos · ficha pública (LotePublico.asp)
+      // Mapa a TODO el ancho útil; en la parte inferior, DOS marcos:
+      // fotografía · ficha pública (LotePublico.asp).
       let mapaX = margen, mapaY = areaY, mapaW = areaW, mapaH = areaH;
       let yInferior = areaY;
       let altoInferior = 0;
       let fotoX = 0, fotoW = 0;
-      let tablaX = 0, tablaW = 0;
       let infoX = 0, infoW = 0;
-      if (tieneTabla) {
-        const necesarias = Math.max(filas.length, filasInfo.length) * 5.2 + 10;
+      if (tieneLote) {
+        const necesarias = filasInfo.length * 5.2 + 10;
         altoInferior = Math.min(Math.max(necesarias, 48), 92);
         mapaH = areaH - altoInferior - gapBloques;
         yInferior = mapaY + mapaH + gapBloques;
 
-        // Fotografía al DOBLE del ancho anterior (32 → 64 mm) ocupando todo
-        // el espacio sobrante del cuerpo inferior; el reparto exacto entre
-        // los tres marcos lo calcula calcularRepartoInferior().
+        // Fotografía al DOBLE del ancho original (32 → 64 mm); la ficha
+        // pública absorbe todo el espacio que ocupaba la tabla cualitativa.
         fotoX = margen;
-        ({ fotoW, tablaW, infoW } = this.calcularRepartoInferior(areaW, gapBloques));
-        tablaX = fotoX + fotoW + gapBloques;
-        infoX = tablaX + tablaW + gapBloques;
+        ({ fotoW, infoW } = this.calcularRepartoInferior(areaW, gapBloques));
+        infoX = fotoX + fotoW + gapBloques;
       }
 
       // Red de seguridad: garantiza resaltado rojo + medidas antes de capturar
@@ -724,7 +694,7 @@ export class Imprimir {
       pdf.setLineWidth(0.6);
       pdf.line(margen, yLinea, ancho - margen, yLinea);
 
-      if (tieneTabla) {
+      if (tieneLote) {
         // Recuadro del mapa a todo el ancho útil (más ancho y con cuadrícula)
         this.dibujarMapa(pdf, imagenMapa, mapaX, mapaY, mapaW, mapaH);
         this.dibujarBarraEscala(pdf, mapaX, mapaY + mapaH, mapaW);
@@ -732,10 +702,7 @@ export class Imprimir {
         // Marco inferior 1 · fotografía del lote
         this.dibujarFoto(pdf, foto, fotoX, yInferior, fotoW, altoInferior);
 
-        // Marco inferior 2 · datos cualitativos (WFS)
-        this.dibujarTabla(pdf, filas, tablaX, yInferior, tablaW, altoInferior);
-
-        // Marco inferior 3 · ficha pública (LotePublico.asp)
+        // Marco inferior 2 · ficha pública (LotePublico.asp)
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(7);
         pdf.setTextColor(...COLOR_INSTITUCIONAL);
@@ -831,38 +798,18 @@ export class Imprimir {
 
   /** Ancho del marco de fotografía: el DOBLE del diseño original (32 mm) */
   private static readonly FOTO_ANCHO_MM = 64;
-  /** Anchos mínimo/máximo garantizados de los marcos contiguos (mm) */
-  private static readonly TABLA_MIN_MM = 52;
-  private static readonly TABLA_MAX_MM = 84;
-  private static readonly INFO_MIN_MM = 44;
 
   /**
-   * Reparte el ancho útil del cuerpo inferior del plano entre los tres marcos:
-   * fotografía (prioritaria, al doble del ancho original), tabla de datos
-   * cualitativos y ficha pública. La fotografía ocupa el espacio sobrante y
-   * se garantiza un mínimo legible para las dos columnas de texto.
+   * Reparte el ancho útil del cuerpo inferior entre los DOS marcos restantes:
+   * fotografía (prioritaria, al doble del ancho original) y ficha pública,
+   * que absorbe íntegro el espacio que ocupaba la tabla cualitativa.
    * @param areaW Ancho útil total del cuerpo (mm).
    * @param gapBloques Separación entre marcos (mm).
    */
-  calcularRepartoInferior(
-    areaW: number,
-    gapBloques: number,
-  ): { fotoW: number; tablaW: number; infoW: number } {
+  calcularRepartoInferior(areaW: number, gapBloques: number): { fotoW: number; infoW: number } {
     const fotoW = Imprimir.FOTO_ANCHO_MM;
-    const disponible = areaW - fotoW - gapBloques * 2;
-    let tablaW = Math.max(
-      Imprimir.TABLA_MIN_MM,
-      Math.min(Imprimir.TABLA_MAX_MM, Math.round(disponible * 0.55)),
-    );
-    let infoW = disponible - tablaW;
-
-    // Red de seguridad: si la ficha pública quedara demasiado estrecha,
-    // cedemos milímetros a la columna cualitativa (nunca bajo su mínimo).
-    if (infoW < Imprimir.INFO_MIN_MM && tablaW > Imprimir.TABLA_MIN_MM) {
-      tablaW -= Imprimir.INFO_MIN_MM - infoW;
-      infoW = disponible - tablaW;
-    }
-    return { fotoW, tablaW, infoW };
+    const infoW = areaW - fotoW - gapBloques; // todo el resto para la ficha
+    return { fotoW, infoW };
   }
 
   /**

@@ -52,36 +52,24 @@ describe('Imprimir', () => {
   it('el marco de fotografía ocupa el DOBLE del ancho original (64 mm)', () => {
     const reparto = (
       component as unknown as {
-        calcularRepartoInferior(a: number, g: number): { fotoW: number; tablaW: number; infoW: number };
+        calcularRepartoInferior(a: number, g: number): { fotoW: number; infoW: number };
       }
     ).calcularRepartoInferior(190, 3); // A4 vertical: 190 mm útiles
 
     expect(reparto.fotoW).toBe(64); // antes era 32 mm
   });
 
-  it('reparte el resto sin huecos y garantiza mínimos legibles (A4 vertical)', () => {
-    const reparto = (
-      component as unknown as {
-        calcularRepartoInferior(a: number, g: number): { fotoW: number; tablaW: number; infoW: number };
-      }
-    ).calcularRepartoInferior(190, 3);
+  it('la ficha pública absorbe TODO el espacio de la tabla cualitativa eliminada', () => {
+    const sut = component as unknown as {
+      calcularRepartoInferior(a: number, g: number): { fotoW: number; infoW: number };
+    };
 
-    expect(reparto.tablaW).toBeGreaterThanOrEqual(52); // mínimo tabla cualitativa
-    expect(reparto.infoW).toBeGreaterThanOrEqual(44);  // mínimo ficha pública
-    // La suma cubre TODO el espacio disponible: la foto absorbe lo sobrante
-    expect(reparto.fotoW + 3 * 2 + reparto.tablaW + reparto.infoW).toBe(190);
-  });
+    const a4 = sut.calcularRepartoInferior(190, 3);
+    expect(a4.fotoW + 3 + a4.infoW).toBe(190); // sin huecos ni marcos muertos
+    expect(a4.infoW).toBeGreaterThan(100);     // la ficha gana el hueco de la tabla
 
-  it('limita la tabla cualitativa a su máximo en hojas grandes (A3 horizontal)', () => {
-    const reparto = (
-      component as unknown as {
-        calcularRepartoInferior(a: number, g: number): { fotoW: number; tablaW: number; infoW: number };
-      }
-    ).calcularRepartoInferior(400, 3); // A3 horizontal: 400 mm útiles
-
-    expect(reparto.fotoW).toBe(64);
-    expect(reparto.tablaW).toBeLessThanOrEqual(84);
-    expect(reparto.fotoW + 3 * 2 + reparto.tablaW + reparto.infoW).toBe(400);
+    const a3 = sut.calcularRepartoInferior(400, 3);
+    expect(a3.fotoW + 3 + a3.infoW).toBe(400);
   });
 
   it('las líneas de cuadrícula se crean con PARES de coordenadas (regresión RangeError)', () => {

@@ -19,5 +19,11 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/GaleriaFotosCatastro": {
+    "target": "http://www.munisanisidro.gob.pe",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
   }
 }

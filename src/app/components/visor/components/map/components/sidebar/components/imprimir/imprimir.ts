@@ -282,12 +282,31 @@ export class Imprimir {
       filas.push([k, v]);
     };
 
-    // 1) Tablas HTML: primera celda = etiqueta, resto concatenado = valor
+    // 1) Tablas HTML: clasificamos cada celda por su clase CSS de la ficha
+    //    ("Subtitulo" = etiqueta, "Dato" = valor); soporta filas dobles
+    //    [Etiqueta | Valor | Etiqueta | Valor] sin mezclar campos.
     doc.querySelectorAll('tr').forEach(tr => {
-      const celdas = Array.from(tr.querySelectorAll('td,th')).map(td => limpiar(td.textContent));
-      if (celdas.length >= 2) {
-        const valor = celdas.slice(1).filter(Boolean).join(' ');
-        agregarPar(celdas[0], valor);
+      let etiquetaPendiente: string | null = null;
+      tr.querySelectorAll('td,th').forEach(td => {
+        const clase = td.getAttribute('class') ?? '';
+        const texto = limpiar(td.textContent);
+        if (!texto) return;
+        if (/subtitulo/i.test(clase)) {
+          etiquetaPendiente = texto.replace(/:$/, '');
+        } else if (/\bdato\b/i.test(clase)) {
+          if (etiquetaPendiente) {
+            agregarPar(etiquetaPendiente, texto);
+            etiquetaPendiente = null;
+          }
+        } else if (etiquetaPendiente) {
+          agregarPar(etiquetaPendiente, texto);
+          etiquetaPendiente = null;
+        }
+      });
+      // Fila residual: etiqueta sin clase y última celda como valor
+      if (etiquetaPendiente) {
+        const celdas = Array.from(tr.querySelectorAll('td,th')).map(x => limpiar(x.textContent));
+        if (celdas.length >= 2) agregarPar(etiquetaPendiente, celdas[celdas.length - 1]);
       }
     });
 
@@ -313,14 +332,14 @@ export class Imprimir {
       });
     }
 
-    // Sin duplicados consecutivos (tablas anidadas/contenedores) y tope de 14
+    // Sin duplicados consecutivos (tablas anidadas/contenedores) y tope de 18
     const unicas: [string, string][] = [];
     for (const fila of filas) {
       const previa = unicas[unicas.length - 1];
       if (!previa || previa[0].toLowerCase() !== fila[0].toLowerCase() || previa[1] !== fila[1]) {
         unicas.push(fila);
       }
-      if (unicas.length >= 14) break;
+      if (unicas.length >= 18) break;
     }
     console.info(`[Imprimir] Ficha pública (${codigo}): ${unicas.length} campos`);
     return unicas;
@@ -333,15 +352,23 @@ export class Imprimir {
    * Devuelve el HTML o null si ambos intentos fallan.
    */
   private async descargarPaginaDataGIS(ruta: string, codigo: string): Promise<string | null> {
-    const candidatas = [
-      `/DataGIS_WGS84/${ruta}`,
-      `http://192.168.41.160/DataGIS_WGS84/${ruta}`,
-    ];
+    return this.descargarUrlDataGIS(`/DataGIS_WGS84/${ruta}?codigo_i=${encodeURIComponent(codigo)}`);
+  }
+
+  /**
+   * Descarga un recurso del servidor DataGIS probando primero la ruta
+   * relativa (proxy de desarrollo / same-origin en producción) y luego la
+   * misma ruta contra el host absoluto. Decodifica ISO-8859-1 si corresponde.
+   */
+  private async descargarUrlDataGIS(destino: string): Promise<string | null> {
+    const candidatas = destino.startsWith('http')
+      ? [destino.replace(/^https?:\/\/[^/]+/i, ''), destino]
+      : [destino, `http://192.168.41.160${destino}`];
     for (const base of candidatas) {
       try {
         const controlador = new AbortController();
         const timeout = setTimeout(() => controlador.abort(), 6000);
-        const respuesta = await fetch(`${base}?codigo_i=${encodeURIComponent(codigo)}`, {
+        const respuesta = await fetch(base, {
           signal: controlador.signal,
         });
         clearTimeout(timeout);
@@ -362,38 +389,147 @@ export class Imprimir {
         // Intentamos la siguiente ruta (sin proxy o bloqueo CORS)
       }
     }
-    console.warn('[Imprimir] No se pudo descargar:', ruta, codigo);
+    console.warn('[Imprimir] No se pudo descargar:', destino);
     return null;
   }
 
   /**
    * Intenta obtener la fotografía del lote desde la ficha ASP.
-   * Devuelve null si no está disponible (CORS, red o sin imágenes),
-   * en cuyo caso el PDF incluirá un enlace a la ficha en línea.
+   * Estrategia:
+   *  1) Descarga informacion.asp (vía proxy relativo) y recolecta los <img src>.
+   *  2) Si la ficha enlaza una página de fotos ("Ver Fotos"), la descarga y
+   *     suma también sus imágenes.
+   *  3) Cada candidato se baja como blob (evita CORS y canvas contaminado),
+   *     se convierte a DataURL y se descartan iconos diminutos.
+   * Devuelve null si no hay foto usable; el PDF incluirá el enlace en línea.
    */
   private async obtenerFotoLote(codigo: string): Promise<string | null> {
-    const urlFicha = this.fichaUrl() ?? `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigo}`;
     try {
-      const html = await this.descargarPaginaDataGIS('WEBFILES/informacion.asp', codigo);
-      if (!html) return null;
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      const imagenes = Array.from(doc.querySelectorAll('img'))
-        .map(img => img.getAttribute('src') || '')
-        .filter(src => src.length > 0);
-      if (imagenes.length === 0) return null;
-      // Priorizamos imágenes que parezcan fotografías del predio
-      const candidata = imagenes.find(src => /foto|frontis|fachada|\.(jpe?g|png)/i.test(src)) || imagenes[0];
-      const urlAbsoluta = new URL(candidata, urlFicha).href;
-      const img = await this.cargarImagen(urlAbsoluta);
-      this.fotoProporcion = img.naturalWidth / Math.max(img.naturalHeight, 1);
-      // Convertimos a DataURL para poder incrustarla en el PDF
-      const lienzo = document.createElement('canvas');
-      lienzo.width = img.naturalWidth;
-      lienzo.height = img.naturalHeight;
-      lienzo.getContext('2d')?.drawImage(img, 0, 0);
-      return lienzo.toDataURL('image/jpeg', 0.9);
+      const baseFicha = '/DataGIS_WGS84/WEBFILES/informacion.asp';
+      const htmlFicha = await this.descargarUrlDataGIS(`${baseFicha}?codigo_i=${encodeURIComponent(codigo)}`);
+      if (!htmlFicha) return null;
+
+      type Candidato = { ruta: string; prioridad: number };
+      const candidatos: Candidato[] = [];
+      const procesarPagina = (html: string, rutaPagina: string): void => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        doc.querySelectorAll('img').forEach(img => {
+          const src = img.getAttribute('src') ?? '';
+          // La imagen principal de la ficha se marca con name="IMAGEN_LOTE"
+          const esPrincipal = /imagen_lote/i.test(img.getAttribute('name') ?? '');
+          const extraPrioridad = esPrincipal ? -1 : 0;
+          for (const c of this.rutasCandidatasDeSrc(src, rutaPagina.split('?')[0])) {
+            candidatos.push({ ruta: c.ruta, prioridad: extraPrioridad + c.prioridad });
+          }
+          // Algunas fichas traen la foto sólo en el enlace de ampliación
+          const contenedor = img.closest('a');
+          const onClick = contenedor?.getAttribute('onclick') ?? '';
+          const m = /https?:\/\/[^'"\s]+/i.exec(onClick);
+          if (m && !src) {
+            for (const c of this.rutasCandidatasDeSrc(m[0], rutaPagina.split('?')[0])) {
+              candidatos.push({ ruta: c.ruta, prioridad: extraPrioridad + c.prioridad });
+            }
+          }
+        });
+      };
+
+      procesarPagina(htmlFicha, baseFicha);
+
+      // Ordenamos por prioridad, sin duplicados y descartando iconos
+      const vistas = new Set<string>();
+      const unicas: Candidato[] = [];
+      for (const c of candidatos.sort((a, b) => a.prioridad - b.prioridad)) {
+        if (/icon|bullet|arrow|flecha|logo|banner|fondo/i.test(c.ruta)) continue;
+        if (vistas.has(c.ruta)) continue;
+        vistas.add(c.ruta);
+        unicas.push(c);
+        if (unicas.length >= 8) break;
+      }
+
+      for (const c of unicas) {
+        const dataUrl = await this.descargarImagenComoDataURL(c.ruta);
+        if (dataUrl) {
+          console.info('[Imprimir] Fotografía del lote obtenida:', c.ruta);
+          return dataUrl;
+        }
+      }
+      console.info('[Imprimir] Sin fotografía usable para el lote', codigo,
+        '· candidatos revisados:', unicas.length);
+      return null;
     } catch {
-      return null; // CORS/red/sin imagen: el PDF usará el enlace a la ficha
+      return null; // Sin imagen disponible: el PDF usará el enlace a la ficha
+    }
+  }
+
+  /**
+   * Normaliza un src/href a una ruta del servidor DataGIS con forma
+   * '/DataGIS_WGS84/...' (para pasarla por el proxy). Devuelve null si el
+   * valor no es utilizable o apunta a otro host.
+   */
+  /**
+   * Convierte un src/href en la lista ordenada de URLs descargables:
+   *  - DataGIS (192.168.41.160): relativa al proxy + absoluta.
+   *  - Portal municipal (www.munisanisidro.gob.pe): relativa (proxy
+   *    "/GaleriaFotosCatastro" en desarrollo) + absoluta.
+   * Devuelve [] si el valor no es utilizable o apunta a otro host.
+   */
+  private rutasCandidatasDeSrc(valor: string, rutaBase?: string): { ruta: string; prioridad: number }[] {
+    const limpio = valor.trim();
+    if (!limpio || /^(data:|javascript:|mailto:|#)/i.test(limpio)) return [];
+    let url: URL;
+    try {
+      url = new URL(limpio, `http://192.168.41.160${rutaBase ?? '/DataGIS_WGS84/'}`);
+    } catch {
+      return [];
+    }
+    const destino = `${url.pathname}${url.search}`;
+    const host = url.hostname.toLowerCase();
+    if (host === '192.168.41.160') {
+      return [
+        { ruta: destino, prioridad: 0 },
+        { ruta: `http://192.168.41.160${destino}`, prioridad: 1 },
+      ];
+    }
+    if (/munisanisidro\.gob\.pe$/i.test(host)) {
+      // La foto pública vive en el portal municipal (p. ej.
+      // /GaleriaFotosCatastro/<cod>/FL-<cod>/FLFoto-N.jpg)
+      return [
+        { ruta: destino, prioridad: 0 }, // vía proxy "/GaleriaFotosCatastro" o same-origin
+        { ruta: `${url.protocol}//${url.hostname}${destino}`, prioridad: 1 },
+      ];
+    }
+    return [];
+  }
+
+  /**
+   * Descarga una imagen como DataURL probando primero la ruta relativa
+   * (proxy/same-origin) y luego la absoluta. Rechaza respuestas que no sean
+   * imágenes o iconos demasiado pequeños (<60 px o <1,2 kB).
+   */
+  private async descargarImagenComoDataURL(url: string): Promise<string | null> {
+    try {
+      const controlador = new AbortController();
+      const timeout = setTimeout(() => controlador.abort(), 6000);
+      const respuesta = await fetch(url, { signal: controlador.signal });
+      clearTimeout(timeout);
+      if (!respuesta.ok) return null;
+      const tipo = respuesta.headers.get('content-type') ?? '';
+      if (!tipo.startsWith('image')) return null;
+      const blob = await respuesta.blob();
+      if (blob.size < 1200) return null; // descarta iconos/bullets
+
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const lector = new FileReader();
+        lector.onload = () => resolve(lector.result as string);
+        lector.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+        lector.readAsDataURL(blob);
+      });
+      const img = await this.cargarImagen(dataUrl);
+      if (img.naturalWidth < 60 || img.naturalHeight < 60) return null;
+      this.fotoProporcion = img.naturalWidth / Math.max(img.naturalHeight, 1);
+      return dataUrl;
+    } catch {
+      return null;
     }
   }
 
@@ -477,7 +613,7 @@ export class Imprimir {
       let infoX = 0, infoW = 0;
       if (tieneTabla) {
         const necesarias = Math.max(filas.length, filasInfo.length) * 5.2 + 10;
-        altoInferior = Math.min(Math.max(necesarias, 48), 86);
+        altoInferior = Math.min(Math.max(necesarias, 48), 92);
         mapaH = areaH - altoInferior - gapBloques;
         yInferior = mapaY + mapaH + gapBloques;
 
@@ -540,7 +676,7 @@ export class Imprimir {
         pdf.setTextColor(...COLOR_INSTITUCIONAL);
         pdf.text('Información pública del lote', infoX, yInferior + 2.5);
         if (filasInfo.length > 0) {
-          this.dibujarTabla(pdf, filasInfo, infoX, yInferior, infoW, altoInferior, '');
+          this.dibujarTabla(pdf, filasInfo, infoX, yInferior, infoW, altoInferior, '', 0.55);
         } else {
           pdf.setFont('helvetica', 'italic');
           pdf.setFontSize(6.8);
@@ -653,9 +789,10 @@ export class Imprimir {
     w: number,
     h: number,
     titulo: string = 'Datos cualitativos del lote',
+    pctClave: number = 0.45,
   ): void {
     const rowH = Math.min(7, Math.max((h - 6) / filas.length, 4.5));
-    const colClave = w * 0.45; // columna de etiquetas más ancha (marcos estrechos)
+    const colClave = w * pctClave; // columna de etiquetas adaptable al marco
     let cursorY = y + 5; // espacio para el título del bloque
 
     if (titulo) {
@@ -671,7 +808,7 @@ export class Imprimir {
         pdf.rect(x, cursorY, w, rowH, 'F');
       }
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(7);
+      pdf.setFontSize(w < 80 ? 6.3 : 7); // fuente menor en marcos estrechos
       pdf.setTextColor(70, 70, 70);
       pdf.text(fila[0], x + 1.5, cursorY + rowH - 1.8);
       pdf.setFont('helvetica', 'normal');

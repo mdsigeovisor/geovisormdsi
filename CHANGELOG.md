@@ -23,7 +23,11 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
     *   **Recuadro del mapa duplicado:** nuevo layout de dos paneles — el mapa ocupa todo el alto del cuerpo (panel izquierdo) y la tabla/fotografía pasan a una columna derecha; además la captura se adapta al aspecto exacto del recuadro (150 dpi), eliminando bandas vacías.
     *   **Cuadrícula UTM-18S:** líneas de cuadrícula eventuales con etiquetas Este/Norte estampadas solo durante la captura del plano.
     *   **Barra de escala gráfica:** barra vectorial de 4 segmentos dentro del recuadro, calculada con la resolución real de la captura y redondeada a valores legibles (m/km).
+    *   **Marco inferior de ficha pública:** nuevo marco con la información de `LotePublico.asp` (misma ficha del ciudadano) usando el código catastral capturado al hacer clic; parser HTML de tablas con respaldo "Etiqueta: valor" y aviso/enlace en línea si no está disponible.
+    *   **Márgenes ISO 5457:** márgenes de impresión de 10 mm por lado ⇒ área útil A4V 190×277 mm · A3H 400×277 mm; encabezado y pie reubicados dentro del área útil.
+    *   **Mapa a todo el ancho útil:** el recuadro del mapa pasa a ocupar los 190/400 mm completos del área útil (antes compartía columna), con la fila inferior compuesta por fotografía · datos cualitativos · ficha pública.
     *   **Corrección (SRS):** el resaltado rojo y las medidas no aparecían porque el GetFeatureInfo devuelve la geometría en la proyección de la vista (EPSG:3857) y se interpretaba como UTM 18S. Ahora se detecta el SRS real del GeoJSON (miembro `crs` o proyección de la vista), las medidas se calculan siempre sobre coordenadas UTM 18S y existe una red de seguridad que recupera la geometría vía WFS al generar el PDF/impresión si no estuviera dibujada.
+    *   **Corrección (ficha pública):** la llamada a `LotePublico.asp` fallaba por CORS desde el entorno de desarrollo. Ahora se descarga vía ruta relativa `/DataGIS_WGS84` (nueva entrada en `proxy.conf.json`) con fallback a la URL absoluta, decodifica ISO-8859-1 y el parser reconoce el formato real de la ficha (pares con/sin dos puntos, campos múltiples por nodo como `Niveles construidos / Niveles Zonificación`). Mismo arreglo aplicado a la descarga de la fotografía (`informacion.asp`).
 
 ---
 

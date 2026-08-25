@@ -13,5 +13,11 @@
       "^/geoserver-orto": "/geoserver"
     },
     "logLevel": "debug"
+  },
+  "/DataGIS_WGS84": {
+    "target": "http://192.168.41.160",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
   }
 }

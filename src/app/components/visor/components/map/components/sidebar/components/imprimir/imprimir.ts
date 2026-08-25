@@ -193,6 +193,8 @@ export class Imprimir {
   cargandoDatos = signal(false);
   /** URL de la ficha completa del lote (enlace en PDF/impresión) */
   fichaUrl = signal<string | null>(null);
+  /** Filas [etiqueta, valor] de la ficha pública (LotePublico.asp) del marco inferior */
+  infoPublicaFilas = signal<[string, string][]>([]);
 
   /** Feature crudo del lote seleccionado (para centrar/ajustar la vista) */
   private featureLote: GeoJSONFeature | null = null;
@@ -209,6 +211,7 @@ export class Imprimir {
         this.filasTabla.set([]);
         this.fotoLote.set(null);
         this.fichaUrl.set(null);
+        this.infoPublicaFilas.set([]);
       }
     });
   }
@@ -228,6 +231,8 @@ export class Imprimir {
       this.fichaUrl.set(`http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigo}`);
       // La fotografía es opcional: si falla (p. ej. CORS), se usa un enlace en el PDF
       this.fotoLote.set(await this.obtenerFotoLote(codigo));
+      // La ficha pública es opcional: si falla, el marco mostrará un aviso
+      this.infoPublicaFilas.set(await this.obtenerInfoPublica(codigo));
     } catch {
       this.error.set('No se pudieron cargar los datos del lote.');
     } finally {
@@ -255,6 +260,113 @@ export class Imprimir {
   }
 
   /**
+   * Obtiene la ficha pública del lote desde LotePublico.asp (la misma que ve
+   * el ciudadano) y la convierte en filas [etiqueta, valor] para el marco
+   * inferior del plano. Devuelve [] si no está disponible (CORS/red/timeout).
+   */
+  private async obtenerInfoPublica(codigo: string): Promise<[string, string][]> {
+    const html = await this.descargarPaginaDataGIS('WEBFILES/LotePublico.asp', codigo);
+    if (!html) return [];
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const limpiar = (texto: string | null | undefined): string =>
+      (texto ?? '').replace(/\s+/g, ' ').trim();
+    const filas: [string, string][] = [];
+
+    const agregarPar = (clave: string, valor: string): void => {
+      const k = limpiar(clave).replace(/:$/, '');
+      const v = limpiar(valor);
+      // Descartamos rótulos de navegación/encabezado y valores vacíos
+      if (!k || !v) return;
+      if (/^(ficha|ver fotos|consultas|informacion de lote)/i.test(k)) return;
+      if (/^\d+$/.test(k)) return;
+      filas.push([k, v]);
+    };
+
+    // 1) Tablas HTML: primera celda = etiqueta, resto concatenado = valor
+    doc.querySelectorAll('tr').forEach(tr => {
+      const celdas = Array.from(tr.querySelectorAll('td,th')).map(td => limpiar(td.textContent));
+      if (celdas.length >= 2) {
+        const valor = celdas.slice(1).filter(Boolean).join(' ');
+        agregarPar(celdas[0], valor);
+      }
+    });
+
+    // 2) Bloques de texto con pares "Etiqueta: valor" (formato real de la ficha)
+    if (filas.length === 0) {
+      doc.querySelectorAll('td, p, div, b, strong, font, li').forEach(el => {
+        // Solo nodos hoja para no duplicar el texto de los contenedores
+        if (el.querySelector('td, p, div, b, strong, li')) return;
+        const texto = limpiar(el.textContent);
+        if (!texto || texto.length > 200) return;
+        // Un mismo nodo puede traer varios campos: "N1: v1 - N2: v2"
+        const partes = texto.split(/\s+-\s+(?=[A-ZÁÉÍÓÚÑÜ][^:]{2,40}:)/);
+        for (const parte of partes) {
+          let m = /^([^:]{2,45}?)\s*:\s*(.+)$/.exec(parte);
+          if (m) {
+            agregarPar(m[1], m[2]);
+            continue;
+          }
+          // Campo sin dos puntos: "Urbanización URBANIZACION COUNTRY CLUB , ..."
+          m = /^(Urbanizaci[oó]n)\s+(\S.*)$/i.exec(parte);
+          if (m) agregarPar(m[1], m[2]);
+        }
+      });
+    }
+
+    // Sin duplicados consecutivos (tablas anidadas/contenedores) y tope de 14
+    const unicas: [string, string][] = [];
+    for (const fila of filas) {
+      const previa = unicas[unicas.length - 1];
+      if (!previa || previa[0].toLowerCase() !== fila[0].toLowerCase() || previa[1] !== fila[1]) {
+        unicas.push(fila);
+      }
+      if (unicas.length >= 14) break;
+    }
+    console.info(`[Imprimir] Ficha pública (${codigo}): ${unicas.length} campos`);
+    return unicas;
+  }
+
+  /**
+   * Descarga una página ASP del servidor DataGIS probando primero la ruta
+   * relativa (proxy de desarrollo / same-origin en producción) y luego la URL
+   * absoluta. Decodifica correctamente ISO-8859-1 (codificación del ASP).
+   * Devuelve el HTML o null si ambos intentos fallan.
+   */
+  private async descargarPaginaDataGIS(ruta: string, codigo: string): Promise<string | null> {
+    const candidatas = [
+      `/DataGIS_WGS84/${ruta}`,
+      `http://192.168.41.160/DataGIS_WGS84/${ruta}`,
+    ];
+    for (const base of candidatas) {
+      try {
+        const controlador = new AbortController();
+        const timeout = setTimeout(() => controlador.abort(), 6000);
+        const respuesta = await fetch(`${base}?codigo_i=${encodeURIComponent(codigo)}`, {
+          signal: controlador.signal,
+        });
+        clearTimeout(timeout);
+        if (!respuesta.ok) continue;
+
+        // El ASP responde ISO-8859-1: decodificamos según cabecera/meta
+        const buffer = await respuesta.arrayBuffer();
+        let html = new TextDecoder('utf-8').decode(buffer);
+        const tipo = respuesta.headers.get('content-type') ?? '';
+        if (
+          /iso-8859-1|windows-1252|latin[-_]?1/i.test(tipo) ||
+          /<meta[^>]+charset=["']?(iso-8859-1|windows-1252)/i.test(html.slice(0, 900))
+        ) {
+          html = new TextDecoder('windows-1252').decode(buffer);
+        }
+        return html;
+      } catch {
+        // Intentamos la siguiente ruta (sin proxy o bloqueo CORS)
+      }
+    }
+    console.warn('[Imprimir] No se pudo descargar:', ruta, codigo);
+    return null;
+  }
+
+  /**
    * Intenta obtener la fotografía del lote desde la ficha ASP.
    * Devuelve null si no está disponible (CORS, red o sin imágenes),
    * en cuyo caso el PDF incluirá un enlace a la ficha en línea.
@@ -262,12 +374,8 @@ export class Imprimir {
   private async obtenerFotoLote(codigo: string): Promise<string | null> {
     const urlFicha = this.fichaUrl() ?? `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigo}`;
     try {
-      const controlador = new AbortController();
-      const timeout = setTimeout(() => controlador.abort(), 6000);
-      const respuesta = await fetch(urlFicha, { signal: controlador.signal });
-      clearTimeout(timeout);
-      if (!respuesta.ok) return null;
-      const html = await respuesta.text();
+      const html = await this.descargarPaginaDataGIS('WEBFILES/informacion.asp', codigo);
+      if (!html) return null;
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const imagenes = Array.from(doc.querySelectorAll('img'))
         .map(img => img.getAttribute('src') || '')
@@ -346,33 +454,41 @@ export class Imprimir {
       const alto = pdf.internal.pageSize.getHeight();
       const margen = 10;
 
-      // --- Geometría del cuerpo (se calcula antes de capturar para adaptar
-      //     el lienzo del mapa al aspecto exacto del recuadro del plano) ---
-      const yLinea = margen + 16;          // línea separadora (se dibuja más abajo)
-      const areaY = yLinea + 4;
-      const areaW = ancho - margen * 2;
-      const areaH = alto - areaY - 7;      // pie compacto
+      // --- Geometría según norma ISO 5457 ---
+      // Márgenes de 10 mm por lado ⇒ área útil: A4V 190×277 mm · A3H 400×277 mm
+      const gapBloques = 3;
+      const yLinea = margen + 15;          // línea separadora del encabezado
+      const areaY = yLinea + 3;
+      const areaW = ancho - margen * 2;    // 190 (A4 vertical) · 400 (A3 horizontal)
+      const areaH = (alto - margen) - areaY - 9; // pie reservado DENTRO del área útil
 
       const filas = this.filasTabla();
       const tieneTabla = filas.length > 0 && !!this.mapService.loteSeleccionadoCodigo();
+      const filasInfo = tieneTabla ? this.infoPublicaFilas() : [];
       const foto = this.fotoLote();
 
-      // Recuadro del mapa: con lote ocupa TODO el alto del cuerpo (panel izquierdo),
-      // duplicando el área útil visible respecto al layout anterior apilado.
+      // Mapa a TODO el ancho útil; en la parte inferior, tres marcos:
+      // fotografía · datos cualitativos · ficha pública (LotePublico.asp)
       let mapaX = margen, mapaY = areaY, mapaW = areaW, mapaH = areaH;
-      let tablaX = 0, tablaW = 0, tablaH = 0;
-      let fotoX = 0, fotoY = 0, fotoW = 0, fotoH = 0;
+      let yInferior = areaY;
+      let altoInferior = 0;
+      let fotoX = 0, fotoW = 0;
+      let tablaX = 0, tablaW = 0;
+      let infoX = 0, infoW = 0;
       if (tieneTabla) {
-        const gapPanel = 3;
-        const colDerecha = 62;
-        mapaW = areaW - colDerecha - gapPanel;
-        tablaX = margen + mapaW + gapPanel;
-        tablaW = colDerecha;
-        fotoW = colDerecha;
-        fotoH = Math.min(52, Math.round(areaH * 0.22));
-        fotoX = tablaX;
-        fotoY = areaY + areaH - fotoH;
-        tablaH = areaH - fotoH - gapPanel;
+        const necesarias = Math.max(filas.length, filasInfo.length) * 5.2 + 10;
+        altoInferior = Math.min(Math.max(necesarias, 48), 86);
+        mapaH = areaH - altoInferior - gapBloques;
+        yInferior = mapaY + mapaH + gapBloques;
+
+        fotoX = margen;
+        fotoW = 32;
+
+        tablaX = fotoX + fotoW + gapBloques;
+        tablaW = Math.min(92, Math.round(areaW * 0.36));
+
+        infoX = tablaX + tablaW + gapBloques;
+        infoW = margen + areaW - infoX; // hasta el borde derecho útil
       }
 
       // Red de seguridad: garantiza resaltado rojo + medidas antes de capturar
@@ -381,28 +497,26 @@ export class Imprimir {
       }
       const imagenMapa = await this.capturarMapa({ w: mapaW, h: mapaH });
 
-      // --- Logo institucional ---
+      // --- Encabezado (contenido dentro de los márgenes ISO de 10 mm) ---
       try {
         const logo = await this.cargarImagen(LOGO_SRC);
-        const logoAlto = 16;
+        const logoAlto = 12;
         const logoAncho = (logo.width / logo.height) * logoAlto;
-        pdf.addImage(logo, 'PNG', margen, margen - 4, logoAncho, logoAlto);
+        pdf.addImage(logo, 'PNG', margen, margen, logoAncho, logoAlto);
       } catch {
         // Si el logo no está disponible continuamos sin él
       }
 
-      // --- Título centrado ---
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(14);
+      pdf.setFontSize(13);
       pdf.setTextColor(...COLOR_INSTITUCIONAL);
-      pdf.text(this.titulo(), ancho / 2, margen + 3, { align: 'center' });
+      pdf.text(this.titulo(), ancho / 2, margen + 3.5, { align: 'center' });
 
-      // --- Subtítulo institucional y fecha/hora ---
       pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8.5);
+      pdf.setFontSize(8);
       pdf.setTextColor(90, 90, 90);
-      pdf.text('Municipalidad de San Isidro · Visor Cartográfico Catastral', ancho / 2, margen + 8.5, { align: 'center' });
-      pdf.text(`Fecha de impresión: ${this.fechaHora()}   ·   Escala: ${this.etiquetaEscala()}`, ancho / 2, margen + 13, { align: 'center' });
+      pdf.text('Municipalidad de San Isidro · Visor Cartográfico Catastral', ancho / 2, margen + 8, { align: 'center' });
+      pdf.text(`Fecha de impresión: ${this.fechaHora()}   ·   Escala: ${this.etiquetaEscala()}`, ancho / 2, margen + 12, { align: 'center' });
 
       // --- Línea separadora ---
       pdf.setDrawColor(...COLOR_VERDE);
@@ -410,25 +524,47 @@ export class Imprimir {
       pdf.line(margen, yLinea, ancho - margen, yLinea);
 
       if (tieneTabla) {
-        // Panel izquierdo: mapa a alto completo del cuerpo (recuadro duplicado)
+        // Recuadro del mapa a todo el ancho útil (más ancho y con cuadrícula)
         this.dibujarMapa(pdf, imagenMapa, mapaX, mapaY, mapaW, mapaH);
-        // Barra de escala dentro del recuadro (abajo-izquierda)
         this.dibujarBarraEscala(pdf, mapaX, mapaY + mapaH, mapaW);
-        // Panel derecho: tabla cualitativa arriba y fotografía abajo
-        this.dibujarTabla(pdf, filas, tablaX, areaY, tablaW, tablaH);
-        this.dibujarFoto(pdf, foto, fotoX, fotoY, fotoW, fotoH);
+
+        // Marco inferior 1 · fotografía del lote
+        this.dibujarFoto(pdf, foto, fotoX, yInferior, fotoW, altoInferior);
+
+        // Marco inferior 2 · datos cualitativos (WFS)
+        this.dibujarTabla(pdf, filas, tablaX, yInferior, tablaW, altoInferior);
+
+        // Marco inferior 3 · ficha pública (LotePublico.asp)
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(7);
+        pdf.setTextColor(...COLOR_INSTITUCIONAL);
+        pdf.text('Información pública del lote', infoX, yInferior + 2.5);
+        if (filasInfo.length > 0) {
+          this.dibujarTabla(pdf, filasInfo, infoX, yInferior, infoW, altoInferior, '');
+        } else {
+          pdf.setFont('helvetica', 'italic');
+          pdf.setFontSize(6.8);
+          pdf.setTextColor(110, 110, 110);
+          pdf.text('Sin datos públicos disponibles.', infoX, yInferior + 11);
+          pdf.textWithLink(
+            'Ver ficha en línea',
+            infoX,
+            yInferior + 16,
+            { url: `http://192.168.41.160/DataGIS_WGS84/WEBFILES/LotePublico.asp?codigo_i=${this.mapService.loteSeleccionadoCodigo()}` },
+          );
+        }
       } else {
         // Sin lote: el mapa ocupa todo el cuerpo
         this.dibujarMapa(pdf, imagenMapa, mapaX, mapaY, mapaW, mapaH);
         this.dibujarBarraEscala(pdf, mapaX, mapaY + mapaH, mapaW);
       }
 
-      // --- Pie de página ---
+      // --- Pie de página (dentro del área útil ISO de 10 mm inferior) ---
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7.5);
       pdf.setTextColor(80, 80, 80);
-      pdf.text('Subgerencia de Planeamiento Urbano y Catastro', margen, alto - 5);
-      pdf.text(`Impreso: ${this.fechaHora()}`, ancho - margen, alto - 5, { align: 'right' });
+      pdf.text('Subgerencia de Planeamiento Urbano y Catastro', margen, alto - margen - 2);
+      pdf.text(`Impreso: ${this.fechaHora()}`, ancho - margen, alto - margen - 2, { align: 'right' });
 
       const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
       pdf.save(`${this.slug(this.titulo())}_${stamp}.pdf`);
@@ -506,15 +642,28 @@ export class Imprimir {
   /**
    * Dibuja la tabla cualitativa del lote con filas alternadas y bordes sutiles.
    */
-  private dibujarTabla(pdf: jsPDF, filas: [string, string][], x: number, y: number, w: number, h: number): void {
+  /**
+   * Dibuja una tabla de filas [etiqueta, valor] con encabezado configurable.
+   */
+  private dibujarTabla(
+    pdf: jsPDF,
+    filas: [string, string][],
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    titulo: string = 'Datos cualitativos del lote',
+  ): void {
     const rowH = Math.min(7, Math.max((h - 6) / filas.length, 4.5));
-    const colClave = w * 0.45; // columna de etiquetas más ancha (tabla en panel estrecho)
+    const colClave = w * 0.45; // columna de etiquetas más ancha (marcos estrechos)
     let cursorY = y + 5; // espacio para el título del bloque
 
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(7);
-    pdf.setTextColor(...COLOR_INSTITUCIONAL);
-    pdf.text('Datos cualitativos del lote', x, y + 2.5);
+    if (titulo) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7);
+      pdf.setTextColor(...COLOR_INSTITUCIONAL);
+      pdf.text(titulo, x, y + 2.5);
+    }
 
     filas.forEach((fila, i) => {
       if (i % 2 === 0) {

@@ -1480,13 +1480,21 @@ export class MapService {
   /** Capa de cuadrícula UTM-18S (eventual: visible solo durante la captura del plano) */
   private cuadriculaUtm?: VectorLayer<any>;
 
+  /** Opciones de espaciado (orientadas al papel) de la última activación */
+  private opcionesCuadricula?: { mmEntreLineas?: number; dpi?: number };
+
   /**
    * Activa la cuadrícula de coordenadas UTM zona 18S sobre el mapa.
-   * Las líneas se generan manualmente a múltiplos "agradables" de metros
-   * (1/2/5 × 10ⁿ) según el zoom actual, con etiquetas Este/Norte. Se usa de
-   * manera eventual al capturar el plano (PDF) y debe desactivarse después.
+   * Las líneas se generan a múltiplos "agradables" de metros (1/2/5 × 10ⁿ)
+   * con etiquetas Este/Norte. Debe invocarse cuando la vista ya tiene el
+   * tamaño y la resolución DEFINITIVOS de la impresión, y desactivarse tras
+   * la captura.
+   * @param opciones Espaciado orientado al PAPEL impreso:
+   *  - `mmEntreLineas`: separación objetivo entre líneas en mm de papel.
+   *  - `dpi`: resolución de la captura (px por pulgada de papel).
+   * Si se omite, se usa un espaciado pensado para pantalla (~130 px).
    */
-  activarCuadriculaUtm(): void {
+  activarCuadriculaUtm(opciones?: { mmEntreLineas?: number; dpi?: number }): void {
     const map = this._map();
     if (!map) return;
     if (!this.cuadriculaUtm) {
@@ -1497,6 +1505,7 @@ export class MapService {
       });
       map.addLayer(this.cuadriculaUtm);
     }
+    this.opcionesCuadricula = opciones;
     this.cuadriculaUtm.setVisible(true);
     this.actualizarCuadriculaUtm();
   }
@@ -1568,9 +1577,16 @@ export class MapService {
     const yMax = Math.max(esquinaMin[1], esquinaMax[1]);
     if (![xMin, xMax, yMin, yMax].every(Number.isFinite)) return;
 
-    // Paso de cuadrilla: una línea aprox. cada ~130 píxeles de pantalla
+    // Paso de cuadrilla orientado al PAPEL: con opciones de impresión, la
+    // separación objetivo son milímetros de papel convertidos a píxeles de
+    // captura; así, a cualquier escala (1/250…1/2000), las líneas quedan a un
+    // intervalo legible, siempre en metros redondos y coherentes con la barra
+    // de escala. Sin opciones se conserva el criterio de pantalla (~130 px).
     const resolucion = vista.getResolution() ?? 1;
-    let paso = this.numeroAgradableSuperior(resolucion * 130);
+    const mmEntreLineas = this.opcionesCuadricula?.mmEntreLineas;
+    const dpi = this.opcionesCuadricula?.dpi ?? 150;
+    const pixelesObjetivo = mmEntreLineas ? (mmEntreLineas * dpi) / 25.4 : 130;
+    let paso = this.numeroAgradableSuperior(resolucion * pixelesObjetivo);
     // Seguridad #1: valores patológicos (NaN/Infinity) de la resolución o de
     // la extensión durante la impresión invalidan la cuadrícula completa y
     // derivaban en "RangeError: Invalid array length".

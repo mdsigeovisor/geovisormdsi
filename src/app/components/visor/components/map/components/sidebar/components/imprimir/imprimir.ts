@@ -108,15 +108,6 @@ export class Imprimir {
 
     try {
       console.time('[Imprimir] captura');
-      // Cuadrícula UTM-18S eventual (solo durante la captura). Es decorativa:
-      // un fallo en su generación (p. ej. RangeError con vistas patológicas
-      // tras el redimensionado) NUNCA debe abortar la toma del mapa ni la
-      // generación del PDF.
-      try {
-        this.mapService.activarCuadriculaUtm();
-      } catch (errCuadricula) {
-        console.warn('[Imprimir] Cuadrícula UTM omitida:', errCuadricula);
-      }
 
       // Adaptamos el lienzo del mapa al aspecto del recuadro del plano
       const sizeActual = olMap.getSize();
@@ -132,6 +123,17 @@ export class Imprimir {
         await this.prepararVista(cajaMm.w);
       } else {
         await new Promise(res => setTimeout(res, 120));
+      }
+
+      // Cuadrícula UTM-18S eventual: se genera DESPUÉS de fijar tamaño y
+      // encuadre definitivos, para que el espaciado derive de la resolución
+      // real de impresión (escala 1/250…1/2000) y las líneas cubran
+      // exactamente el recuadro del plano. Es decorativa: un fallo en su
+      // generación NUNCA debe abortar el PDF.
+      try {
+        this.mapService.activarCuadriculaUtm({ mmEntreLineas: 25, dpi });
+      } catch (errCuadricula) {
+        console.warn('[Imprimir] Cuadrícula UTM omitida:', errCuadricula);
       }
 
       // Esperamos a que terminen de pintarse todas las capas

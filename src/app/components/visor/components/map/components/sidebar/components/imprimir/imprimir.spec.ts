@@ -110,4 +110,18 @@ describe('Imprimir', () => {
     sut.escala.set('auto');
     expect(sut.etiquetaEscala()).toBe('Automática');
   });
+
+  it('muestra el spinner de proceso mientras genera y lo oculta al terminar', () => {
+    const sut = component as unknown as { generando: { set(v: boolean): void } };
+
+    sut.generando.set(true);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.msi-print-spinner-overlay')).toBeTruthy();
+    expect(el.querySelector('.msi-print-spinner-overlay app-spinner')).toBeTruthy();
+
+    sut.generando.set(false);
+    fixture.detectChanges();
+    expect(el.querySelector('.msi-print-spinner-overlay')).toBeFalsy();
+  });
 });

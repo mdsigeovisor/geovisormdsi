@@ -1,3 +1,18 @@
+<!-- Overlay de proceso: bloquea la interfaz y muestra el avance mientras se
+     captura el mapa y se genera el PDF o se prepara la impresión -->
+@if (generando()) {
+  <div class="msi-print-spinner-overlay" role="status" aria-live="polite">
+    <div class="msi-print-spinner-card">
+      <app-spinner size="h-12 w-12" color="text-primary" />
+      <p class="msi-print-spinner-msg">{{ mensajeProceso() }}</p>
+      <p class="msi-print-spinner-sub">
+        Capturando el mapa con su cuadrícula, medidas y ficha del lote.<br />
+        Esta ventana se cerrará automáticamente.
+      </p>
+    </div>
+  </div>
+}
+
 <div class="p-5 font-sans">
   <!-- Encabezado del panel -->
   <div class="border-b border-gray-200 pb-3 mb-4">

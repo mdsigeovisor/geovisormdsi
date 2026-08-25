@@ -1,6 +1,7 @@
 import { Component, HostListener, signal, inject, effect, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Spinner } from '@app/animations/spinner/spinner';
 import { jsPDF } from 'jspdf';
 import { firstValueFrom } from 'rxjs';
 import { GeoJSON, getCenter, OlMap } from '@app/modules/openlayers.module';
@@ -24,7 +25,7 @@ const COLOR_VERDE: [number, number, number] = [70, 87, 15];         // #46570f
 @Component({
   selector: 'app-imprimir',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, Spinner],
   templateUrl: './imprimir.html',
   styleUrl: './imprimir.css',
   // Necesario para que las reglas @media print afecten a todo el documento
@@ -41,6 +42,8 @@ export class Imprimir {
   formato = signal<FormatoPapel>('a4');
   /** Indica si se está generando el PDF o preparando la impresión */
   generando = signal(false);
+  /** Texto principal del spinner de proceso (según la acción en curso) */
+  mensajeProceso = signal<string>('Generando PDF…');
   /** Mensaje de error para el usuario */
   error = signal<string | null>(null);
   /** Data URL del mapa capturado para la vista de impresora */
@@ -609,6 +612,7 @@ export class Imprimir {
    */
   async generarPdf(): Promise<void> {
     if (this.generando()) return;
+    this.mensajeProceso.set('Generando PDF…');
     this.generando.set(true);
     this.error.set(null);
     this.fechaHora.set(this.formatearFecha(new Date()));
@@ -777,6 +781,7 @@ export class Imprimir {
    */
   async enviarAImpresora(): Promise<void> {
     if (this.generando()) return;
+    this.mensajeProceso.set('Preparando impresión…');
     this.generando.set(true);
     this.error.set(null);
     this.fechaHora.set(this.formatearFecha(new Date()));

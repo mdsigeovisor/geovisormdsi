@@ -53,6 +53,18 @@ export class Imprimir {
   private mapaAltoPx = 1;
   /** Resolución de la última captura (metros reales por píxel) para la barra de escala */
   private resolucionCapturaMpx = 0;
+  /**
+   * Caché de la última captura válida. Si la segunda impresión usa el mismo
+   * lote/escala/formato/orientación/tamaño de recuadro, se reutiliza la imagen
+   * sin volver a manipular el mapa (evita congelamientos por reproceso).
+   */
+  private cacheCaptura?: {
+    clave: string;
+    imagen: string;
+    anchoPx: number;
+    altoPx: number;
+    resolucion: number;
+  };
   private estiloPagina?: HTMLStyleElement;
 
   /** Formatea una fecha como DD/MM/YYYY HH:mm:ss (es-PE) */
@@ -83,20 +95,24 @@ export class Imprimir {
     if (!olMap) return this.capturarMapaSimple();
 
     const dpi = 150;
-    const pxW = Math.max(360, Math.round((cajaMm.w / 25.4) * dpi));
-    const pxH = Math.max(360, Math.round((cajaMm.h / 25.4) * dpi));
+    // Tope de seguridad: nunca lienzos gigantes que bloqueen el hilo principal
+    const pxW = Math.min(2600, Math.max(360, Math.round((cajaMm.w / 25.4) * dpi)));
+    const pxH = Math.min(2600, Math.max(360, Math.round((cajaMm.h / 25.4) * dpi)));
 
-    const sizeOriginal = olMap.getSize()?.slice() as number[] | undefined;
     const view = olMap.getView();
     const centroOriginal = view.getCenter()?.slice() as number[] | undefined;
     const resolucionOriginal = view.getResolution() ?? undefined;
 
     try {
+      console.time('[Imprimir] captura');
       // Cuadrícula UTM-18S eventual (solo durante la captura)
       this.mapService.activarCuadriculaUtm();
 
       // Adaptamos el lienzo del mapa al aspecto del recuadro del plano
-      olMap.setSize([pxW, pxH]);
+      const sizeActual = olMap.getSize();
+      if (!sizeActual || sizeActual[0] !== pxW || sizeActual[1] !== pxH) {
+        olMap.setSize([pxW, pxH]);
+      }
       await new Promise(res => setTimeout(res, 80));
 
       // Encuadre según la escala elegida (usa el nuevo ancho en píxeles)
@@ -119,17 +135,19 @@ export class Imprimir {
       return canvas.toDataURL('image/jpeg', 0.92);
     } finally {
       this.mapService.desactivarCuadriculaUtm();
-      // Restauramos tamaño y vista originales del visor
-      if (sizeOriginal && sizeOriginal.length === 2) {
-        olMap.setSize(sizeOriginal);
-      } else {
-        olMap.updateSize();
+      // Cancelamos animaciones pendientes y devolvemos el visor a su estado
+      // original: el tamaño se recalcula DESDE el contenedor (setSize(undefined))
+      // para no arrastrar estados de resize inconsistentes entre impresiones.
+      try {
+        view.cancelAnimations();
+        if (centroOriginal) view.setCenter(centroOriginal);
+        if (resolucionOriginal) view.setResolution(resolucionOriginal);
+      } catch {
+        // La vista pudo cambiar; seguimos con la restauración del lienzo
       }
-      if (centroOriginal && resolucionOriginal) {
-        view.setCenter(centroOriginal);
-        view.setResolution(resolucionOriginal);
-      }
-      await new Promise(res => setTimeout(res, 60));
+      olMap.setSize(undefined);
+      olMap.updateSize();
+      console.timeEnd('[Imprimir] captura');
     }
   }
 
@@ -631,7 +649,34 @@ export class Imprimir {
       if (this.mapService.loteSeleccionadoCodigo()) {
         this.mapService.asegurarResaltadoLoteSeleccionado();
       }
-      const imagenMapa = await this.capturarMapa({ w: mapaW, h: mapaH });
+
+      // Caché: la 2ª impresión con el mismo contexto reutiliza la captura
+      const claveCaptura = [
+        this.mapService.loteSeleccionadoCodigo() ?? 'sin-lote',
+        this.escala(),
+        this.formato(),
+        this.orientacion(),
+        Math.round(mapaW),
+        Math.round(mapaH),
+      ].join('|');
+
+      let imagenMapa: string;
+      if (this.cacheCaptura && this.cacheCaptura.clave === claveCaptura) {
+        console.info('[Imprimir] Reutilizando captura en caché');
+        imagenMapa = this.cacheCaptura.imagen;
+        this.mapaAnchoPx = this.cacheCaptura.anchoPx;
+        this.mapaAltoPx = this.cacheCaptura.altoPx;
+        this.resolucionCapturaMpx = this.cacheCaptura.resolucion;
+      } else {
+        imagenMapa = await this.capturarMapa({ w: mapaW, h: mapaH });
+        this.cacheCaptura = {
+          clave: claveCaptura,
+          imagen: imagenMapa,
+          anchoPx: this.mapaAnchoPx,
+          altoPx: this.mapaAltoPx,
+          resolucion: this.resolucionCapturaMpx,
+        };
+      }
 
       // --- Encabezado (contenido dentro de los márgenes ISO de 10 mm) ---
       try {

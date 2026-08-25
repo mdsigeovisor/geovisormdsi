@@ -1565,47 +1565,62 @@ export class MapService {
 
     // Paso de cuadrilla: una línea aprox. cada ~130 píxeles de pantalla
     const resolucion = vista.getResolution() ?? 1;
-    const paso = this.numeroAgradableSuperior(resolucion * 130);
+    let paso = this.numeroAgradableSuperior(resolucion * 130);
+    // Seguridad: nunca más de ~120 líneas por eje (evita bucles pesados si la
+    // resolución o la extensión toman valores patológicos entre impresiones)
+    while ((yMax - yMin) / paso > 120 || (xMax - xMin) / paso > 120) {
+      paso *= 2;
+    }
     const muestras = 9; // puntos por línea para seguir la curvatura
 
     const aVista = (coordenadaUtm: number[]): number[] =>
       transform(coordenadaUtm, 'EPSG:32718', proyeccionVista);
 
-    const agregarLineas = (
-      inicioFijo: number,
-      finVariable: number,
-      esVertical: boolean,
-    ): void => {
-      const desde = Math.ceil(Math.min(inicioFijo, finVariable) / paso) * paso;
-      const hasta = Math.max(inicioFijo, finVariable);
-      for (let valor = desde; valor <= hasta + 1e-6; valor += paso) {
-        const coordenadas: number[] = [];
-        let etiquetaPuntoUtm: number[] | undefined;
-        for (let i = 0; i < muestras; i++) {
-          const fraccion = i / (muestras - 1);
-          const variable = yMin + fraccion * (yMax - yMin);
-          const puntoUtm = esVertical ? [valor, variable] : [variable, valor];
-          coordenadas.push(...aVista(puntoUtm));
-          if (i === 0) etiquetaPuntoUtm = puntoUtm;
-        }
-        source.addFeature(new Feature(new LineString(coordenadas)));
-        if (etiquetaPuntoUtm) {
-          const desplazamientoX = (xMax - xMin) * 0.012;
-          const desplazamientoY = (yMax - yMin) * 0.018;
-          const puntoEtiqueta = esVertical
-            ? aVista([valor + desplazamientoX, yMax - desplazamientoY])
-            : aVista([xMin + desplazamientoX, valor + desplazamientoY]);
-          const etiqueta = new Feature(new Point(puntoEtiqueta));
-          etiqueta.set('etiqueta', `${Math.round(valor)} ${esVertical ? 'E' : 'N'}`);
-          source.addFeature(etiqueta);
-        }
-        if (!isFinite(valor + paso)) break;
-      }
-    };
+    const desplazamientoX = (xMax - xMin) * 0.012;
+    const desplazamientoY = (yMax - yMin) * 0.018;
 
+    // Regeneramos la cuadrícula desde cero en cada activación
     source.clear();
-    agregarLineas(yMin, xMax, false); // Horizontales: valores Norte constantes
-    agregarLineas(xMin, xMax, true);  // Verticales: valores Este constantes
+
+    // Verticales: Este constante, el Norte recorre [yMin..yMax]
+    for (
+      let este = Math.ceil(xMin / paso) * paso;
+      este <= xMax + 1e-6;
+      este += paso
+    ) {
+      const coordenadas: number[] = [];
+      for (let i = 0; i < muestras; i++) {
+        const norte = yMin + ((yMax - yMin) * i) / (muestras - 1);
+        coordenadas.push(...aVista([este, norte]));
+      }
+      source.addFeature(new Feature(new LineString(coordenadas)));
+
+      const etiqueta = new Feature(
+        new Point(aVista([este + desplazamientoX, yMax - desplazamientoY])),
+      );
+      etiqueta.set('etiqueta', `${Math.round(este)} E`);
+      source.addFeature(etiqueta);
+    }
+
+    // Horizontales: Norte constante, el Este recorre [xMin..xMax]
+    for (
+      let norte = Math.ceil(yMin / paso) * paso;
+      norte <= yMax + 1e-6;
+      norte += paso
+    ) {
+      const coordenadas: number[] = [];
+      for (let i = 0; i < muestras; i++) {
+        const este = xMin + ((xMax - xMin) * i) / (muestras - 1);
+        coordenadas.push(...aVista([este, norte]));
+      }
+      source.addFeature(new Feature(new LineString(coordenadas)));
+
+      const etiqueta = new Feature(
+        new Point(aVista([xMin + desplazamientoX, norte + desplazamientoY])),
+      );
+      etiqueta.set('etiqueta', `${Math.round(norte)} N`);
+      source.addFeature(etiqueta);
+    }
   }
 
   /**

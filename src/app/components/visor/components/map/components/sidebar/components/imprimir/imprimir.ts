@@ -35,7 +35,7 @@ export class Imprimir {
   readonly mapService = inject(MapService);
 
   /** Título editable que se estampará en el plano */
-  titulo = signal('Plano Catastral - Municipalidad de San Isidro');
+  titulo = signal('Plano de Recorte - Municipalidad de San Isidro');
   /** Orientación del papel */
   orientacion = signal<Orientacion>('vertical');
   /** Tamaño de papel */

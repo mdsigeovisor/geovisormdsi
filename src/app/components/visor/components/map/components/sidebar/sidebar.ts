@@ -45,7 +45,7 @@ export class Sidebar  {
     { id: 'coordenadas', icon: 'bi bi-geo', label: 'Busqueda por Coordenadas'},
     { id: 'print', icon: 'bi-printer', label: 'Imprimir'},    
     { id: 'downloads', icon: 'bi-download', label: 'Descargas'},
-    { id: 'about', icon: 'bi-info-circle', label: 'Acerca de'},
+    //{ id: 'about', icon: 'bi-info-circle', label: 'Acerca de'},
   ];
   /** Obtiene el ID de la primera herramienta activa del Set */
   get activeTab(): string | undefined {

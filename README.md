@@ -68,7 +68,7 @@ graph TB
   %% COMPONENTES
   %% =========================
   subgraph "Cliente Web"
-    FRONT[GeoVisor-MDSI]
+    FRONT[Geovisor-MDSI]
   end 
 
   subgraph "Auth"

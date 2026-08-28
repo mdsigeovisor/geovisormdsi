@@ -11,11 +11,11 @@ import { MapService } from '@app/services/map.service';
  * "Ver Términos y Condiciones" del panel "Acerca de".
  */
 @Component({
-  selector: 'app-terms-modal',
+  selector: 'app-terminos',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './terms-modal.html',
-  styleUrl: './terms-modal.css',
+  templateUrl: './terminos.html',
+  styleUrl: './terminos.css',
 })
 export class TermsModal {
   public readonly mapService = inject(MapService);

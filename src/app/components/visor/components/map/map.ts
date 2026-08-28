@@ -11,7 +11,7 @@ import { Funciones } from './components/functions/functions';
 import { Spinner } from '../../../../animations/spinner/spinner';
 import { Login } from '../../../auth/components/login/login'; // Import Login component
 import { CoordinateInfo } from './components/coordinate-info/coordinate-info';
-import { TermsModal } from './components/terms-modal/terms-modal';
+import { TermsModal } from './components/terminos/terminos';
 /**
  * Componente principal de la interfaz del mapa.
  * Coordina la visualización de la barra de herramientas, barra lateral y los controles

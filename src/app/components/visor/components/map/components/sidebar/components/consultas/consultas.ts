@@ -18,7 +18,7 @@ export class Consultas {
   Close = output<void>();
   SearchResult = output<SearchResult>();
   /** Control de pestañas */
-  activeTab: 'catastral' | 'predial' | 'direccion' | 'habilitacion' | 'titular' | 'cuc' | 'ciudadano' | 'denominacion' | 'parque' = 'catastral';
+  activeTab: 'catastral' | 'predial' | 'direccion' | 'habilitacion' | 'titular' | 'cuc' | 'denominacion' | 'parque' = 'catastral';
   /** Campos para búsqueda por CUC */
   cuc = '';
   /** Campos para búsqueda por Código Predial */
@@ -59,15 +59,7 @@ export class Consultas {
   /** Estados de la búsqueda */
   loading = signal(false);
   searchError = signal<string | null>(null);
-  /** Campos para búsqueda por Ciudadano */
-  searchType: 'dni' | 'nombre' = 'dni';
-  dni = '';
-  nombreCiudadano = '';
-  showCitizenResults = false;
-  selectedCitizen = '';
-  citizenProperties: SearchResult[] = [];
-  /** Datos simulados para la demostración */
- 
+
   constructor() {
     this.nombreViaSubject.pipe(
       debounceTime(300), // Espera 300ms después de la última pulsación
@@ -148,12 +140,6 @@ export class Consultas {
     this.codigoCatastral = formatted;
   }
 
-  /** Asegura que el DNI sea solo numérico y de 8 dígitos */
-  handleDniChange(value: string) {
-    this.dni = value.replace(/\D/g, "").slice(0, 8);
-  }
-
-
   /** Limpia los campos de la pestaña activa */
   handleClear() {
     this.searchError.set(null);
@@ -175,11 +161,7 @@ export class Consultas {
       titular: () => this.codigoTitular = '',
       denominacion: () => this.denominacionPredio = '',
       parque: () => this.nombreParque = '',
-      catastral: () => this.codigoCatastral = '',
-      ciudadano: () => {
-        this.dni = '';
-        this.nombreCiudadano = '';
-      }
+      catastral: () => this.codigoCatastral = '',      
     };
 
     if (clearActions[this.activeTab]) {
@@ -207,11 +189,7 @@ export class Consultas {
       case 'parque':
         return this.nombreParque.trim().length === 0;
       case 'catastral':
-        return this.codigoCatastral.length < 10; // 8 dígitos + 2 guiones
-      case 'ciudadano':
-        return this.searchType === 'dni'
-          ? this.dni.length < 8
-          : this.nombreCiudadano.trim().length < 3;
+        return this.codigoCatastral.length < 10; // 8 dígitos + 2 guiones      
       default:
         return true;
     }
@@ -501,43 +479,7 @@ export class Consultas {
             this.loading.set(false);
           }
       });
-    }  else if (this.activeTab === 'ciudadano') {
-      this.loading.set(true);
-      this.searchError.set(null);
-      const query = this.searchType === 'dni' ? this.dni : this.nombreCiudadano;
-
-      this.mapService.searchPropertiesByCitizen(this.searchType, query).pipe(take(1)).subscribe({
-        next: (features) => {
-          this.loading.set(false);
-          if (features && features.length > 0) {
-            this.citizenProperties = features.map(feature => {
-              const props = feature.properties as any;
-              return {
-                codigoCatastral: String(props['id_lote'] || 'N/A').trim(),
-                direccion: props['direccion'] ?? props['ubicacion'] ?? "Ubicación no disponible",
-                propietario: props['propietario'] ?? "Información reservada",
-                area: props['area_lote'] ? `${props['area_lote']} m²` : "No disponible",
-                zonificacion: props['zonificacion'] ?? "No disponible",
-                fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80", // Mantener o adaptar
-                numeroPisos: props['pisos'] ?? 1,
-                geometry: feature.geometry
-              };
-            });
-            this.selectedCitizen = this.citizenProperties[0]?.propietario || (this.searchType === 'dni' ? `DNI ${this.dni}`: this.nombreCiudadano);
-            this.showCitizenResults = true;
-          } else {
-            this.searchError.set('No se encontraron propiedades para el ciudadano especificado.');
-            this.showCitizenResults = false;
-            this.citizenProperties = [];
-          }
-        },
-        error: (err) => {
-          console.error('Error en la búsqueda por ciudadano:', err);
-          this.searchError.set('Error de conexión con el servicio de búsqueda.');
-          this.loading.set(false);
-        }
-      });
-    }
+    }  
   }
 
   selectParqueSuggestion(parque: GeoJSONFeature) {
@@ -547,15 +489,6 @@ export class Consultas {
     this.mapService.fitToGeometry(parque.geometry, 'EPSG:32718', undefined, true);
     this.Close.emit(); // Cerramos el panel para una mejor visualización.
     this.parqueSuggestions = [];
-  }
-
-  /** Selecciona un predio de la lista del ciudadano */
-  handleSelectProperty(property: SearchResult) {
-    if (property.geometry) {
-      this.mapService.fitToGeometry(property.geometry, 'EPSG:32718', undefined, true);
-    }
-    this.emitResult(property);
-    this.showCitizenResults = false;
   }
 
   private emitResult(result: SearchResult) {

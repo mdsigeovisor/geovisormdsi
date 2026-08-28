@@ -42,6 +42,9 @@ export class MapComponent {
 
   public showLoginModal = signal(false);
 
+  /** Conjunto de ids de ventanas de lote cuyo iframe ya terminó de cargar (para ocultar el spinner). */
+  private readonly loteWindowsLoaded = signal<Set<string>>(new Set());
+
   public readonly mapService = inject(MapService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
@@ -146,6 +149,27 @@ export class MapComponent {
    */
   closeLoteWindow(id: string): void {
     this.mapService.closeLoteWindow(id);
+    this.loteWindowsLoaded.update(s => { const n = new Set(s); n.delete(id); return n; });
+  }
+
+  /**
+   * Indica si el iframe de la ventana de lote indicada ya terminó de cargar.
+   * @param id Identificador de la ventana de lote.
+   */
+  isLoteWindowLoaded(id: string): boolean {
+    return this.loteWindowsLoaded().has(id);
+  }
+
+  /**
+   * Marca como cargada la ventana de lote indicada (disparado por el evento
+   * load del iframe) para ocultar el indicador de carga.
+   * @param id Identificador de la ventana de lote.
+   */
+  onLoteIframeLoad(id: string): void {
+    // Si ya estaba registrado, no reescribimos la signal: evita disparar
+    // ciclos de detección de cambios innecesarios con cada recarga.
+    if (this.loteWindowsLoaded().has(id)) return;
+    this.loteWindowsLoaded.update(s => { const n = new Set(s); n.add(id); return n; });
   }
 
   /**
@@ -197,12 +221,28 @@ export class MapComponent {
   }
 
   /**
-   * Sanitiza la URL para que sea segura de usar en un iframe.
+   * Caché de URLs ya sanitizadas, indexada por la URL de origen.
+   * CRÍTICO: `bypassSecurityTrustResourceUrl` devuelve un objeto nuevo en cada
+   * llamada; si el binding [src] del iframe recibiera una instancia distinta en
+   * cada ciclo de detección de cambios, Angular reescribiría el atributo `src`
+   * y el iframe se recargaría indefinidamente (bucle de peticiones que congela
+   * la interfaz y satura la red).
+   */
+  private readonly safeUrlCache = new Map<string, SafeResourceUrl>();
+
+  /**
+   * Sanitiza la URL para que sea segura de usar en un iframe, reutilizando el
+   * resultado si la URL ya fue sanitizada (binding estable entre ciclos de CD).
    * @param url La URL a sanitizar.
    * @returns Una URL segura para recursos.
    */
   getSafeUrl(url: string): SafeResourceUrl {
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    let safe = this.safeUrlCache.get(url);
+    if (!safe) {
+      safe = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      this.safeUrlCache.set(url, safe);
+    }
+    return safe;
   }
 
   /**

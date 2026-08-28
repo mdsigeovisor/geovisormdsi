@@ -29,6 +29,7 @@ import {
   TERMS_ZOOM_DISTRICTO
 } from '../interfaces/mapas.config';
 import {
+  BaseLayer,
   Feature,
   Fill,
   fromLonLat,
@@ -36,9 +37,8 @@ import {
   getCenter,
   getDistance,
   ImageLayer,
-  Layer,
-  BaseLayer,
   ImageWMS,
+  Layer,
   LineString,
   OlMap,
   Overlay,
@@ -54,7 +54,7 @@ import {
   View,
   WKT,
   XYZ,
-} from '../modules/openlayers.module';
+} from '@app/modules/openlayers.module';
 
 export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
 /**
@@ -70,6 +70,14 @@ export interface LoteInfoWindow {
   x: number;
   /** Posición vertical (px) respecto al viewport */
   y: number;
+  /** Título de la ventana. Si no se define, usa "Información del Lote". */
+  title?: string;
+  /** Ancho de la ventana en px. Por defecto 700. */
+  width?: number;
+  /** Alto de la ventana en px. Por defecto 520. */
+  heightPx?: number;
+  /** Prioridad (z-index) de la ventana. Por defecto 1040. */
+  zIndex?: number;
 }
 /** Configuración de una capa consultable al hacer clic sobre el mapa. */
 interface ClickableLayerConfig {
@@ -657,25 +665,66 @@ export class MapService {
     });
   }
   /**
+   * Configuración por defecto (ficha pública) de las ventanas flotantes de lote.
+   * Centralizada aquí para que cualquier ventana se cree con estos valores
+   * y el componente pueda sobrescribirlos de forma opcional.
+   * `Required` garantiza que estas propiedades se traten como obligatorias
+   * (en `LoteInfoWindow` son opcionales) al leerlas, p. ej. al calcular posiciones.
+   */
+  private static readonly LOTE_WINDOW_PUBLICO: Readonly<Required<Pick<LoteInfoWindow, 'title' | 'width' | 'heightPx' | 'zIndex'>>> = {
+    title: 'Información del Lote',
+    // La ficha LotePublico.asp se maqueta con una tabla fija de 680px:
+    // 700px evita espacios laterales muertos sin cortar el contenido.
+    width: 685,
+    // El contenido de la ficha mide ≈ 480-500px de alto; un valor fijo en px
+    // es predecible en cualquier pantalla (720p: y máx. 232 + 520 = 752 < 768).
+    heightPx: 380,
+    zIndex: 1040,
+  };
+
+  /**
+   * Normaliza el identificador del lote: recorta espacios y, si se recibió una
+   * URL completa (p. ej. "…/LotePublico.asp?codigo_i=3107007010"), extrae el
+   * valor real del parámetro `codigo_i` para evitar URLs anidadas inválidas.
+   * @param valor Código catastral o URL que lo contiene.
+   */
+  private static normalizarCodigoLote(valor: string): string {
+    const texto = (valor ?? '').trim();
+    const coincidencia = texto.match(/[?&]codigo_i=([^&\s]+)/i);
+    return coincidencia ? decodeURIComponent(coincidencia[1]) : texto;
+  }
+
+  /**
    * Abre una nueva ventana flotante con la información del lote indicado,
    * o la trae al frente si ya se encuentra abierta. Las ventanas conviven
    * entre sí y no bloquean la interacción con el mapa.
-   * @param codigo Código catastral del lote (id_lote).
+   * @param codigo Código catastral del lote (id_lote). Se acepta también una
+   *               URL que contenga `codigo_i`; se extrae el código real.
+   * @param opciones Ajustes opcionales que sobrescriben los valores por defecto.
    */
-  openLoteInfoWindow(codigo: string): void {
-    const existente = this.loteInfoWindows().find(w => w.id === codigo);
+  openLoteInfoWindow(codigo: string, opciones?: Partial<Pick<LoteInfoWindow, 'title' | 'width' | 'heightPx' | 'zIndex'>>): void {
+    const codigoLote = MapService.normalizarCodigoLote(codigo);
+    if (!codigoLote) return;
+    const existente = this.loteInfoWindows().find(w => w.id === codigoLote);
     if (existente) {
-      this.bringLoteToFront(codigo);
+      this.bringLoteToFront(codigoLote);
       return;
     }
     const index = this.loteInfoWindows().length;
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
     const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
     // Escalonamos cada ventana nueva para que no queden exactamente superpuestas
-    const x = Math.min(96 + index * 36, Math.max(vw - 660, 20));
-    const y = Math.min(88 + index * 30, Math.max(vh - 240, 20));
-    const url = `${environment.dataGis.informacionUrl}?codigo_i=${codigo}`;
-    this.loteInfoWindows.update(wins => [...wins, { id: codigo, url, x, y }]);
+    const x = Math.min(96 + index * 36, Math.max(vw - MapService.LOTE_WINDOW_PUBLICO.width, 20));
+    const y = Math.min(88 + index * 30, Math.max(vh - MapService.LOTE_WINDOW_PUBLICO.heightPx - 16, 20));
+    const url = `${environment.dataGis.informacionUrl}?codigo_i=${encodeURIComponent(codigoLote)}`;
+    this.loteInfoWindows.update(wins => [...wins, {
+      id: codigoLote,
+      url,
+      x,
+      y,
+      ...MapService.LOTE_WINDOW_PUBLICO,
+      ...opciones,
+    }]);
   }
   /**
    * Cierra la ventana flotante del lote indicado.

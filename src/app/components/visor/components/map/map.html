@@ -25,8 +25,11 @@
      class="absolute left-16 bottom-6 z-[5] h-20 w-auto pointer-events-none select-none [filter:drop-shadow(0_0_12px_rgba(255,255,255,0.7))]" />
 <!-- Ventanas flotantes de información del lote (no bloquean el mapa; varias pueden estar abiertas) -->
 @for (win of mapService.loteInfoWindows(); track win.id) {
-<div class="fixed z-[1040] flex flex-col bg-white rounded-lg shadow-2xl border border-gray-300 w-[620px] max-w-[92vw] h-[70vh] animate-scale-in overflow-hidden"
+<div class="fixed flex flex-col bg-white rounded-lg shadow-2xl border border-gray-300 max-w-[92vw] animate-scale-in overflow-hidden"
      [style.left.px]="win.x" [style.top.px]="win.y"
+     [style.width.px]="win.width ?? 700"
+     [style.height.px]="win.heightPx ?? 520"
+     [style.z-index]="win.zIndex ?? 1040"
      (pointerdown)="focusLote(win)">
   <!-- Barra de título arrastrable -->
   <div class="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50 cursor-move select-none touch-none"
@@ -36,7 +39,7 @@
        (pointercancel)="endLoteDrag()">
     <h3 class="m-0 text-sm font-semibold text-gray-800 flex items-center gap-2">
       <i class="bi bi-building text-primary"></i>
-      <span>Información del Lote</span>
+      <span>{{ win.title || 'Información del Lote' }}</span>
       <span class="text-primary">{{ win.id }}</span>
     </h3>
     <button class="w-8 h-8 rounded-full flex items-center justify-center bg-transparent border-none text-2xl leading-none cursor-pointer transition-colors hover:bg-gray-200"
@@ -45,11 +48,14 @@
             title="Cerrar">&times;</button>
   </div>
   <div class="flex-grow p-0 overflow-hidden relative">
-    <!-- Indicador de carga para el iframe -->
+    <!-- Indicador de carga del iframe: se oculta cuando el iframe dispara 'load' -->
+    @if (!isLoteWindowLoaded(win.id)) {
     <div class="absolute inset-0 flex items-center justify-center bg-white/50">
       <app-spinner size="h-32 w-32" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
     </div>
-    <iframe class="relative w-full h-full border-0" [src]="getSafeUrl(win.url)" frameborder="0"></iframe>
+    }
+    <iframe class="relative w-full h-full border-0" [src]="getSafeUrl(win.url)" frameborder="0"
+            (load)="onLoteIframeLoad(win.id)"></iframe>
   </div>
 </div>
 }

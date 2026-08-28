@@ -1,7 +1,7 @@
 import { Component, signal, output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MapService } from '../../../.././../../../../services/map.service';
-import { LayerItemComponent } from './layer-item.component';
+import { MapService } from '@app/services/map.service';
+import { LayerItemComponent } from './layer-item';
 
 
 @Component({

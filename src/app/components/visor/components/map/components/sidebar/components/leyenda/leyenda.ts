@@ -1,6 +1,6 @@
 import { Component, inject, computed, signal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MapService } from '../../../../../../../../services/map.service';
+import { MapService } from '@app/services/map.service';
 
 @Component({
   selector: 'app-leyenda',

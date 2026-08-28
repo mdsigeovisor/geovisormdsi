@@ -1,10 +1,10 @@
 import { Component, Input, signal, output, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MapService } from '../../../../../../../../services/map.service';
-import { AuthService } from '../../../../../../../../services/auth.service';
+import { MapService } from '@app/services/map.service';
+import { AuthService } from '@app/services/auth.service';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
-import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '../../../../../../../../interfaces/geoLayers';
+import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '@app/interfaces/geoLayers';
 
 @Component({
   selector: 'app-consultas',

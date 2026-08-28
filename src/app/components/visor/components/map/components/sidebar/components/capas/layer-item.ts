@@ -1,7 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LayerItem } from '../../../../../../../../interfaces/geoLayers';
+import { LayerItem } from '@app/interfaces/geoLayers';
 
 @Component({
   selector: 'app-layer-item',

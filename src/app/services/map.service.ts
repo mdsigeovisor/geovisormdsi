@@ -171,6 +171,23 @@ export class MapService {
       };
     }));
   });
+  /**
+   * Sincroniza las ventanas de ficha de lote ya abiertas con el estado de
+   * sesión: al autenticarse se recargan con la ficha interna (informacion.asp)
+   * y al cerrar sesión vuelven a la pública (LotePublico.asp), de modo que una
+   * ficha con datos restringidos nunca quede abierta tras el logout.
+   */
+  private readonly syncLoteFichasWithAuth = effect(() => {
+    const autenticado = this.authService.isAuthenticated();
+    untracked(() => {
+      if (this.loteInfoWindows().length === 0) return;
+      this.loteInfoWindows.update(wins => wins.map(w => ({
+        ...w,
+        ...(autenticado ? MapService.LOTE_WINDOW_PRIVADO : MapService.LOTE_WINDOW_PUBLICO),
+        url: this.construirUrlFicha(w.id, autenticado),
+      })));
+    });
+  });
   /** Indica si el mapa ha sido inicializado y está listo para su uso. */
   isReady = signal(false);
   /** Coordenadas actuales del usuario (longitud, latitud). */
@@ -746,6 +763,31 @@ export class MapService {
   };
 
   /**
+   * Configuración de la ventana cuando hay sesión iniciada: muestra la ficha
+   * interna `informacion.asp` (endpoint `informacionPrivadaUrl`). Mientras no
+   * se verifique el layout real de ese ASP reutilizamos las dimensiones de la
+   * ficha pública (misma tabla base de WEBFILES).
+   */
+  private static readonly LOTE_WINDOW_PRIVADO: Readonly<Required<Pick<LoteInfoWindow, 'title' | 'width' | 'heightPx' | 'zIndex'>>> = {
+    ...MapService.LOTE_WINDOW_PUBLICO,
+    title: 'Información del Lote (Interna)',
+    width: 700,
+    heightPx: 850,
+    zIndex: 1040,
+  };
+
+  /**
+   * Construye la URL de la ficha del lote según el estado de sesión:
+   * autenticado → ficha interna (`informacion.asp`); público → `LotePublico.asp`.
+   */
+  private construirUrlFicha(codigoLote: string, autenticado: boolean): string {
+    const base = autenticado
+      ? environment.dataGis.informacionPrivadaUrl
+      : environment.dataGis.informacionUrl;
+    return `${base}?codigo_i=${encodeURIComponent(codigoLote)}`;
+  }
+
+  /**
    * Normaliza el identificador del lote: recorta espacios y, si se recibió una
    * URL completa (p. ej. "…/LotePublico.asp?codigo_i=3107007010"), extrae el
    * valor real del parámetro `codigo_i` para evitar URLs anidadas inválidas.
@@ -776,16 +818,19 @@ export class MapService {
     const index = this.loteInfoWindows().length;
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
     const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+    // Ficha según sesión: autenticado → informacion.asp (interna); público → LotePublico.asp
+    const autenticado = this.authService.isAuthenticated();
+    const configVentana = autenticado ? MapService.LOTE_WINDOW_PRIVADO : MapService.LOTE_WINDOW_PUBLICO;
     // Escalonamos cada ventana nueva para que no queden exactamente superpuestas
-    const x = Math.min(96 + index * 36, Math.max(vw - MapService.LOTE_WINDOW_PUBLICO.width, 20));
-    const y = Math.min(88 + index * 30, Math.max(vh - MapService.LOTE_WINDOW_PUBLICO.heightPx - 16, 20));
-    const url = `${environment.dataGis.informacionUrl}?codigo_i=${encodeURIComponent(codigoLote)}`;
+    const x = Math.min(96 + index * 36, Math.max(vw - configVentana.width, 20));
+    const y = Math.min(88 + index * 30, Math.max(vh - configVentana.heightPx - 16, 20));
+    const url = this.construirUrlFicha(codigoLote, autenticado);
     this.loteInfoWindows.update(wins => [...wins, {
       id: codigoLote,
       url,
       x,
       y,
-      ...MapService.LOTE_WINDOW_PUBLICO,
+      ...configVentana,
       ...opciones,
     }]);
   }

@@ -64,7 +64,7 @@ export const environment = {
     get catArbolesUrl(): string { return `${this.webFilesUrl}/Cat_Arboles_2014.asp`; },
     // --- Endpoints de fichas y fotografía (lote) ---
     get informacionUrl(): string { return `${this.webFilesUpperUrl}/LotePublico.asp`; },
-    //get informacionUrl(): string { return `${this.webFilesUpperUrl}/informacion.asp`; },
+    get informacionPrivadaUrl(): string { return `${this.webFilesUpperUrl}/informacion.asp`; },
     get lotePublicoUrl(): string { return `${this.webFilesUpperUrl}/LotePublico.asp`; },
     // --- Planos de levantamiento topográfico (TUSNE) ---
     get tusneUrlBase(): string {

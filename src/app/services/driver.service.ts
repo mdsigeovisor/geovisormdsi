@@ -48,6 +48,54 @@ export class DriverService {
         },
       },
       {
+        element: '#btn-zoom-in',
+        popover: {
+          side: 'right',
+          title: 'Acercar zoom',
+          description: 'Aumenta el nivel de zoom para ver más detalle del mapa.',
+        },
+      },
+      {
+        element: '#btn-zoom-out',
+        popover: {
+          side: 'right',
+          title: 'Alejar zoom',
+          description: 'Reduce el nivel de zoom para ver una área más amplia.',
+        },
+      },
+      {
+        element: '#btn-home',
+        popover: {
+          side: 'right',
+          title: 'Vista general',
+          description: 'Restablece la vista del mapa a la extensión inicial del distrito.',
+        },
+      },
+      {
+        element: '#btn-geolocalizacion',
+        popover: {
+          side: 'right',
+          title: 'Mi ubicación',
+          description: 'Centra el mapa en tu ubicación actual usando geolocalización del navegador.',
+        },
+      },
+      {
+        element: '#btn-cambio-base',
+        popover: {
+          side: 'right',
+          title: 'Cambiar mapa base',
+          description: 'Alterna entre las vistas satélite, calles y mapa en blanco.',
+        },
+      },
+      {
+        element: '#btn-herramientas',
+        popover: {
+          side: 'right',
+          title: 'Herramientas de dibujo',
+          description: 'Abre el panel de herramientas para medir distancias, áreas y dibujar sobre el mapa.',
+        },
+      },
+      {
         element: '#btn-sidebar-search',
         popover: {
           side: 'right',

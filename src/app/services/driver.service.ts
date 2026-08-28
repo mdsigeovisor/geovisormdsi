@@ -1,6 +1,5 @@
 import { Injectable, signal } from '@angular/core';
 import { driver, type Driver, type DriveStep } from 'driver.js';
-
 /**
  * Servicio singleton que envuelve la factory `driver()` de driver.js 1.8.x.
  *
@@ -16,9 +15,7 @@ import { driver, type Driver, type DriveStep } from 'driver.js';
 export class DriverService {
   /** Estado reactivo del tour (true mientras está activo). */
   readonly tourActivo = signal(false);
-
   private driverInstance: Driver | null = null;
-
   /**
    * Construye la lista de pasos del recorrido interactivo por el visor.
    * Cada paso ancla un `element` del DOM (que debe existir al iniciar el tour)
@@ -38,7 +35,7 @@ export class DriverService {
       {
         element: '#visor-title',
         popover: {
-          title: 'Título del visor',
+          title: 'Geovisor Catastral',
           description: 'Nombre principal del geovisor del ámbito catastral municipal.',
         },
       },
@@ -132,7 +129,6 @@ export class DriverService {
       },
     ];
   }
-
   /**
    * Inicia el recorrido interactivo. Si ya había un tour activo, se cierra
    * (`destroy()`) antes de iniciar uno nuevo.
@@ -144,7 +140,6 @@ export class DriverService {
       this.driverInstance = null;
     }
     this.tourActivo.set(false);
-
     // Factory `driver(config)` devuelve una instancia `Driver` con los hooks
     // declarados como opciones (driver.js 1.8).
     const drv = driver({
@@ -155,9 +150,13 @@ export class DriverService {
       animate: true,
       duration: 300,
       steps: this.steps(),
-      onHighlightStarted: () => this.tourActivo.set(true),
-      onDeselected: () => this.tourActivo.set(false),
-      onDestroyStarted: () => {
+      // onHighlighted se dispara cuando un elemento es resaltado (cada paso).
+      // Lo usamos para marcar el tour como activo.
+      onHighlighted: () => this.tourActivo.set(true),
+      // onDestroyed se dispara DESPUÉS de que el tour se cierra completamente.
+      // NO usar onDeselected aquí porque ese se dispara entre cada paso,
+      // lo que haría que tourActivo parpadeara durante el recorrido.
+      onDestroyed: () => {
         this.tourActivo.set(false);
         this.driverInstance = null;
       },

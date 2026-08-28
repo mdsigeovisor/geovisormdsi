@@ -10,6 +10,127 @@
   --font-arial: Arial, Helvetica, sans-serif;
 }
 
+/* ============================================
+   ESTILOS DEL TOUR INTERACTIVO (driver.js)
+   Colores acordes al visor
+   ============================================ */
+
+/* Popover principal */
+.driver-popover {
+  background: linear-gradient(135deg, #194a8b 0%, #133a72 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  max-width: 340px;
+}
+
+/* Título del popover */
+.driver-popover-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+/* Descripción del popover */
+.driver-popover-description {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+/* Texto de progreso (ej: "1 de 10") */
+.driver-popover-progress-text {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+/* Botón de cerrar (X) */
+.driver-popover-close-btn {
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.2s ease;
+}
+
+.driver-popover-close-btn:hover {
+  color: #ffffff;
+}
+
+/* Botones de navegación (Next/Previous) */
+.driver-popover-next-btn,
+.driver-popover-prev-btn {
+  background: linear-gradient(135deg, #2b96d7 0%, #1e7bb8 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-shadow: none;
+  box-shadow: 0 2px 8px rgba(43, 150, 215, 0.3);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.driver-popover-next-btn:hover,
+.driver-popover-prev-btn:hover {
+  background: linear-gradient(135deg, #3aabe8 0%, #2b96d7 100%);
+  box-shadow: 0 4px 12px rgba(43, 150, 215, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Botón Previous con estilo diferente */
+.driver-popover-prev-btn {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: none;
+}
+
+.driver-popover-prev-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+/* Flecha del popover */
+.driver-popover-arrow {
+  border-color: #194a8b;
+}
+
+.driver-popover-arrow-side-top .driver-popover-arrow {
+  border-top-color: #194a8b;
+}
+
+.driver-popover-arrow-side-bottom .driver-popover-arrow {
+  border-bottom-color: #194a8b;
+}
+
+.driver-popover-arrow-side-left .driver-popover-arrow {
+  border-left-color: #194a8b;
+}
+
+.driver-popover-arrow-side-right .driver-popover-arrow {
+  border-right-color: #194a8b;
+}
+
+/* Overlay del tour */
+.driver-overlay {
+  fill: rgba(0, 0, 0, 0.65);
+}
+
+/* Elemento activo resaltado */
+.driver-active-element {
+  box-shadow: 0 0 0 4px rgba(43, 150, 215, 0.5), 0 0 20px rgba(43, 150, 215, 0.3);
+}
+
+/* Eliminar outline del popover */
+.driver-popover-footer-btn:focus {
+  outline: 2px solid rgba(43, 150, 215, 0.5);
+  outline-offset: 2px;
+}
+
 /* Elimina el cuadro/borde de selección de OpenLayers y mejora la carga */
 .ol-viewport {
   outline: none !important;

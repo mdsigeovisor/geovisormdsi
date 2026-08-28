@@ -45,8 +45,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     items: [
       { type: 'layer', id: 'lote_urbano', label: 'Lote Urbano', visible: false, opacity: 1, showInLegend: false },
       { type: 'layer', id: 'etiquetas_catastrales', label: 'Código Catastral', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'denominacion_predio', label: 'Denominación del Predio', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'lote-no-delimitado', label: 'Lote No Delimitado', visible: false, opacity: 1, showInLegend: false },
+      { type: 'layer', id: 'denominacion_predio', label: 'Denominación del Predio', visible: false, opacity: 1, showInLegend: false },      
     ],
   },
   {

@@ -10,8 +10,7 @@ const wp = environment.geoserver.workspacePrefix;
 const ETIQUETAS_LAYERS: WmsLayerConfig[] = [
   { id: 'lote_urbano', layerName: `${wp}vw_tg_lote_urbano`, zIndex: 2, title: 'Lote Urbano' },
   { id: 'etiquetas_catastrales', layerName: `${wp}gc_mz_lote_catastral_etiqueta`, zIndex: 2, title: 'Etiquetas Catastrales' },
-  { id: 'denominacion_predio', layerName: `${wp}denominacion_predio`, zIndex: 2, title: 'Denominación del Predio' },
-  { id: 'lote-no-delimitado', layerName: `${wp}tg_lote_no_delimitado`, zIndex: 2, title: 'Lote no Delimitado' },
+  { id: 'denominacion_predio', layerName: `${wp}denominacion_predio`, zIndex: 2, title: 'Denominación del Predio' },  
 ];
 
 const INFRAESTRUCTURA_LAYERS: WmsLayerConfig[] = [

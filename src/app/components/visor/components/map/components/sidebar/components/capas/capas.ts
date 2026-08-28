@@ -16,8 +16,8 @@ export class CapasComponent {
   private readonly mapService = inject(MapService);
   /** Estado de minimización del panel */
   isMinimized = signal(false);
-  /** Referencia al signal de secciones centralizado en el servicio */
-  sections = this.mapService.sections;
+  /** Vista del panel filtrada por sesión (oculta capas con `requiresAuth` si no hay sesión) */
+  sections = this.mapService.panelSections;
   toggleMinimize() {
     this.isMinimized.update(v => !v);
   }
@@ -32,7 +32,8 @@ export class CapasComponent {
   }
 
   toggleSubSectionExpanded(sectionId: string, subSectionId: string) {
-    this.sections.update(sections =>
+    // Actualizamos el estado interno completo (panelSections se recalcula solo).
+    this.mapService.sections.update(sections =>
       sections.map(section => {
         if (section.id !== sectionId) return section;
         return {

@@ -1,6 +1,7 @@
-import { Injectable, signal, inject, NgZone, effect, WritableSignal } from '@angular/core';
+import { Injectable, signal, computed, inject, NgZone, effect, untracked, WritableSignal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { DrawMeasureService } from './draw.service';
+import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import type { Coordinate } from 'ol/coordinate';
@@ -100,6 +101,7 @@ export class MapService {
   private readonly http = inject(HttpClient);
   private readonly zone = inject(NgZone);
   private readonly drawMeasureService = inject(DrawMeasureService);
+  private readonly authService = inject(AuthService);
   baseLayerType = signal<TipoMapaBase>('streets');
   /** Instancia del mapa OpenLayers */
   private readonly _map = signal<OlMap | undefined>(undefined);
@@ -128,6 +130,47 @@ export class MapService {
    * Signal que gestiona las secciones y capas del visor.
    */
   sections = signal<Section[]>(LAYER_PANEL_SECTIONS);
+  /**
+   * Vista del panel de capas filtrada por el estado de sesión: los items
+   * marcados con `requiresAuth` (capas, subsecciones o secciones completas)
+   * solo aparecen cuando el usuario está autenticado.
+   * El estado interno (`sections`) conserva SIEMPRE todas las capas para no
+   * alterar la lógica del mapa (olLayer, leyenda, clics, ortofotos, etc.).
+   */
+  readonly panelSections = computed<Section[]>(() => {
+    const isAuthed = this.authService.isAuthenticated();
+    return this.sections()
+      .map(section => this.filterSectionForPanel(section, isAuthed))
+      .filter((section): section is Section => section !== null);
+  });
+  /**
+   * Al cerrar sesión apagamos en el mapa cualquier capa restringida que
+   * hubiera quedado visible (el panel ya no la muestra, pero la capa OL existe).
+   */
+  private readonly hideRestrictedOnLogout = effect(() => {
+    if (this.authService.isAuthenticated()) return;
+    const hasVisibleRestricted = untracked(() => this.sections()).some(section =>
+      section.items.some(item =>
+        ('layers' in item && item.requiresAuth && item.layers.some(l => l.visible)) ||
+        (item.type === 'layer' && item.requiresAuth && item.visible)
+      )
+    );
+    if (!hasVisibleRestricted) return;
+    this.sections.update(sections => sections.map(section => {
+      const hideAll = section.requiresAuth;
+      return {
+        ...section,
+        items: section.items.map(item => {
+          if ('layers' in item) {
+            const hideSub = hideAll || item.requiresAuth;
+            const layers = item.layers.map(l => (hideSub || l.requiresAuth) ? { ...l, visible: false } : l);
+            return { ...item, layers };
+          }
+          return (hideAll || item.requiresAuth) ? { ...item, visible: false } : item;
+        }),
+      };
+    }));
+  });
   /** Indica si el mapa ha sido inicializado y está listo para su uso. */
   isReady = signal(false);
   /** Coordenadas actuales del usuario (longitud, latitud). */
@@ -1082,11 +1125,52 @@ export class MapService {
     const propsToApply = typeof newProps === 'function' ? newProps(layer) : newProps;
     return { ...layer, ...propsToApply };
   }
+  /**
+   * Enciende/apaga todas las capas de una sección. Respeta la restricción
+   * `requiresAuth`: en modo público esas capas permanecen apagadas.
+   */
   toggleAllLayersInSection(sectionId: string, visible: boolean) {
-    this.sections.update(s => s.map(sec => sec.id === sectionId
-      ? { ...sec, items: sec.items.map(item => 'layers' in item ? { ...item, layers: item.layers.map(l => ({ ...l, visible })) } : { ...item, visible: item.type === 'layer' ? visible : (item as any).visible }) }
-      : sec
-    ));
+    const isAuthed = this.authService.isAuthenticated();
+    this.sections.update(s => s.map(sec => {
+      if (sec.id !== sectionId) return sec;
+      const sectionAllowed = !sec.requiresAuth || isAuthed;
+      return {
+        ...sec,
+        items: sec.items.map(item => {
+          if ('layers' in item) {
+            // Subsección restringida sin sesión: no se toca.
+            if (!sectionAllowed || (item.requiresAuth && !isAuthed)) return item;
+            return {
+              ...item,
+              layers: item.layers.map(l => ({ ...l, visible: (l.requiresAuth && !isAuthed) ? false : visible })),
+            };
+          }
+          if (item.type === 'layer') {
+            return { ...item, visible: (item.requiresAuth && !isAuthed) ? false : visible };
+          }
+          return item;
+        }),
+      };
+    }));
+  }
+
+  /**
+   * Devuelve la sección filtrada para el panel según la sesión, o `null` si
+   * debe ocultarse por completo (secciones/subsecciones/capas con `requiresAuth`).
+   */
+  private filterSectionForPanel(section: Section, isAuthed: boolean): Section | null {
+    if (section.requiresAuth && !isAuthed) return null;
+    const items = section.items
+      .map(item => {
+        if ('layers' in item) {
+          if (item.requiresAuth && !isAuthed) return null;
+          const layers = item.layers.filter(l => !l.requiresAuth || isAuthed);
+          return layers.length > 0 ? { ...item, layers } : null;
+        }
+        return (item.requiresAuth && !isAuthed) ? null : item;
+      })
+      .filter((item): item is Section['items'][number] => item !== null);
+    return items.length > 0 ? { ...section, items } : null;
   }
   /**
    * Alterna la herramienta activa del sidebar. Si se hace clic en la misma, se cierra.

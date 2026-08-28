@@ -24,7 +24,7 @@ export class Leyenda {
     this.isMinimized.update(v => !v);
   }
   activeLegends = computed(() => {
-    const sections = this.mapService.sections();
+    const sections = this.mapService.panelSections();
     const uniqueLegends = new Map<string, { label: string; url: string }>();
 
     sections.forEach(section => {

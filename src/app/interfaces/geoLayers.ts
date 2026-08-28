@@ -30,6 +30,8 @@ export interface WfsResponse {
 /** Configuración para la inicialización de capas WMS */
 export interface LayerItem {
   showInLegend: boolean;
+  /** Si es true, la capa solo se muestra en el panel cuando el usuario está autenticado. */
+  requiresAuth?: boolean;
   type: 'layer';
   id: string;
   label: string;
@@ -55,6 +57,8 @@ export interface SubSection {
   id: string;
   title: string;
   subtitle?: string;
+  /** Si es true, la subsección completa solo se muestra con sesión iniciada. */
+  requiresAuth?: boolean;
   expanded: boolean;
   layers: LayerItem[];
 }
@@ -62,6 +66,8 @@ export interface Section {
   id: string;
   title: string;
   subtitle?: string;
+  /** Si es true, toda la sección solo se muestra con sesión iniciada. */
+  requiresAuth?: boolean;
   expanded: boolean;
   items: (LayerItem | SubSection)[];
 }

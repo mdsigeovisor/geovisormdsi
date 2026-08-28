@@ -8,7 +8,7 @@ import { ORTOFOTO_YEARS } from './ortofotos';
 export const LAYER_PANEL_SECTIONS: Section[] = [
   {
     id: 'catastral',
-    title: 'Información Catastral',    
+    title: 'Información Catastral',
     expanded: false,
     items: [
       {
@@ -24,7 +24,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
           { type: 'layer', id: 'veredas', label: 'Veredas', visible: true, opacity: 1, showInLegend: false },
           { type: 'layer', id: 'arearecreativa', label: 'Área Recreativa', visible: true, opacity: 1, showInLegend: false },
         ],
-      },      
+      },
     ],
   },
   {
@@ -45,12 +45,13 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     items: [
       { type: 'layer', id: 'lote_urbano', label: 'Lote Urbano', visible: false, opacity: 1, showInLegend: false },
       { type: 'layer', id: 'etiquetas_catastrales', label: 'Código Catastral', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'denominacion_predio', label: 'Denominación del Predio', visible: false, opacity: 1, showInLegend: false },      
+      { type: 'layer', id: 'denominacion_predio', label: 'Denominación del Predio', visible: false, opacity: 1, showInLegend: false },
     ],
   },
   {
     id: 'puntosGeodesicos',
     title: 'Puntos Geodésicos',
+    requiresAuth: true,
     expanded: false,
     items: [
       { type: 'layer', id: 'puntos_geodesicos', label: 'Puntos Geodésicos', visible: false, opacity: 1, showInLegend: true },
@@ -72,10 +73,10 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     items: [
       { type: 'layer', id: 'num_municipal_2024', label: 'Numeración de campo 2024', visible: false, opacity: 1, showInLegend: true },
       { type: 'layer', id: 'num_municipal_2022', label: 'Numeración de campo 2022', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'puertas2024', label: 'Puertas 2024', visible: false, opacity: 1, showInLegend: true },      
+      { type: 'layer', id: 'puertas2024', label: 'Puertas 2024', visible: false, opacity: 1, showInLegend: true },
     ],
   },
-    {
+  {
     id: 'arbolado_urbano',
     title: 'Arbolado Urbano',
     expanded: false,
@@ -87,7 +88,7 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
   },
   {
     id: 'imaAereas',
-    title: 'Fotográfias Áereas',    
+    title: 'Fotográfias Áereas',
     expanded: false,
     items: [
       {
@@ -109,6 +110,8 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
         type: 'subsection',
         id: 'ortofotos-sin-procesar',
         title: 'Ortofotos sin procesar',
+        // Restringida: solo aparece en el panel cuando hay sesión iniciada (AuthService).
+        requiresAuth: true,
         expanded: false,
         layers: [
           { type: 'layer', id: 'fotos_sin_2018', label: 'Fotos sin Procesar - 2018', visible: false, opacity: 1, showInLegend: false },
@@ -123,13 +126,14 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     expanded: false,
     items: [
       { type: 'layer', id: 'etiq_zonificacion', label: 'Etiqueta Zonificación', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'zonificacion', label: 'Zonificación', visible: false, opacity: 1, showInLegend: true },      
+      { type: 'layer', id: 'zonificacion', label: 'Zonificación', visible: false, opacity: 1, showInLegend: true },
       { type: 'layer', id: 'amUrbHomogeneo', label: 'Ambito Urbano Homogéneo', visible: false, opacity: 1, showInLegend: false },
     ],
   },
   {
     id: 'tusne',
     title: 'TUSNE',
+    requiresAuth: true,
     expanded: false,
     items: [
       { type: 'layer', id: 'tusne', label: 'Levantamiento Topográfico', visible: false, opacity: 1, showInLegend: true },

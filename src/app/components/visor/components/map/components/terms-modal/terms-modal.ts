@@ -29,6 +29,23 @@ export class TermsModal {
     this.mapService.closeTermsModal();
   }
 
+  /** URL pública del sitio de la Municipalidad de San Isidro a la que se redirige al rechazar los términos */
+  private readonly institutionalUrl = 'https://msi.gob.pe';
+
+  /** El usuario no acepta los términos: cierra la aplicación y sale hacia el sitio web de la municipalidad */
+  rejectAndExit(): void {
+    this.modalTermsAccepted = false;
+    this.mapService.closeTermsModal();
+    // El visor puede estar embebido en un iframe del portal municipal. Si ocurre,
+    // lo correcto es navegar la ventana superior para "salir" de la aplicación;
+    // si no se puede (embedding cross-origin restringido), navegamos la actual.
+    try {
+      window.top!.location.assign(this.institutionalUrl);
+    } catch {
+      window.location.assign(this.institutionalUrl);
+    }
+  }
+
   /** Registra la aceptación de los términos y cierra el modal */
   acceptAndEnter(): void {
     this.mapService.acceptTerms();

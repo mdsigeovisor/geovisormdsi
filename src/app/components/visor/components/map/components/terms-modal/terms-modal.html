@@ -102,9 +102,8 @@
         <span class="select-none">He leído y acepto los términos.</span>
       </label>
       <div class="flex items-center gap-2">
-        <button (click)="closeModal()" type="button"
-          class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-100">No
-          acepto</button>
+        <button (click)="rejectAndExit()" type="button"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-100">No acepto</button>
         <button (click)="acceptAndEnter()" [disabled]="!modalTermsAccepted" type="button"
           class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-1.5 text-xs font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
           style="background: linear-gradient(155deg, rgb(95, 114, 32) 0%, rgb(70, 87, 15) 45%, rgb(33, 42, 11) 100%);">Acepto

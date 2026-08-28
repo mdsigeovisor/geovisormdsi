@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 // Servicios y módulos
 import { LoteInfoWindow, MapService } from '../../../../services/map.service';
+import { DriverService } from '../../../../services/driver.service';
 import { DrawMeasureService } from '../../../../services/draw.service';
 // Componentes relacionados
 import { Navbar } from './components/navbar/navbar';
@@ -47,7 +48,10 @@ export class MapComponent {
   /** Conjunto de ids de ventanas de lote cuyo iframe ya terminó de cargar (para ocultar el spinner). */
   private readonly loteWindowsLoaded = signal<Set<string>>(new Set());
 
-  public readonly mapService = inject(MapService);
+    public readonly mapService = inject(MapService);
+  private readonly driverService = inject(DriverService);
+  /** Estado del tour activo (proyectado al navbar para el resaltado del botón). */
+  isTourActive = this.driverService.tourActivo;
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly drawMeasureService = inject(DrawMeasureService);
@@ -218,8 +222,16 @@ export class MapComponent {
   /**
    * Cierra el modal de inicio de sesión.
    */
-  closeLoginModal(): void {
+    closeLoginModal(): void {
     this.showLoginModal.set(false);
+  }
+
+  /**
+   * Inicia el recorrido interactivo del visor (driver.js).
+   * Se delega al `DriverService` singleton.
+   */
+  startTour(): void {
+    this.driverService.startTour();
   }
 
   /**

@@ -12,9 +12,9 @@
   </div>
 </div>
 }
-<app-navbar (login)="openLoginModal()"></app-navbar>
+<app-navbar [tourActivo]="isTourActive()" (login)="openLoginModal()" (tour)="startTour()"></app-navbar>
 <app-sidebar (onToggle)="handleSidebarToggle($event)"></app-sidebar>
-<div #mapContainer class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
+<div #mapContainer id="mapContainer" class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
 <app-funciones></app-funciones>
 
 <!-- Logo institucional del visor: esquina inferior izquierda,
@@ -163,3 +163,4 @@
 <app-coordinate-info></app-coordinate-info>
 <!-- Modal global de Términos y Condiciones (se muestra al hacer zoom sobre el distrito) -->
 <app-terminos></app-terminos>
+

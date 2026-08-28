@@ -25,9 +25,19 @@
         <span class="text-2xl font-bold cash-register-font">{{ visitCount() | number }}</span>
       </div>
     </div>
+    <!-- Botón de Tour interactivo (driver.js) -->
+  <button
+    id="btn-tour"
+    (click)="onTourClick()"
+    [title]="isAuthenticated() ? 'Recorrido interactivo' : 'Recorrido interactivo (login para más)' "
+        [ngClass]="{'bg-secondary/20 text-white': tourActivo, 'text-white/80 hover:bg-white/10 hover:text-white': !tourActivo}"
+    class="flex items-center gap-2 px-3 py-2 rounded-md transition-all cursor-pointer">
+    <i class="bi bi-info-circle text-white text-xl"></i>
+    <span class="hidden sm:inline text-sm font-medium">Tour</span>
+  </button>
   <!-- Botón de Observatorio Urbano (abre en otra pestaña) -->
   <a
-    href="https://test.munisanisidro.gob.pe/WebObservatorioUrbano/"
+    id="btn-observatorio"
     target="_blank"
     rel="noopener noreferrer"
     class="flex items-center gap-2 text-white hover:bg-secondary hover:text-white px-3 py-2 rounded-md transition-colors cursor-pointer mr-2"
@@ -45,6 +55,7 @@
     <span class="hidden text-sm sm:inline">Observatorio</span>
   </a>
   <button
+    id="btn-auth"
     (click)="onLoginClick()"
     class="flex items-center gap-2 text-white hover:bg-secondary hover:text-white px-3 py-2 rounded-md transition-colors cursor-pointer"
     [title]="isAuthenticated() ? 'Cerrar Sesión' : 'Acceder'"

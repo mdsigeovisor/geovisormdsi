@@ -4,25 +4,41 @@
     <div class="w-12 h-full flex flex-col items-center border-r border-white/10 z-20">
       <div class="flex-1 w-full overflow-y-auto py-4 space-y-3 custom-scrollbar">
         @for (item of menuItems; track item.id) {
-          <button (click)="setActive(item.id)"
-                  class="w-full h-10 flex items-center justify-center transition-all duration-200 group relative"
-                  [ngClass]="isActive(item.id) ? 'text-white' : 'text-gray-300 hover:text-white'"
-                  [title]="item.label">
+          <button
+            id="btn-sidebar-{{ item.id }}"
+            (click)="setActive(item.id)"
+            class="w-full h-10 flex items-center justify-center transition-all duration-200 group relative"
+            [ngClass]="isActive(item.id) ? 'text-white' : 'text-gray-300 hover:text-white'"
+            [title]="item.label"
+          >
             <!-- Indicador de activo -->
-            <div class="absolute left-0 top-1 bottom-1 w-1 transition-all rounded-r-full"
-                 [ngClass]="isActive(item.id) ? 'bg-secondary' : 'bg-transparent'"></div>
+            <div
+              class="absolute left-0 top-1 bottom-1 w-1 transition-all rounded-r-full"
+              [ngClass]="isActive(item.id) ? 'bg-secondary' : 'bg-transparent'"
+            ></div>
             <!-- Círculo del Icono -->
-            <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
-                 [ngClass]="isActive(item.id) ? 'bg-white/20 shadow-lg scale-110' : 'bg-transparent group-hover:bg-white/10'">
-              <i class="text-[22px] transition-transform group-hover:scale-110" [ngClass]="item.icon"></i>
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              [ngClass]="
+                isActive(item.id)
+                  ? 'bg-white/20 shadow-lg scale-110'
+                  : 'bg-transparent group-hover:bg-white/10'
+              "
+            >
+              <i
+                class="text-[22px] transition-transform group-hover:scale-110"
+                [ngClass]="item.icon"
+              ></i>
             </div>
           </button>
         }
       </div>
       <!-- Botón inferior de configuración/cerrar -->
       <div class="w-full py-4 border-t border-white/10 flex justify-center">
-        <button (click)="toggleSidebar()"
-                class="w-10 h-10 rounded-full flex items-center justify-center text-gray-300 hover:text-white transition-all duration-300 hover:bg-white/10">
+        <button
+          (click)="toggleSidebar()"
+          class="w-10 h-10 rounded-full flex items-center justify-center text-gray-300 hover:text-white transition-all duration-300 hover:bg-white/10"
+        >
           <i class="text-[22px]" [ngClass]="isOpen ? 'bi-chevron-left' : 'bi-gear'"></i>
         </button>
       </div>
@@ -31,12 +47,18 @@
     <aside
       class="h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out bg-white"
       [class.w-80]="isOpen"
-      [class.w-0]="!isOpen">
+      [class.w-0]="!isOpen"
+    >
       <div class="w-80 h-full flex flex-col">
         <!-- Encabezado del Panel -->
-        <div class="bg-primary p-4 h-16 text-white shadow-md flex justify-between items-center shrink-0">
+        <div
+          class="bg-primary p-4 h-16 text-white shadow-md flex justify-between items-center shrink-0"
+        >
           <h2 class="font-bold text-lg tracking-wide uppercase">{{ activeTitle }}</h2>
-          <button (click)="toggleSidebar()" class="text-white hover:bg-white/20 rounded-full p-1.5 transition-colors">
+          <button
+            (click)="toggleSidebar()"
+            class="text-white hover:bg-white/20 rounded-full p-1.5 transition-colors"
+          >
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -46,11 +68,20 @@
             <ng-container [ngSwitch]="activeTab">
               <app-consultas *ngSwitchCase="'search'" (onClose)="toggleSidebar()"></app-consultas>
               <app-capas *ngSwitchCase="'layers'" (onClose)="toggleSidebar()"></app-capas>
-              <app-coordenadas *ngSwitchCase="'coordenadas'" (onClose)="toggleSidebar()"></app-coordenadas>
+              <app-coordenadas
+                *ngSwitchCase="'coordenadas'"
+                (onClose)="toggleSidebar()"
+              ></app-coordenadas>
               <app-imprimir *ngSwitchCase="'print'" (onClose)="toggleSidebar()"></app-imprimir>
-              <app-descargaspdf *ngSwitchCase="'downloads'" (onClose)="toggleSidebar()"></app-descargaspdf>
+              <app-descargaspdf
+                *ngSwitchCase="'downloads'"
+                (onClose)="toggleSidebar()"
+              ></app-descargaspdf>
               <!-- Mensaje para herramientas sin componente aún -->
-              <div *ngSwitchDefault class="flex flex-col items-center justify-center h-full text-gray-400">
+              <div
+                *ngSwitchDefault
+                class="flex flex-col items-center justify-center h-full text-gray-400"
+              >
                 <span class="material-icons text-5xl mb-2">construction</span>
                 <p>Módulo en desarrollo</p>
               </div>
@@ -70,13 +101,19 @@
 <!-- PANEL FLOTANTE "ACERCA DE" (tarjeta superpuesta al mapa) -->
 @if (activeTab === 'about') {
   <div class="fixed left-[60px] top-[76px] z-40 font-sans animate-panel-fade-in">
-    <div class="w-80 max-h-[calc(100vh-96px)] flex flex-col bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-panel-scale-in">
+    <div
+      class="w-80 max-h-[calc(100vh-96px)] flex flex-col bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-panel-scale-in"
+    >
       <!-- Encabezado de la tarjeta -->
-      <div class="bg-primary p-4 text-white shadow-md flex justify-between items-center shrink-0 rounded-t-xl">
+      <div
+        class="bg-primary p-4 text-white shadow-md flex justify-between items-center shrink-0 rounded-t-xl"
+      >
         <h2 class="font-bold text-lg tracking-wide uppercase">{{ activeTitle }}</h2>
-        <button (click)="closeAbout()"
-                title="Cerrar"
-                class="text-white hover:bg-white/20 rounded-full p-1.5 transition-colors">
+        <button
+          (click)="closeAbout()"
+          title="Cerrar"
+          class="text-white hover:bg-white/20 rounded-full p-1.5 transition-colors"
+        >
           <i class="bi bi-x-lg"></i>
         </button>
       </div>

@@ -2,27 +2,32 @@
 <ng-container *ngIf="isReady()">
   <!-- Panel de funciones flotantes -->
   <div class="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-50 animate-in fade-in duration-500">    
-    <button (click)="zoomIn()"
+        <button id="btn-zoom-in"
+            (click)="zoomIn()"
             class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
             title="Acercar">
       <i class="bi bi-plus-lg text-xl"></i>
     </button>
-    <button (click)="zoomOut()"
+        <button id="btn-zoom-out"
+            (click)="zoomOut()"
             class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
             title="Alejar">
       <i class="bi bi-dash-lg text-xl"></i>
     </button>
-    <button (click)="goHome()"
+        <button id="btn-home"
+            (click)="goHome()"
             class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
             title="Mapa Completo">
       <i class="bi bi-house-door-fill text-xl"></i>
     </button>    
-    <button (click)="getCurrentLocation()"
+        <button id="btn-geolocalizacion"
+            (click)="getCurrentLocation()"
             class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
             title="Mi Ubicación">
       <i class="bi bi-geo-alt-fill text-xl"></i>
     </button>
-    <button (click)="toggleBaseLayer()"
+        <button id="btn-cambio-base"
+            (click)="toggleBaseLayer()"
             class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
             [title]="baseLayerType() === 'satellite'
               ? 'Cambiar a Mapa de Calles'
@@ -34,7 +39,8 @@
          [class.bi-layers-half]="baseLayerType() === 'streets'"
          [class.bi-square]="baseLayerType() === 'blanco'"></i>
     </button>
-    <button (click)="toggleHerramientas()"
+        <button id="btn-herramientas"
+            (click)="toggleHerramientas()"
             class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
             [class.bg-secondary]="herramientasActivas()"
             title="Herramientas de Dibujo">
@@ -54,27 +60,27 @@
   <!-- Panel de Herramientas de Dibujo y Medición -->
   @if (herramientasActivas()) {
   <div class="fixed right-14 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-50 animate-in fade-in duration-300">
-    <button (click)="medirDistancia()" title="Medir Distancia"
+        <button id="btn-medir-distancia" (click)="medirDistancia()" title="Medir Distancia"
             class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
       <i class="bi bi-rulers text-xl"></i>
     </button>
-    <button (click)="medirArea()" title="Medir Área"
+        <button id="btn-medir-area" (click)="medirArea()" title="Medir Área"
             class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
       <i class="bi bi-bounding-box-circles text-xl"></i>
     </button>
-    <button (click)="dibujarPoligono()" title="Dibujar Polígono"
+        <button id="btn-poligono" (click)="dibujarPoligono()" title="Dibujar Polígono"
             class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
       <i class="bi bi-pentagon text-xl"></i>
     </button>
-    <button (click)="dibujarLinea()" title="Dibujar Línea"
+        <button id="btn-linea" (click)="dibujarLinea()" title="Dibujar Línea"
             class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
       <i class="bi bi-slash-lg text-xl"></i>
     </button>
-    <button (click)="dibujarPunto()" title="Dibujar Punto"
+        <button id="btn-punto" (click)="dibujarPunto()" title="Dibujar Punto"
             class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
       <i class="bi bi-pin-map-fill text-xl"></i>
     </button>
-    <button (click)="limpiarDibujo()" title="Limpiar Dibujos"
+        <button id="btn-limpiar" (click)="limpiarDibujo()" title="Limpiar Dibujos"
             class="w-10 h-10 flex items-center justify-center bg-red-500 backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-red-600 hover:scale-105 transition-all active:scale-95 cursor-pointer">
       <i class="bi bi-trash-fill text-xl"></i>
     </button>

@@ -29,7 +29,7 @@ export class Funciones {
   public readonly herramientasActivas = signal(false);
 
   private userMarkerOverlay?: Overlay;
-  private readonly locationPopupOverlay?: Overlay;
+  private locationPopupOverlay?: Overlay;
 
   constructor() {
     afterNextRender(() => {
@@ -56,22 +56,33 @@ export class Funciones {
   }
 
   getCurrentLocation(): void {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { longitude, latitude } = position.coords;
-          this.mapService.userCoords.set({ lon: longitude, lat: latitude });
-          this.mapService.goToCoordinates(latitude, longitude, 18);
-          this.showUserMarker(longitude, latitude);
-        },
-        (error) => {
-          console.error('Error al obtener la geolocalización:', error);
-          alert('No se pudo obtener tu ubicación. Asegúrate de haber concedido los permisos necesarios.');
-        }
-      );
-    } else {
+    if (!navigator.geolocation) {
       alert('La geolocalización no es compatible con este navegador.');
+      return;
     }
+    console.debug('[GPS] Solicitando ubicación al navegador...');
+    // Sin `timeout` el navegador puede esperar indefinidamente (ni marcador,
+    // ni popup, ni error) cuando el servicio de ubicación del equipo está
+    // apagado. Con 10s garantizamos siempre una respuesta visible.
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { longitude, latitude } = position.coords;
+        console.debug('[GPS] Posición obtenida:', longitude, latitude);
+        this.mapService.userCoords.set({ lon: longitude, lat: latitude });
+        this.mapService.goToCoordinates(latitude, longitude, 18);
+        this.showUserMarker(longitude, latitude);
+      },
+      (error) => {
+        console.error('[GPS] Error de geolocalización:', error);
+        const motivos: Record<number, string> = {
+          1: 'Permiso denegado. Habilite la ubicación para este sitio (icono de candado en la barra de direcciones) y vuelva a intentarlo.',
+          2: 'Posición no disponible. Verifique que el servicio de ubicación del equipo (Windows) esté activado.',
+          3: 'Tiempo de espera agotado (10 s) al intentar obtener la ubicación.',
+        };
+        alert(`No se pudo obtener tu ubicación. ${motivos[error.code] ?? error.message}`);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
   }
 
   toggleBaseLayer(): void {
@@ -89,7 +100,16 @@ export class Funciones {
 
   private showUserMarker(lon: number, lat: number): void {
     const map = this.olMap();
-    if (!map) return;
+    if (!map) {
+      console.error('[GPS] El mapa aún no está inicializado; no se puede anclar el marcador.');
+      return;
+    }
+    // Guardia defensiva: si el elemento no está en la plantilla, el overlay
+    // quedaría huérfano y el popup jamás sería visible (falla silenciosa).
+    if (!this.userMarker?.nativeElement || !this.locationPopup?.nativeElement) {
+      console.error('[GPS] No se encontraron los elementos #userMarker/#locationPopup en la plantilla.');
+      return;
+    }
 
     if (!this.userMarkerOverlay) {
       this.userMarkerOverlay = new Overlay({
@@ -101,16 +121,37 @@ export class Funciones {
     }
     this.userMarker.nativeElement.style.display = 'flex';
     this.userMarkerOverlay.setPosition(this.mapService.offsetLonLat(lon, lat));
+
+    // Popup informativo anclado sobre el marcador: sin este overlay el div
+    // #locationPopup permanece oculto (display:none) para siempre.
+    if (!this.locationPopupOverlay) {
+      this.locationPopupOverlay = new Overlay({
+        element: this.locationPopup.nativeElement,
+        // El caret inferior del popup apunta al punto: anclamos su borde inferior.
+        positioning: 'bottom-center',
+        // Lo elevamos por encima del marcador (h-10 = 40px, centro en la coords).
+        offset: [0, -28],
+        // Evita que los clicks dentro del popup lleguen al mapa (interacciones/dibujo).
+        stopEvent: true,
+      });
+      map.addOverlay(this.locationPopupOverlay);
+    }
+    this.locationPopup.nativeElement.style.display = 'block';
+    this.locationPopupOverlay.setPosition(this.mapService.offsetLonLat(lon, lat));
   }
 
   removeLocationMarker(): void {
     this.userMarkerOverlay?.setPosition(undefined);
     this.locationPopupOverlay?.setPosition(undefined);
+    // OL oculta el overlay al quitar la posición; forzamos también el display
+    // inline para dejar el estado inicial consistente.
+    this.locationPopup.nativeElement.style.display = 'none';
     this.mapService.userCoords.set(null);
   }
 
   // --- Métodos para Dibujo y Medición ---
 
+  
   toggleHerramientas(): void {
     this.herramientasActivas.update(v => !v);
     if (!this.herramientasActivas()) {

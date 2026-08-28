@@ -2,7 +2,7 @@ import { Component, HostListener, signal, inject, effect, ViewEncapsulation } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Spinner } from '@app/animations/spinner/spinner';
-import { jsPDF } from 'jspdf';
+import { jsPDF, GState } from 'jspdf';
 import { firstValueFrom } from 'rxjs';
 import { GeoJSON, getCenter, OlMap } from '@app/modules/openlayers.module';
 import { MapService } from '@services/map.service';
@@ -687,7 +687,7 @@ export class Imprimir {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(8);
       pdf.setTextColor(90, 90, 90);
-      pdf.text('Municipalidad de San Isidro · Visor Cartográfico Catastral', ancho / 2, margen + 8, { align: 'center' });
+      pdf.text('Municipalidad de San Isidro · Geovisor Catastral', ancho / 2, margen + 8, { align: 'center' });
       pdf.text(`Fecha de impresión: ${this.fechaHora()}   ·   Escala: ${this.etiquetaEscala()}`, ancho / 2, margen + 12, { align: 'center' });
 
       // --- Línea separadora ---
@@ -734,6 +734,9 @@ export class Imprimir {
       pdf.setTextColor(80, 80, 80);
       pdf.text('Subgerencia de Planeamiento Urbano y Catastro', margen, alto - margen - 2);
       pdf.text(`Impreso: ${this.fechaHora()}`, ancho - margen, alto - margen - 2, { align: 'right' });
+
+      // --- Sello de agua diagonal sobre TODA la hoja (encima de todo, opacidad baja) ---
+      this.dibujarMarcaAgua(pdf);
 
       const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
       pdf.save(`${this.slug(this.titulo())}_${stamp}.pdf`);
@@ -923,6 +926,52 @@ export class Imprimir {
       pdf.setTextColor(20, 60, 160);
       pdf.textWithLink('Ver ficha completa en línea', x, y + h - 1, { url: this.fichaUrl()! });
     }
+  }
+
+  /**
+   * Estampa un sello de agua con el texto "Geovisor Catastral", inclinado a
+   * 45° y repetido en mosaico para cubrir TODA la hoja (incluidos márgenes).
+   * Se dibuja al final, encima del mapa y de los marcos, con opacidad muy
+   * baja para que el contenido siga siendo perfectamente legible.
+   */
+  private dibujarMarcaAgua(pdf: jsPDF): void {
+    const TEXTO = 'Geovisor Catastral';
+    const ancho = pdf.internal.pageSize.getWidth();
+    const alto = pdf.internal.pageSize.getHeight();
+
+    // Opacidad real si la versión de jsPDF la soporta (GState); si no,
+    // el gris claro del texto actúa como respaldo visual.
+    let conOpacidad = false;
+    try {
+      pdf.saveGraphicsState();
+      pdf.setGState(new GState({ opacity: 0.11 }));
+      conOpacidad = true;
+    } catch {
+      // Sin GState seguimos con color sólido claro
+    }
+
+    pdf.setFont('helvetica', 'bold');
+    // Tamaño proporcional a la hoja (A4 ≈ 17 pt · A3 ≈ 24 pt)
+    pdf.setFontSize(ancho >= 300 ? 24 : 17);
+    pdf.setTextColor(130, 130, 130);
+
+    // Rejilla en mosaico calculada con el ancho real del texto, de modo que
+    // los sellos quedan uniformes y cubren también los bordes de la hoja.
+    const anchoTexto = pdf.getTextWidth(TEXTO);          // mm con la fuente actual
+    const extension = (anchoTexto + 6) * Math.SQRT1_2;   // extensión del sello rotado 45° por eje
+    const pasoX = extension + 10;
+    const pasoY = extension + 8;
+
+    let fila = 0;
+    for (let y = -pasoY; y <= alto + pasoY; y += pasoY, fila++) {
+      // Filas alternadas desfasadas medio paso → patrón romboidal sin huecos
+      const desfase = fila % 2 === 0 ? 0 : pasoX / 2;
+      for (let x = -pasoX + desfase; x <= ancho + pasoX; x += pasoX) {
+        pdf.text(TEXTO, x, y, { angle: 45, align: 'center' });
+      }
+    }
+
+    if (conOpacidad) pdf.restoreGraphicsState();
   }
 
   /**

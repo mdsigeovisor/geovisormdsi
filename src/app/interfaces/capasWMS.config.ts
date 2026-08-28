@@ -53,7 +53,7 @@ const VUELOS_LAYERS: WmsLayerConfig[] = [
 
 const NORMATIVA_LAYERS: WmsLayerConfig[] = [
   { id: 'etiq_zonificacion', layerName: `${wp}vw_nor_zonificacion_poligono_puntos`, zIndex: 2, title: 'Etiqueta Zonificación' },
-  { id: 'zonificacion', layerName: `${wp}gcZonificacion`, zIndex: 5, title: 'Zonificación' },
+  { id: 'zonificacion', layerName: `${wp}gcZonificacion`, zIndex: 2, title: 'Zonificación' },
   { id: 'amUrbHomogeneo', layerName: `${wp}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 1, title: 'Ámbito Urbano Homogéneo' },
   { id: 'tusne', layerName: `${wp}vw_tg_tusne`, zIndex: 2, title: 'Levantamiento Topográfico' },
 ];

@@ -71,9 +71,9 @@ const PANEL_BASE: Section[] = [
     items: [
       subseccion('catastro', 'CARTOGRAFIA', [
         capa('num_cuadra', 'Cuadra', { visible: true }),
-        capa('construcciones', 'Construcciones', { visible: true, showInLegend: true }),
-        capa('lote', 'Lote', { visible: true, showInLegend: true }),
-        capa('manzana', 'Manzana', { visible: true, showInLegend: true }),
+        capa('construcciones', 'Construcciones', { visible: true, showInLegend: false }),
+        capa('lote', 'Lote', { visible: true, showInLegend: false }),
+        capa('manzana', 'Manzana', { visible: true, showInLegend: false }),
         capa('veredas', 'Veredas', { visible: true }),
         capa('arearecreativa', 'Área Recreativa', { visible: true }),
       ]),
@@ -121,8 +121,8 @@ const PANEL_BASE: Section[] = [
     title: 'Numeración de Campo',
     expanded: false,
     items: [
-      capa('num_municipal_2024', 'Numeración de campo 2024', { showInLegend: true }),
-      capa('num_municipal_2022', 'Numeración de campo 2022', { showInLegend: true }),
+      capa('num_municipal_2024', 'Numeración de campo 2024', { showInLegend: false }),
+      capa('num_municipal_2022', 'Numeración de campo 2022', { showInLegend: false }),
       capa('puertas2024', 'Puertas 2024', { showInLegend: true }),
     ],
   },

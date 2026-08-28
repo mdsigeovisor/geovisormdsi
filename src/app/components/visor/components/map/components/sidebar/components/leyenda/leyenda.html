@@ -1,14 +1,42 @@
-<div class="flex flex-col h-full space-y-4 animate-in fade-in duration-300">
+<!-- Ventana flotante arrastrable sobre el mapa (en lugar del panel lateral) -->
+<div class="fixed flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 w-80 max-w-[92vw] overflow-hidden animate-in fade-in zoom-in duration-200"
+     style="max-height: calc(100vh - 100px); z-index: 1040;"
+     [style.left.px]="x()" [style.top.px]="y()">
+  <!-- Barra de título arrastrable -->
+  <div class="flex justify-between items-center px-3 py-2 border-b border-gray-200 bg-gray-50 cursor-move select-none touch-none shrink-0"
+       (pointerdown)="startDrag($event)"
+       (pointermove)="drag($event)"
+       (pointerup)="endDrag()"
+       (pointercancel)="endDrag()">
+    <h3 class="m-0 text-[11px] font-bold text-gray-700 uppercase tracking-widest flex items-center gap-2">
+      <i class="bi bi-map-fill text-primary"></i>
+      <span>Leyenda</span>
+    </h3>
+    <div class="flex items-center gap-1">
+      <button (pointerdown)="$event.stopPropagation()" (click)="toggleMinimize()"
+              class="w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+              [title]="isMinimized() ? 'Expandir' : 'Minimizar'">
+        <i class="bi text-xs" [ngClass]="isMinimized() ? 'bi-chevron-down' : 'bi-chevron-up'"></i>
+      </button>
+      <button (pointerdown)="$event.stopPropagation()" (click)="closePanel()"
+              class="w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer"
+              title="Cerrar">
+        <i class="bi bi-x-lg text-xs"></i>
+      </button>
+    </div>
+  </div>
+
+  @if (!isMinimized()) {
   <!-- Contenido de la leyenda -->
-  <div class="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+  <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3">
     <div class="space-y-3">
       @if (activeLegends().length === 0) {
-        <div class="flex flex-col items-center justify-center p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+        <div class="flex flex-col items-center justify-center p-6 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
           <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-3">
             <i class="bi bi-map text-xl"></i>
           </div>
           <p class="text-xs font-bold text-gray-500 uppercase tracking-wider leading-relaxed">No hay capas activas<br>con simbología.</p>
-          <p class="text-[10px] text-gray-400 mt-2 italic">Active capas en el panel anterior para ver su leyenda aquí.</p>
+          <p class="text-[10px] text-gray-400 mt-2 italic">Active capas con leyenda en el panel de Capas para verlas aquí.</p>
         </div>
       } @else {
         @for (item of activeLegends(); track item.label) {
@@ -24,9 +52,8 @@
       }
     </div>
   </div>
-
   <!-- Pie de página -->
-  <div class="pt-3 border-t border-gray-100 bg-white sticky bottom-0">
+  <div class="p-3 border-t border-gray-100 bg-white shrink-0">
     <div class="p-3 rounded-xl bg-primary/5 border border-primary/10 flex gap-3">
       <i class="bi bi-info-circle-fill text-primary/60 text-sm"></i>
       <p class="text-[10px] text-primary/80 leading-normal font-medium italic">
@@ -34,4 +61,5 @@
       </p>
     </div>
   </div>
+  }
 </div>

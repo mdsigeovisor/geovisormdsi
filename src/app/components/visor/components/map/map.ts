@@ -12,6 +12,7 @@ import { Spinner } from '../../../../animations/spinner/spinner';
 import { Login } from '../../../auth/components/login/login'; // Import Login component
 import { CoordinateInfo } from './components/coordinate-info/coordinate-info';
 import { TermsModal } from './components/terminos/terminos';
+import { Leyenda } from './components/sidebar/components/leyenda/leyenda';
 /**
  * Componente principal de la interfaz del mapa.
  * Coordina la visualización de la barra de herramientas, barra lateral y los controles
@@ -29,6 +30,7 @@ import { TermsModal } from './components/terminos/terminos';
     Spinner,
     CoordinateInfo,
     TermsModal,
+    Leyenda,
   ],
   templateUrl: './map.html',
   styleUrl: './map.css',
@@ -218,6 +220,15 @@ export class MapComponent {
    */
   closeLoginModal(): void {
     this.showLoginModal.set(false);
+  }
+
+  /**
+   * Cierra la ventana flotante de la leyenda.
+   * Remueve 'legend' del Set de herramientas activas del sidebar, lo que
+   * oculta el <app-leyenda> renderizado condicionalmente en la plantilla.
+   */
+  closeLeyenda(): void {
+    this.mapService.toggleSidebarTool('legend');
   }
 
   /**

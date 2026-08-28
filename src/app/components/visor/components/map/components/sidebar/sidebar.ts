@@ -6,7 +6,6 @@ import { MapService } from '../../../../../../services/map.service';
 //Componentes
 import { CapasComponent } from './components/capas/capas';
 import { Consultas } from './components/consultas/consultas';
-import { Leyenda } from './components/leyenda/leyenda';
 import { About } from './components/about/about';
 import { Descargaspdf } from './components/descargaspdf/descargaspdf';
 import { Imprimir } from './components/imprimir/imprimir';
@@ -22,7 +21,6 @@ import { UbicacionCoordenadas } from './components/coordenadas/coordenadas';
     Consultas,
     Descargaspdf,        
     FormsModule,
-    Leyenda,
     Imprimir,
     UbicacionCoordenadas
 
@@ -80,6 +78,21 @@ export class Sidebar  {
         }
       }
       this.mapService.toggleSidebarTool('about');
+      return;
+    }
+    // La leyenda se muestra como ventana flotante sobre el mapa,
+    // por lo que no debe abrir el panel lateral deslizable.
+    if (toolId === 'legend') {
+      const previous = this.activeTab;
+      if (previous && previous !== 'legend') {
+        // Si había otra herramienta activa, la cerramos junto con el panel
+        this.mapService.toggleSidebarTool(previous);
+        if (this.isOpen) {
+          this.isOpen = false;
+          this.onToggle.emit(false);
+        }
+      }
+      this.mapService.toggleSidebarTool('legend');
       return;
     }
     const currentActive = this.activeTab;

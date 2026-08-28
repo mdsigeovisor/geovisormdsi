@@ -12,12 +12,44 @@ import { MapService } from '@app/services/map.service';
 export class Leyenda {
   onClose = output<void>();
 
+  private mapService = inject(MapService);
+  /** Posición de la ventana flotante (px desde la esquina superior izquierda) */
+  x = signal(16);
+  y = signal(76);
+  /** Estado interno del arrastre de la ventana */
+  private dragState: { startX: number; startY: number; originX: number; originY: number } | null = null;
+
+  constructor() {
+    // Posición inicial: anclada al borde derecho, bajo la barra superior (w-80 = 320px + 16px de margen)
+    this.x.set(Math.max(16, window.innerWidth - 336));
+    this.y.set(76);
+  }
+
   closePanel() {
-    console.log('Leyenda: Emitiendo evento onClose');
     this.onClose.emit();
   }
 
-  private mapService = inject(MapService);
+  /** Inicia el arrastre de la ventana desde su barra de título. */
+  startDrag(event: PointerEvent): void {
+    if (event.button !== 0) return;
+    event.preventDefault(); // Evita seleccionar texto durante el arrastre
+    this.dragState = { startX: event.clientX, startY: event.clientY, originX: this.x(), originY: this.y() };
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  /** Arrastra la ventana siguiendo el puntero, sin salir del viewport. */
+  drag(event: PointerEvent): void {
+    if (!this.dragState) return;
+    const nx = this.dragState.originX + (event.clientX - this.dragState.startX);
+    const ny = this.dragState.originY + (event.clientY - this.dragState.startY);
+    this.x.set(Math.max(0, Math.min(nx, window.innerWidth - 80)));
+    this.y.set(Math.max(0, Math.min(ny, window.innerHeight - 60)));
+  }
+
+  /** Finaliza el arrastre de la ventana. */
+  endDrag(): void {
+    this.dragState = null;
+  }
   isMinimized = signal(false);  
 
   toggleMinimize() {
@@ -44,7 +76,6 @@ export class Leyenda {
         }
       });
     });
-
     return Array.from(uniqueLegends.values());
   });
 }

@@ -59,6 +59,11 @@
   </div>
 </div>
 }
+<!-- Leyenda: ventana flotante arrastrable sobre el mapa (se abre desde el menú lateral,
+     no usa el panel deslizable). El botón de cierre del menú alterna 'legend' en el Set. -->
+@if (mapService.activeSidebarTools().has('legend')) {
+<app-leyenda (onClose)="closeLeyenda()"></app-leyenda>
+}
 <!-- Modal para foto de dron -->
 @if (mapService.fotoDroneUrl2018(); as url) {
 <div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in" (click)="closeFotoDroneModal2018()" tabindex="-1">

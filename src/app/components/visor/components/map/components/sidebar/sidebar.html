@@ -46,7 +46,6 @@
             <ng-container [ngSwitch]="activeTab">
               <app-consultas *ngSwitchCase="'search'" (onClose)="toggleSidebar()"></app-consultas>
               <app-capas *ngSwitchCase="'layers'" (onClose)="toggleSidebar()"></app-capas>
-              <app-leyenda *ngSwitchCase="'legend'" (onClose)="toggleSidebar()"></app-leyenda>
               <app-coordenadas *ngSwitchCase="'coordenadas'" (onClose)="toggleSidebar()"></app-coordenadas>
               <app-imprimir *ngSwitchCase="'print'" (onClose)="toggleSidebar()"></app-imprimir>
               <app-descargaspdf *ngSwitchCase="'downloads'" (onClose)="toggleSidebar()"></app-descargaspdf>

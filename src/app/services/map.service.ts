@@ -1,8 +1,9 @@
-import { Injectable, signal, inject, NgZone, effect } from '@angular/core';
+import { Injectable, signal, inject, NgZone, effect, WritableSignal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { DrawMeasureService } from './draw.service';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
+import type { Coordinate } from 'ol/coordinate';
 import { Observable, map } from 'rxjs';
 import { ORTOFOTO_YEARS } from '../interfaces/ortofotos';
 import { LAYER_PANEL_SECTIONS } from '../interfaces/controlCapasConfig';
@@ -69,6 +70,15 @@ export interface LoteInfoWindow {
   x: number;
   /** Posición vertical (px) respecto al viewport */
   y: number;
+}
+/** Configuración de una capa consultable al hacer clic sobre el mapa. */
+interface ClickableLayerConfig {
+  /** Identificador de la capa en el panel de capas. */
+  layerId: string;
+  /** Obtiene la capa de OpenLayers asociada. */
+  getLayer: () => ImageLayer<ImageWMS> | undefined;
+  /** Lógica a ejecutar cuando el clic acierta sobre un feature de esta capa. */
+  handler: (feature: GeoJSONFeature) => void;
 }
 /**
  * Servicio de Angular para la gestión del mapa OpenLayers.
@@ -147,6 +157,49 @@ export class MapService {
   arboladoUrbano2015Url = signal<string | null>(null);
   /** URL del PDF de levantamiento topográfico (TUSNE) para mostrar en un modal. */
   tusneUrl = signal<string | null>(null);
+  /** Parámetros comunes para las consultas GetFeatureInfo. */
+  private static readonly FEATURE_INFO_PARAMS = {
+    'INFO_FORMAT': 'application/json',
+    'FEATURE_COUNT': '1'
+  } as const;
+  /**
+   * Capas consultables al hacer un clic simple sobre el mapa. La prioridad
+   * se resuelve en tiempo de consulta por el zIndex de cada capa visible.
+   */
+  private readonly clickableLayers: ClickableLayerConfig[] = [
+    this.infoLayerConfig('fotos_sin_2018', p => p['id'], id => `${environment.dataGis.fotoDrone2018Url}?codigo_i=${id}`, this.fotoDroneUrl2018),
+    this.infoLayerConfig('fotos_sin_2024', p => p['id'], id => `${environment.dataGis.fotoDrone2024Url}?codigo_i=${id}`, this.fotoDroneUrl2024),
+    this.infoLayerConfig('puntos_geodesicos', p => p['cod_pto_geodesico'], id => `${environment.dataGis.ptoGeodesicoUrl}?codigo_i=${id}`, this.ptoGeodesicoUrl),
+    this.infoLayerConfig('arbolado_urbano_2015', p => p['codigo'], id => `${environment.dataGis.catArbolesUrl}?codigo_i=${id}`, this.arboladoUrbano2015Url),
+    this.infoLayerConfig('cactus_yucca_2015', p => p['codigo'], id => `${environment.dataGis.catArbolesUrl}?codigo_i=${id}`, this.arboladoUrbano2015Url),
+    this.infoLayerConfig('tusne', p => p['id_lote'] ?? p['codigo'] ?? p['id'], id => `${environment.dataGis.tusneUrlBase}/${id}.pdf`, this.tusneUrl),
+  ];
+
+  /**
+   * Construye la configuración de una capa que, al recibir un clic sobre uno
+   * de sus features, asigna la URL construida a la señal indicada.
+   * @param layerId Identificador de la capa en el panel de capas.
+   * @param getId Extrae el identificador del feature (p. ej. de sus propiedades).
+   * @param buildUrl Construye la URL a partir del identificador obtenido.
+   * @param target Señal donde se guarda la URL de la capa consultada.
+   */
+  private infoLayerConfig(
+    layerId: string,
+    getId: (properties: Record<string, any>) => string | undefined,
+    buildUrl: (id: string) => string,
+    target: WritableSignal<string | null>
+  ): ClickableLayerConfig {
+    return {
+      layerId,
+      getLayer: () => this.getLayerById(layerId),
+      handler: (feature) => {
+        const id = getId(feature.properties);
+        if (id) {
+          target.set(buildUrl(id));
+        }
+      }
+    };
+  }
   /** Controla la visibilidad del modal global de Términos y Condiciones */
   showTermsModal = signal(false);
   /** Términos aceptados por el usuario durante esta sesión (no vuelve a mostrarse automáticamente) */
@@ -467,81 +520,23 @@ export class MapService {
     return layers.map(l => (l.id === layerId ? { ...l, olLayer } : l));
   }
   /**
-   * Configura el manejador de clics en el mapa para obtener información de las capas WMS.
+   * Configura los handlers de clic del mapa: un clic simple para consultar
+   * información de las capas y seleccionar lotes para impresión, y un doble
+   * clic para abrir la ficha del lote catastral.
    * @param olMap Instancia del mapa de OpenLayers.
    */
   private setupMapClickHandler(olMap: OlMap): void {
-    // Definimos las capas que queremos consultar en un clic y la lógica para cada una.
-    const singleClickLayersConfig = [
-      {
-        layerId: 'fotos_sin_2018',
-        getLayer: () => this.getLayerById('fotos_sin_2018'),
-        handler: (feature: GeoJSONFeature) => {
-          const fotoId = feature.properties['id'];
-          if (fotoId) {
-            const droneUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/2018Drone.asp?codigo_i=${fotoId}`;
-            this.fotoDroneUrl2018.set(droneUrl);
-          }
-        }
-      },
-      {
-        layerId: 'fotos_sin_2024',
-        getLayer: () => this.getLayerById('fotos_sin_2024'),
-        handler: (feature: GeoJSONFeature) => {
-          const fotoId = feature.properties['id'];
-          if (fotoId) {
-            const droneUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/2024Drone.asp?codigo_i=${fotoId}`;
-            this.fotoDroneUrl2024.set(droneUrl);
-          }
-        }
-      },
-      {
-        layerId: 'puntos_geodesicos',
-        getLayer: () => this.getLayerById('puntos_geodesicos'),
-        handler: (feature: GeoJSONFeature) => {
-          const ptoId = feature.properties['cod_pto_geodesico'];
-          if (ptoId) {
-            const ptoUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/PtoGeodesico.asp?codigo_i=${ptoId}`;
-            this.ptoGeodesicoUrl.set(ptoUrl);
-          }
-        }
-      },
-      {
-        layerId: 'arbolado_urbano_2015',
-        getLayer: () => this.getLayerById('arbolado_urbano_2015'),
-        handler: (feature: GeoJSONFeature) => {
-          const arbolId = feature.properties['codigo'];
-          if (arbolId) {
-            const arbolUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/Cat_Arboles_2014.asp?codigo_i=${arbolId}`;
-            this.arboladoUrbano2015Url.set(arbolUrl);
-          }
-        }
-      },
-      {
-        layerId: 'cactus_yucca_2015',
-        getLayer: () => this.getLayerById('cactus_yucca_2015'),
-        handler: (feature: GeoJSONFeature) => {
-          const arbolId = feature.properties['codigo'];
-          if (arbolId) {
-            const arbolUrl = `http://192.168.41.160/DataGIS_WGS84/WebFiles/Cat_Arboles_2014.asp?codigo_i=${arbolId}`;
-            this.arboladoUrbano2015Url.set(arbolUrl);
-          }
-        }
-      },
-      {
-        layerId: 'tusne',
-        getLayer: () => this.getLayerById('tusne'),
-        handler: (feature: GeoJSONFeature) => {
-          // Los planos TUSNE se nombran con el identificador del predio: <id_lote>.pdf
-          const tusneId = feature.properties['id_lote'] ?? feature.properties['codigo'] ?? feature.properties['id'];
-          if (tusneId) {
-            const tusnePdfUrl = `http://192.168.41.61/DataGIS_WGS84/32_LEVANTAMIENTO_TOPOGRAFICO_(TUSNE)/${tusneId}.pdf`;
-            this.tusneUrl.set(tusnePdfUrl);
-          }
-        }
-      },
-    ];
+    this.setupSingleClickHandler(olMap);
+    this.setupDoubleClickHandler(olMap);
+  }
 
+  /**
+   * Registra el evento de clic simple. Si se está usando una herramienta de
+   * dibujo se ignora; en modo "pick lote" se captura el predio clicado y se
+   * abandona el modo; en caso contrario se consultan las capas clicables.
+   * @param olMap Instancia del mapa de OpenLayers.
+   */
+  private setupSingleClickHandler(olMap: OlMap): void {
     olMap.on('singleclick', (evt) => {
       // Si se está usando una herramienta de dibujo, no hacemos nada.
       if (this.drawMeasureService.isDrawing()) {
@@ -549,78 +544,105 @@ export class MapService {
       }
       // Modo "seleccionar lote para imprimir": capturamos el lote clicado y salimos.
       if (this.pickLoteActivo()) {
-        const loteLayer = this.getLayerById('lote');
-        const source = loteLayer?.getSource();
-        const view = olMap.getView();
-        const infoUrl = loteLayer?.getVisible()
-          ? source?.getFeatureInfoUrl(evt.coordinate, view.getResolution()!, view.getProjection(), { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': '1' })
-          : undefined;
-        if (infoUrl) {
-          this.http.get<WfsResponse>(infoUrl).subscribe(resp => {
-            const loteFeature = resp?.features?.[0];
-            const codigo = loteFeature?.properties?.['id_lote'];
-            this.zone.run(() => {
-              if (codigo) {
-                this.loteSeleccionadoCodigo.set(String(codigo).trim());
-                // Resaltamos el lote en rojo y estampamos sus medidas perimetrales
-                this.resaltarLoteSeleccionado(loteFeature);
-              }
-              this.pickLoteActivo.set(false);
-            });
-          });
-        } else {
-          this.zone.run(() => this.pickLoteActivo.set(false));
-        }
+        this.handlePickLoteClick(olMap, evt.coordinate);
         return;
       }
-      const view = olMap.getView();
-      const viewResolution = view.getResolution()!;
-      const projection = view.getProjection();
-      // Priorizamos la capa visible con el zIndex más alto.
-      const visibleClickableLayers = singleClickLayersConfig
-        .map(config => ({ config, layer: config.getLayer() }))
-        .filter(item => item.layer?.getVisible())
-        .sort((a, b) => (b.layer?.getZIndex() ?? 0) - (a.layer?.getZIndex() ?? 0));
-      const queryNextLayer = (layers: typeof visibleClickableLayers) => {
-        if (layers.length === 0) return;
-        const { config, layer } = layers[0];
-        const source = layer?.getSource();
-        if (!source) {
-          queryNextLayer(layers.slice(1)); // Intenta con la siguiente
-          return;
-        };
-        const url = source.getFeatureInfoUrl(evt.coordinate, viewResolution, projection, { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': '1' });
-        if (url) {
-          this.http.get<WfsResponse>(url).subscribe(response => {
-            if (response?.features?.length > 0) {
-              config.handler(response.features[0]); // Si encontramos algo, lo manejamos y paramos.
-            } else {
-              queryNextLayer(layers.slice(1)); // Si no, intentamos con la siguiente capa en la lista.
-            }
-          });
-        } else {
-          queryNextLayer(layers.slice(1));
-        }
-      };
-      queryNextLayer(visibleClickableLayers);
+      this.queryInfoLayers(olMap, evt.coordinate);
     });
+  }
 
+  /**
+   * Modo selección de lote para impresión: consulta la capa "Lote Catastral"
+   * en el punto indicado y, si existe un predio, lo marca como seleccionado y
+   * resalta sus medidas perimetrales.
+   * @param olMap Instancia del mapa de OpenLayers.
+   * @param coordinate Coordenada del clic en la proyección del mapa.
+   */
+  private handlePickLoteClick(olMap: OlMap, coordinate: Coordinate): void {
+    const loteLayer = this.getLayerById('lote');
+    const source = loteLayer?.getSource();
+    const view = olMap.getView();
+    const infoUrl = loteLayer?.getVisible()
+      ? source?.getFeatureInfoUrl(coordinate, view.getResolution()!, view.getProjection(), MapService.FEATURE_INFO_PARAMS)
+      : undefined;
+
+    if (infoUrl) {
+      this.http.get<WfsResponse>(infoUrl).subscribe(resp => {
+        const loteFeature = resp?.features?.[0];
+        const codigo = loteFeature?.properties?.['id_lote'];
+        this.zone.run(() => {
+          if (codigo) {
+            this.loteSeleccionadoCodigo.set(String(codigo).trim());
+            // Resaltamos el lote en rojo y estampamos sus medidas perimetrales
+            this.resaltarLoteSeleccionado(loteFeature);
+          }
+          this.pickLoteActivo.set(false);
+        });
+      });
+    } else {
+      this.zone.run(() => this.pickLoteActivo.set(false));
+    }
+  }
+
+  /**
+   * Consulta las capas clicables visibles (ordenadas de mayor a menor zIndex)
+   * hasta encontrar la primera que devuelva un feature y ejecuta su handler.
+   * @param olMap Instancia del mapa de OpenLayers.
+   * @param coordinate Coordenada del clic en la proyección del mapa.
+   */
+  private queryInfoLayers(olMap: OlMap, coordinate: Coordinate): void {
+    const view = olMap.getView();
+    const viewResolution = view.getResolution()!;
+    const projection = view.getProjection();
+
+    // Priorizamos la capa visible con el zIndex más alto.
+    const visibleLayers = this.clickableLayers
+      .map(config => ({ config, layer: config.getLayer() }))
+      .filter(item => item.layer?.getVisible())
+      .sort((a, b) => (b.layer?.getZIndex() ?? 0) - (a.layer?.getZIndex() ?? 0));
+
+    const queryNext = (pending: typeof visibleLayers): void => {
+      if (pending.length === 0) return;
+      const { config, layer } = pending[0];
+      const source = layer?.getSource();
+      if (!source) {
+        queryNext(pending.slice(1)); // Sin fuente: intenta con la siguiente
+        return;
+      }
+      const url = source.getFeatureInfoUrl(coordinate, viewResolution, projection, MapService.FEATURE_INFO_PARAMS);
+      if (!url) {
+        queryNext(pending.slice(1)); // Sin URL: intenta con la siguiente
+        return;
+      }
+      this.http.get<WfsResponse>(url).subscribe(response => {
+        if (response?.features?.length > 0) {
+          config.handler(response.features[0]); // Encontramos algo: lo manejamos y paramos.
+        } else {
+          queryNext(pending.slice(1)); // Si no, intentamos con la siguiente capa.
+        }
+      });
+    };
+
+    queryNext(visibleLayers);
+  }
+
+  /**
+   * Registra el evento de doble clic para abrir la ficha del lote catastral
+   * (información de la capa "Lote Catastral") cuando está visible.
+   * @param olMap Instancia del mapa de OpenLayers.
+   */
+  private setupDoubleClickHandler(olMap: OlMap): void {
     olMap.on('dblclick', (evt) => {
       if (this.drawMeasureService.isDrawing()) {
         return;
       }
-
       const layer = this.getLayerById('lote');
       if (!layer?.getVisible()) {
         return;
       }
-
       const view = olMap.getView();
       const source = layer.getSource();
-      const url = source?.getFeatureInfoUrl(evt.coordinate, view.getResolution()!, view.getProjection(), {
-        'INFO_FORMAT': 'application/json',
-        'FEATURE_COUNT': '1'
-      });
+      const url = source?.getFeatureInfoUrl(evt.coordinate, view.getResolution()!, view.getProjection(), MapService.FEATURE_INFO_PARAMS);
 
       if (url) {
         this.http.get<WfsResponse>(url).subscribe(response => {
@@ -652,7 +674,7 @@ export class MapService {
     // Escalonamos cada ventana nueva para que no queden exactamente superpuestas
     const x = Math.min(96 + index * 36, Math.max(vw - 660, 20));
     const y = Math.min(88 + index * 30, Math.max(vh - 240, 20));
-    const url = `http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigo}`;
+    const url = `${environment.dataGis.informacionUrl}?codigo_i=${codigo}`;
     this.loteInfoWindows.update(wins => [...wins, { id: codigo, url, x, y }]);
   }
   /**

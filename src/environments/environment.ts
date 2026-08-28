@@ -30,5 +30,44 @@ export const environment = {
   },
 
   // --- CONFIGURACIÓN DEL SERVIDOR DE ORTOFOTOS ---
-  ortofotoServerUrl: 'http://192.168.40.58:8082'
+  ortofotoServerUrl: 'http://192.168.40.58:8082',
+
+  // --- CONFIGURACIÓN DEL SERVIDOR DE DATOS CATASTRALES (DataGIS) ---
+  // Centraliza las URLs de los servidores internos para no exponerlas
+  // hardcodeadas en el código fuente de la aplicación.
+  dataGis: {
+    // Servidor principal de datos catastrales (fichas, fotos, planos, capas)
+    serverUrl: 'http://192.168.41.160',
+    // Servidor de levantamientos topográficos (planos TUSNE)
+    tusneServerUrl: 'http://192.168.41.61',
+
+    /** Host del servidor principal (sin protocolo), usado al comparar orígenes. */
+    get serverHost(): string {
+      return this.serverUrl.replace(/^https?:\/\//, '');
+    },
+    /** Raíz pública de los datos catastrales. */
+    get baseUrl(): string {
+      return `${this.serverUrl}/DataGIS_WGS84`;
+    },
+    /** Carpeta "WebFiles" (capas consultables). */
+    get webFilesUrl(): string {
+      return `${this.baseUrl}/WebFiles`;
+    },
+    /** Carpeta "WEBFILES" (fichas y fotografía). */
+    get webFilesUpperUrl(): string {
+      return `${this.baseUrl}/WEBFILES`;
+    },
+    // --- Endpoints ASP de las capas consultables por clic ---
+    get fotoDrone2018Url(): string { return `${this.webFilesUrl}/2018Drone.asp`; },
+    get fotoDrone2024Url(): string { return `${this.webFilesUrl}/2024Drone.asp`; },
+    get ptoGeodesicoUrl(): string { return `${this.webFilesUrl}/PtoGeodesico.asp`; },
+    get catArbolesUrl(): string { return `${this.webFilesUrl}/Cat_Arboles_2014.asp`; },
+    // --- Endpoints de fichas y fotografía (lote) ---
+    get informacionUrl(): string { return `${this.webFilesUpperUrl}/informacion.asp`; },
+    get lotePublicoUrl(): string { return `${this.webFilesUpperUrl}/LotePublico.asp`; },
+    // --- Planos de levantamiento topográfico (TUSNE) ---
+    get tusneUrlBase(): string {
+      return `${this.tusneServerUrl}/DataGIS_WGS84/32_LEVANTAMIENTO_TOPOGRAFICO_(TUSNE)`;
+    }
+  }
 };

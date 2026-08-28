@@ -5,8 +5,9 @@ import { Spinner } from '@app/animations/spinner/spinner';
 import { jsPDF } from 'jspdf';
 import { firstValueFrom } from 'rxjs';
 import { GeoJSON, getCenter, OlMap } from '@app/modules/openlayers.module';
-import { MapService } from '../../../../../../../../services/map.service';
+import { MapService } from '@services/map.service';
 import { GeoJSONFeature } from '@app/interfaces/geoLayers';
+import { environment } from '@environments/environment';
 
 /** Opciones de orientación del plano */
 type Orientacion = 'vertical' | 'horizontal';
@@ -258,7 +259,7 @@ export class Imprimir {
       // sus atributos cualitativos ya NO se muestran en el plano.
       const feature = await firstValueFrom(this.mapService.searchLoteByCodigoCatastral(codigo));
       this.featureLote = feature ?? null;
-      this.fichaUrl.set(`http://192.168.41.160/DataGIS_WGS84/WEBFILES/informacion.asp?codigo_i=${codigo}`);
+      this.fichaUrl.set(`${environment.dataGis.informacionUrl}?codigo_i=${codigo}`);
       // La fotografía es opcional: si falla (p. ej. CORS), se usa un enlace en el PDF
       this.fotoLote.set(await this.obtenerFotoLote(codigo));
       // La ficha pública es opcional: si falla, el marco mostrará un aviso
@@ -374,7 +375,7 @@ export class Imprimir {
   private async descargarUrlDataGIS(destino: string): Promise<string | null> {
     const candidatas = destino.startsWith('http')
       ? [destino.replace(/^https?:\/\/[^/]+/i, ''), destino]
-      : [destino, `http://192.168.41.160${destino}`];
+      : [destino, `${environment.dataGis.serverUrl}${destino}`];
     for (const base of candidatas) {
       try {
         const controlador = new AbortController();
@@ -489,16 +490,16 @@ export class Imprimir {
     if (!limpio || /^(data:|javascript:|mailto:|#)/i.test(limpio)) return [];
     let url: URL;
     try {
-      url = new URL(limpio, `http://192.168.41.160${rutaBase ?? '/DataGIS_WGS84/'}`);
+      url = new URL(limpio, `${environment.dataGis.serverUrl}${rutaBase ?? '/DataGIS_WGS84/'}`);
     } catch {
       return [];
     }
     const destino = `${url.pathname}${url.search}`;
     const host = url.hostname.toLowerCase();
-    if (host === '192.168.41.160') {
+    if (host === environment.dataGis.serverHost) {
       return [
         { ruta: destino, prioridad: 0 },
-        { ruta: `http://192.168.41.160${destino}`, prioridad: 1 },
+        { ruta: `${environment.dataGis.serverUrl}${destino}`, prioridad: 1 },
       ];
     }
     if (/munisanisidro\.gob\.pe$/i.test(host)) {
@@ -718,7 +719,7 @@ export class Imprimir {
             'Ver ficha en línea',
             infoX,
             yInferior + 16,
-            { url: `http://192.168.41.160/DataGIS_WGS84/WEBFILES/LotePublico.asp?codigo_i=${this.mapService.loteSeleccionadoCodigo()}` },
+            { url: `${environment.dataGis.lotePublicoUrl}?codigo_i=${this.mapService.loteSeleccionadoCodigo()}` },
           );
         }
       } else {

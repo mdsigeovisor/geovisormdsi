@@ -16,7 +16,8 @@
     "paths": {
       "@app/*": ["./src/app/*"],
       "@services/*": ["./src/app/services/*"],
-      "@interfaces/*": ["./src/app/interfaces/*"]
+      "@interfaces/*": ["./src/app/interfaces/*"],
+      "@environments/*": ["./src/environments/*"]
     },
     "isolatedModules": true,
     "experimentalDecorators": true,

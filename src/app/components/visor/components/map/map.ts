@@ -223,12 +223,13 @@ export class MapComponent {
   }
 
   /**
-   * Cierra la ventana flotante de la leyenda.
-   * Remueve 'legend' del Set de herramientas activas del sidebar, lo que
-   * oculta el <app-leyenda> renderizado condicionalmente en la plantilla.
+   * Cierra la ventana flotante de la leyenda (botón X de la propia ventana).
+   * Apaga la señal dedicada `leyendaVisible` del MapService, lo que oculta
+   * el <app-leyenda> renderizado condicionalmente en la plantilla. No toca
+   * las herramientas activas del sidebar.
    */
   closeLeyenda(): void {
-    this.mapService.toggleSidebarTool('legend');
+    this.mapService.closeLeyenda();
   }
 
   /**

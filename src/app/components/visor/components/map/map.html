@@ -59,9 +59,11 @@
   </div>
 </div>
 }
-<!-- Leyenda: ventana flotante arrastrable sobre el mapa (se abre desde el menú lateral,
-     no usa el panel deslizable). El botón de cierre del menú alterna 'legend' en el Set. -->
-@if (mapService.activeSidebarTools().has('legend')) {
+<!-- Leyenda: ventana flotante FIJA sobre el mapa. Su visibilidad vive en la
+     señal `leyendaVisible` del MapService (independiente de las herramientas
+     del sidebar): cambiar de opción en el menú NO la cierra; solo la X de la
+     propia ventana (closeLeyenda) o pulsar de nuevo "Leyenda" la eliminan. -->
+@if (mapService.leyendaVisible()) {
 <app-leyenda (onClose)="closeLeyenda()"></app-leyenda>
 }
 <!-- Modal para foto de dron -->

@@ -55,6 +55,16 @@ export class Sidebar  {
     if (!active) return '';
     return this.menuItems.find(i => i.id === active)?.label || 'Herramienta';
   }
+  /**
+   * Resaltado del menú lateral. La leyenda usa su propia señal
+   * (`leyendaVisible`) porque no vive en el Set de herramientas; el resto
+   * de opciones se resaltan según el Set de herramienta activa.
+   */
+  isActive(toolId: string): boolean {
+    return toolId === 'legend'
+      ? this.mapService.leyendaVisible()
+      : this.activeTools().has(toolId);
+  }
   toggleSidebar() {
     this.isOpen = !this.isOpen;
     this.onToggle.emit(this.isOpen);
@@ -80,19 +90,11 @@ export class Sidebar  {
       this.mapService.toggleSidebarTool('about');
       return;
     }
-    // La leyenda se muestra como ventana flotante sobre el mapa,
-    // por lo que no debe abrir el panel lateral deslizable.
+    // La leyenda es una ventana flotante FIJA con señal propia (`leyendaVisible`):
+    // solo se alterna esa señal. No abre el panel deslizable, no toca el Set de
+    // herramientas y ninguna otra opción del menú puede cerrarla o borrarla.
     if (toolId === 'legend') {
-      const previous = this.activeTab;
-      if (previous && previous !== 'legend') {
-        // Si había otra herramienta activa, la cerramos junto con el panel
-        this.mapService.toggleSidebarTool(previous);
-        if (this.isOpen) {
-          this.isOpen = false;
-          this.onToggle.emit(false);
-        }
-      }
-      this.mapService.toggleSidebarTool('legend');
+      this.mapService.toggleLeyenda();
       return;
     }
     const currentActive = this.activeTab;

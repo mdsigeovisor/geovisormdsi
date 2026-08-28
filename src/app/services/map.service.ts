@@ -177,6 +177,21 @@ export class MapService {
   userCoords = signal<{ lon: number, lat: number } | null>(null);
   /** Herramientas del sidebar activas. */
   activeSidebarTools = signal<Set<string>>(new Set());
+  /**
+   * Visibilidad de la ventana flotante de la leyenda. Es INDEPENDIENTE de
+   * `activeSidebarTools`: la navegación del sidebar gestiona una herramienta
+   * de panel a la vez y nunca debe cerrar ni borrar la leyenda. Solo su
+   * propio botón de cierre (X) o pulsar de nuevo "Leyenda" la ocultan.
+   */
+  leyendaVisible = signal(false);
+  /** Alterna la ventana flotante de la leyenda (botón "Leyenda" del sidebar). */
+  toggleLeyenda(): void {
+    this.leyendaVisible.update(v => !v);
+  }
+  /** Cierra la ventana flotante de la leyenda (botón X de la propia ventana). */
+  closeLeyenda(): void {
+    this.leyendaVisible.set(false);
+  }
   /** Ventanas flotantes con la información de lotes (varias abiertas, sin bloquear el mapa) */
   loteInfoWindows = signal<LoteInfoWindow[]>([]);
   /** Modo selección: el próximo clic sobre la capa "Lote Catastral" lo asigna al módulo de impresión */

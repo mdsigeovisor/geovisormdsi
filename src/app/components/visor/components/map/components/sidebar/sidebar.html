@@ -6,14 +6,14 @@
         @for (item of menuItems; track item.id) {
           <button (click)="setActive(item.id)"
                   class="w-full h-10 flex items-center justify-center transition-all duration-200 group relative"
-                  [ngClass]="activeTools().has(item.id) ? 'text-white' : 'text-gray-300 hover:text-white'"
+                  [ngClass]="isActive(item.id) ? 'text-white' : 'text-gray-300 hover:text-white'"
                   [title]="item.label">
             <!-- Indicador de activo -->
             <div class="absolute left-0 top-1 bottom-1 w-1 transition-all rounded-r-full"
-                 [ngClass]="activeTools().has(item.id) ? 'bg-secondary' : 'bg-transparent'"></div>
+                 [ngClass]="isActive(item.id) ? 'bg-secondary' : 'bg-transparent'"></div>
             <!-- Círculo del Icono -->
             <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
-                 [ngClass]="activeTools().has(item.id) ? 'bg-white/20 shadow-lg scale-110' : 'bg-transparent group-hover:bg-white/10'">
+                 [ngClass]="isActive(item.id) ? 'bg-white/20 shadow-lg scale-110' : 'bg-transparent group-hover:bg-white/10'">
               <i class="text-[22px] transition-transform group-hover:scale-110" [ngClass]="item.icon"></i>
             </div>
           </button>

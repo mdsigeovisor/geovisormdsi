@@ -25,21 +25,51 @@ export class DriverService {
    */
   private steps(): DriveStep[] {
     return [
-      {
+      {/* 1. Logo MSI - Navbar izquierda */
         element: '#msiLogo',
         popover: {
+          side: 'bottom',
+          align: 'start',
           title: 'Geovisor Catastral',
           description: 'Municipalidad de San Isidro. Logo institucional de la aplicación.',
         },
       },
-      {
+      {/* 2. Título - Navbar centro */
         element: '#visor-title',
         popover: {
+          side: 'bottom',
           title: 'Geovisor Catastral',
           description: 'Nombre principal del geovisor del ámbito catastral municipal.',
         },
       },
-      {
+      {/* 3. Contador de visitas - Navbar derecha */
+        element: '#visit-counter',
+        popover: {
+          side: 'bottom',
+          align: 'end',
+          title: 'Visitas',
+          description: 'Contador de visitas al geovisor. Cada carga de la página incrementa el contador.',
+        },
+      },
+      {/* 4. Observatorio - Navbar derecha */
+        element: '#btn-observatorio',
+        popover: {
+          side: 'bottom',
+          align: 'end',
+          title: 'Observatorio Urbano',
+          description: 'Enlace externo al Observatorio Urbano de la comuna. Se abre en una pestaña nueva.',
+        },
+      },
+      {/* 5. Botón Tour - Navbar derecha */
+        element: '#btn-tour',
+        popover: {
+          side: 'bottom',
+          align: 'end',
+          title: 'Recorrido interactivo',
+          description: 'Repite el tour de bienvenida en cualquier momento pulsando este botón.',
+        },
+      },
+      {/* 6. Mapa principal - Centro */
         element: '#mapContainer',
         popover: {
           title: 'Mapa principal',
@@ -47,55 +77,7 @@ export class DriverService {
             'Visualiza, navega y consulta la cartografía catastral. Usa la rueda del ratón o los controles para hacer zoom y arrastrar.',
         },
       },
-      {
-        element: '#btn-zoom-in',
-        popover: {
-          side: 'right',
-          title: 'Acercar zoom',
-          description: 'Aumenta el nivel de zoom para ver más detalle del mapa.',
-        },
-      },
-      {
-        element: '#btn-zoom-out',
-        popover: {
-          side: 'right',
-          title: 'Alejar zoom',
-          description: 'Reduce el nivel de zoom para ver una área más amplia.',
-        },
-      },
-      {
-        element: '#btn-home',
-        popover: {
-          side: 'right',
-          title: 'Vista general',
-          description: 'Restablece la vista del mapa a la extensión inicial del distrito.',
-        },
-      },
-      {
-        element: '#btn-geolocalizacion',
-        popover: {
-          side: 'right',
-          title: 'Mi ubicación',
-          description: 'Centra el mapa en tu ubicación actual usando geolocalización del navegador.',
-        },
-      },
-      {
-        element: '#btn-cambio-base',
-        popover: {
-          side: 'right',
-          title: 'Cambiar mapa base',
-          description: 'Alterna entre las vistas satélite, calles y mapa en blanco.',
-        },
-      },
-      {
-        element: '#btn-herramientas',
-        popover: {
-          side: 'right',
-          title: 'Herramientas de dibujo',
-          description: 'Abre el panel de herramientas para medir distancias, áreas y dibujar sobre el mapa.',
-        },
-      },
-      {
+      {/* 7. Consultas - Sidebar izquierda */
         element: '#btn-sidebar-search',
         popover: {
           side: 'right',
@@ -104,7 +86,7 @@ export class DriverService {
             'Busca predios por código catastral, CUC, dirección, habilitación, titular, denominación o parque.',
         },
       },
-      {
+      {/* 8. Capas - Sidebar izquierda */
         element: '#btn-sidebar-layers',
         popover: {
           side: 'right',
@@ -112,7 +94,7 @@ export class DriverService {
           description: 'Activa o desactiva las capas cartográficas visibles en el mapa.',
         },
       },
-      {
+      {/* 9. Leyenda - Sidebar izquierda */
         element: '#btn-sidebar-legend',
         popover: {
           side: 'right',
@@ -120,7 +102,7 @@ export class DriverService {
           description: 'Visualiza la simbología de las capas activas en una ventana flotante.',
         },
       },
-      {
+      {/* 10. Coordenadas - Sidebar izquierda */
         element: '#btn-sidebar-coordenadas',
         popover: {
           side: 'right',
@@ -128,7 +110,7 @@ export class DriverService {
           description: 'Ubica un punto ingresando sus coordenadas geográficas.',
         },
       },
-      {
+      {/* 11. Imprimir - Sidebar izquierda */
         element: '#btn-sidebar-print',
         popover: {
           side: 'right',
@@ -136,7 +118,7 @@ export class DriverService {
           description: 'Genera un PDF con la vista actual del mapa.',
         },
       },
-      {
+      {/* 12. Descargas - Sidebar izquierda */
         element: '#btn-sidebar-downloads',
         popover: {
           side: 'right',
@@ -144,35 +126,67 @@ export class DriverService {
           description: 'Accede a los formatos de descarga disponibles.',
         },
       },
-      {
-        element: '#visit-counter',
+      {/* 13. Zoom In - Panel derecho */
+        element: '#btn-zoom-in',
         popover: {
-          title: 'Visitas',
-          description:
-            'Contador de visitas al geovisor. Cada carga de la página incrementa el contador.',
+          side: 'right',
+          align: 'center',
+          title: 'Acercar zoom',
+          description: 'Aumenta el nivel de zoom para ver más detalle del mapa.',
         },
       },
-      {
-        element: '#btn-observatorio',
+      {/* 14. Zoom Out - Panel derecho */
+        element: '#btn-zoom-out',
         popover: {
-          title: 'Observatorio Urbano',
-          description:
-            'Enlace externo al Observatorio Urbano de la comuna. Se abre en una pestaña nueva.',
+          side: 'right',
+          align: 'center',
+          title: 'Alejar zoom',
+          description: 'Reduce el nivel de zoom para ver una área más amplia.',
         },
       },
-      {
-        element: '#btn-tour',
+      {/* 15. Vista general - Panel derecho */
+        element: '#btn-home',
         popover: {
-          title: 'Recorrido interactivo',
-          description: 'Repite el tour de bienvenida en cualquier momento pulsando este botón.',
+          side: 'right',
+          align: 'center',
+          title: 'Vista general',
+          description: 'Restablece la vista del mapa a la extensión inicial del distrito.',
         },
       },
-      {
+      {/* 16. Geolocalización - Panel derecho */
+        element: '#btn-geolocalizacion',
+        popover: {
+          side: 'right',
+          align: 'center',
+          title: 'Mi ubicación',
+          description: 'Centra el mapa en tu ubicación actual usando geolocalización del navegador.',
+        },
+      },
+      {/* 17. Cambio base - Panel derecho */
+        element: '#btn-cambio-base',
+        popover: {
+          side: 'right',
+          align: 'center',
+          title: 'Cambiar mapa base',
+          description: 'Alterna entre las vistas satélite, calles y mapa en blanco.',
+        },
+      },
+      {/* 18. Herramientas - Panel derecho */
+        element: '#btn-herramientas',
+        popover: {
+          side: 'right',
+          align: 'center',
+          title: 'Herramientas de dibujo',
+          description: 'Abre el panel de herramientas para medir distancias, áreas y dibujar sobre el mapa.',
+        },
+      },
+      {/* 19. Botón Auth/Login - Último, Navbar derecha */
         element: '#btn-auth',
         popover: {
+          side: 'bottom',
+          align: 'end',
           title: 'Acceso / Salida',
-          description:
-            'Accede con tu cuenta para desbloquear capas y búsquedas restringidas (p. ej. CUC y Titular).',
+          description: 'Accede con tu cuenta para desbloquear capas y búsquedas restringidas (p. ej. CUC y Titular).',
         },
       },
     ];

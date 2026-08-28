@@ -1,30 +1,82 @@
-import { Section } from './geoLayers';
+import { LayerItem, Section, SubSection } from './geoLayers';
 import { ORTOFOTO_YEARS } from './ortofotos';
+
+/* ------------------------------------------------------------------------- */
+/*  Fábricas declarativas                                                     */
+/* ------------------------------------------------------------------------- */
+
+/** Propiedades opcionales al declarar una capa (lo omitido toma el valor por defecto). */
+type CapaOpciones = Partial<Pick<LayerItem, 'visible' | 'opacity' | 'showInLegend'>>;
+
 /**
- * Configuración centralizada para las secciones y capas del panel lateral.
- * Este array define la estructura completa del panel de capas, facilitando
- * su mantenimiento y modificación sin alterar la lógica del `MapService`.
+ * Crea una capa del panel aplicando los valores por defecto
+ * (`visible: false`, `opacity: 1`, `showInLegend: false`), de modo que cada
+ * entrada solo declara aquello que se desvía del estándar.
  */
-export const LAYER_PANEL_SECTIONS: Section[] = [
+const capa = (id: string, label: string, opciones: CapaOpciones = {}): LayerItem => ({
+  type: 'layer',
+  id,
+  label,
+  visible: false,
+  opacity: 1,
+  showInLegend: false,
+  ...opciones,
+});
+
+/** Crea una subsección plegable con sus capas. */
+const subseccion = (id: string, title: string, layers: LayerItem[], expanded = false): SubSection => ({
+  type: 'subsection',
+  id,
+  title,
+  expanded,
+  layers,
+});
+
+/* ------------------------------------------------------------------------- */
+/*  Política de acceso (integración con AuthService)                          */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Por defecto, TODAS las secciones del panel requieren sesión iniciada
+ * (`requiresAuth`; ver `MapService.panelSections`). Si una sección debe verse
+ * también sin autenticar, añade su `id` aquí y quedará exenta automáticamente.
+ * Para casos finos (una capa o subsección concreta) usa `requiresAuth` en el item.
+ */
+const SECCIONES_PUBLICAS: ReadonlySet<string> = new Set<string>([
+  // Cartografía base: todas sus capas son visibles por defecto y deben poder
+  // controlarse desde el panel también en modo público (sin sesión iniciada).
+  'catastral',
+  'sectorizacion',
+  'lotizacion',
+  'nomenclatura_vial',
+  'numeracion_campo',
+  'arbolado_urbano',
+  'imaAereas',
+  'normativaUrbana'
+]);
+
+/** Marca como restringidas todas las secciones que no estén exentas en `SECCIONES_PUBLICAS`. */
+const aplicarPoliticaAcceso = (secciones: Section[]): Section[] =>
+  secciones.map(s => (SECCIONES_PUBLICAS.has(s.id) ? s : { ...s, requiresAuth: true }));
+
+/* ------------------------------------------------------------------------- */
+/*  Estructura del panel (sin política de acceso; se aplica al final)          */
+/* ------------------------------------------------------------------------- */
+
+const PANEL_BASE: Section[] = [
   {
     id: 'catastral',
     title: 'Información Catastral',
     expanded: false,
     items: [
-      {
-        type: 'subsection',
-        id: 'catastro',
-        title: 'CARTOGRAFIA',
-        expanded: false,
-        layers: [
-          { type: 'layer', id: 'num_cuadra', label: 'Cuadra', visible: true, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'construcciones', label: 'Construcciones', visible: true, opacity: 1, showInLegend: true },
-          { type: 'layer', id: 'lote', label: 'Lote', visible: true, opacity: 1, showInLegend: true },
-          { type: 'layer', id: 'manzana', label: 'Manzana', visible: true, opacity: 1, showInLegend: true },
-          { type: 'layer', id: 'veredas', label: 'Veredas', visible: true, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'arearecreativa', label: 'Área Recreativa', visible: true, opacity: 1, showInLegend: false },
-        ],
-      },
+      subseccion('catastro', 'CARTOGRAFIA', [
+        capa('num_cuadra', 'Cuadra', { visible: true }),
+        capa('construcciones', 'Construcciones', { visible: true, showInLegend: true }),
+        capa('lote', 'Lote', { visible: true, showInLegend: true }),
+        capa('manzana', 'Manzana', { visible: true, showInLegend: true }),
+        capa('veredas', 'Veredas', { visible: true }),
+        capa('arearecreativa', 'Área Recreativa', { visible: true }),
+      ]),
     ],
   },
   {
@@ -32,10 +84,10 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     title: 'Sectorización',
     expanded: false,
     items: [
-      { type: 'layer', id: 'sec_catastrales', label: 'Sectores Catastrales', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'sec_vecinal', label: 'Sectores Vecinales', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'hab_urbana', label: 'Urbanizaciones', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'sec_subvecinal', label: 'Sub Sectores - Junta Vecinales', visible: false, opacity: 1, showInLegend: false },
+      capa('sec_catastrales', 'Sectores Catastrales'),
+      capa('sec_vecinal', 'Sectores Vecinales'),
+      capa('hab_urbana', 'Urbanizaciones'),
+      capa('sec_subvecinal', 'Sub Sectores - Junta Vecinales'),
     ],
   },
   {
@@ -43,27 +95,25 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     title: 'Lotización',
     expanded: false,
     items: [
-      { type: 'layer', id: 'lote_urbano', label: 'Lote Urbano', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'etiquetas_catastrales', label: 'Código Catastral', visible: false, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'denominacion_predio', label: 'Denominación del Predio', visible: false, opacity: 1, showInLegend: false },
+      capa('lote_urbano', 'Lote Urbano'),
+      capa('etiquetas_catastrales', 'Código Catastral'),
+      capa('denominacion_predio', 'Denominación del Predio'),
     ],
   },
   {
     id: 'puntosGeodesicos',
     title: 'Puntos Geodésicos',
-    requiresAuth: true,
     expanded: false,
-    items: [
-      { type: 'layer', id: 'puntos_geodesicos', label: 'Puntos Geodésicos', visible: false, opacity: 1, showInLegend: true },
-    ],
+    items: [capa('puntos_geodesicos', 'Puntos Geodésicos', { showInLegend: true })],
   },
   {
     id: 'nomenclatura_vial',
     title: 'Nomenclatura Vial',
     expanded: false,
     items: [
-      { type: 'layer', id: 'vias', label: 'Nomenclatura de Vías', visible: true, opacity: 1, showInLegend: false },
-      { type: 'layer', id: 'seccion_vial', label: 'Sección vias (Inf. referewncial de campo) ', visible: false, opacity: 1, showInLegend: false },
+      capa('vias', 'Nomenclatura de Vías', { visible: true }),
+      // Se conserva el label original tal cual (incluye typo y espacio final).
+      capa('seccion_vial', 'Sección vias (Inf. referewncial de campo) '),
     ],
   },
   {
@@ -71,9 +121,9 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     title: 'Numeración de Campo',
     expanded: false,
     items: [
-      { type: 'layer', id: 'num_municipal_2024', label: 'Numeración de campo 2024', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'num_municipal_2022', label: 'Numeración de campo 2022', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'puertas2024', label: 'Puertas 2024', visible: false, opacity: 1, showInLegend: true },
+      capa('num_municipal_2024', 'Numeración de campo 2024', { showInLegend: true }),
+      capa('num_municipal_2022', 'Numeración de campo 2022', { showInLegend: true }),
+      capa('puertas2024', 'Puertas 2024', { showInLegend: true }),
     ],
   },
   {
@@ -81,9 +131,9 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     title: 'Arbolado Urbano',
     expanded: false,
     items: [
-      { type: 'layer', id: 'arbolado_urbano_2024', label: 'Arboles 2024', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'arbolado_urbano_2015', label: 'Arboles 2015', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'cactus_yucca_2015', label: 'Cactus - Yucca 2015', visible: false, opacity: 1, showInLegend: true },
+      capa('arbolado_urbano_2024', 'Arboles 2024', { showInLegend: true }),
+      capa('arbolado_urbano_2015', 'Arboles 2015', { showInLegend: true }),
+      capa('cactus_yucca_2015', 'Cactus - Yucca 2015', { showInLegend: true }),
     ],
   },
   {
@@ -91,33 +141,20 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     title: 'Fotográfias Áereas',
     expanded: false,
     items: [
-      {
-        type: 'subsection',
-        id: 'ortofotos',
-        title: 'Ortofotos',
-        expanded: false,
-        // Generamos dinámicamente las capas de ortofotos a partir de la configuración de años
-        layers: ORTOFOTO_YEARS.map(year => ({
-          type: 'layer',
-          id: `ortofoto_${year}`,
-          label: `${year}`,
-          visible: false,
-          opacity: 1,
-          showInLegend: false,
-        })),
-      },
-      {
-        type: 'subsection',
-        id: 'ortofotos-sin-procesar',
-        title: 'Ortofotos sin procesar',
-        // Restringida: solo aparece en el panel cuando hay sesión iniciada (AuthService).
-        requiresAuth: true,
-        expanded: false,
-        layers: [
-          { type: 'layer', id: 'fotos_sin_2018', label: 'Fotos sin Procesar - 2018', visible: false, opacity: 1, showInLegend: false },
-          { type: 'layer', id: 'fotos_sin_2024', label: 'Fotos sin Procesar - 2024', visible: false, opacity: 1, showInLegend: false },
-        ],
-      },
+      // Capas generadas dinámicamente a partir de la configuración de años.
+      // Van como capas directas (sin subsección), igual que 'arbolado_urbano';
+      // la regla "solo una ortofoto visible" vive en MapService.toggleLayerVisibility.
+      ...ORTOFOTO_YEARS.map(year => capa(`ortofoto_${year}`, `${year}`)),
+    ],
+  },
+  {
+    id: 'ortoAereas',
+    title: 'Fotográfias sin procesar',
+    expanded: false,
+    items: [
+      // Capas directas (sin subsección), igual que el resto del panel.
+      capa('fotos_sin_2018', 'Fotos sin Procesar - 2018'),
+      capa('fotos_sin_2024', 'Fotos sin Procesar - 2024'),
     ],
   },
   {
@@ -125,18 +162,22 @@ export const LAYER_PANEL_SECTIONS: Section[] = [
     title: 'Normativa Urbana',
     expanded: false,
     items: [
-      { type: 'layer', id: 'etiq_zonificacion', label: 'Etiqueta Zonificación', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'zonificacion', label: 'Zonificación', visible: false, opacity: 1, showInLegend: true },
-      { type: 'layer', id: 'amUrbHomogeneo', label: 'Ambito Urbano Homogéneo', visible: false, opacity: 1, showInLegend: false },
+      capa('etiq_zonificacion', 'Etiqueta Zonificación', { showInLegend: true }),
+      capa('zonificacion', 'Zonificación', { showInLegend: true }),
+      capa('amUrbHomogeneo', 'Ambito Urbano Homogéneo'),
     ],
   },
   {
     id: 'tusne',
     title: 'TUSNE',
-    requiresAuth: true,
     expanded: false,
-    items: [
-      { type: 'layer', id: 'tusne', label: 'Levantamiento Topográfico', visible: false, opacity: 1, showInLegend: true },
-    ],
+    items: [capa('tusne', 'Levantamiento Topográfico', { showInLegend: true })],
   },
 ];
+
+/**
+ * Configuración centralizada para las secciones y capas del panel lateral.
+ * Este array define la estructura completa del panel de capas, facilitando
+ * su mantenimiento y modificación sin alterar la lógica del `MapService`.
+ */
+export const LAYER_PANEL_SECTIONS: Section[] = aplicarPoliticaAcceso(PANEL_BASE);

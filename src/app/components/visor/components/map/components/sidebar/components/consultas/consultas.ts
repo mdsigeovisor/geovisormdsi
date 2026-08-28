@@ -1,7 +1,8 @@
-import { Component, Input, signal, output, inject } from '@angular/core';
+import { Component, Input, signal, output, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MapService } from '../../../../../../../../services/map.service';
+import { AuthService } from '../../../../../../../../services/auth.service';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '../../../../../../../../interfaces/geoLayers';
 
@@ -15,6 +16,9 @@ import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '../../../../../..
 export class Consultas {
   @Input() isGuest: boolean = false;
   private readonly mapService = inject(MapService);
+  private readonly authService = inject(AuthService);
+  /** Estado de autenticación: las pestañas CUC y Titular solo se muestran con sesión iniciada. */
+  public isAuthenticated = this.authService.isAuthenticated;
   Close = output<void>();
   SearchResult = output<SearchResult>();
   /** Control de pestañas */
@@ -61,6 +65,14 @@ export class Consultas {
   searchError = signal<string | null>(null);
 
   constructor() {
+    // Si el usuario cierra sesión con una pestaña restringida (CUC/Titular) abierta,
+    // volvemos a la pestaña pública por defecto.
+    effect(() => {
+      if (!this.authService.isAuthenticated() && (this.activeTab === 'cuc' || this.activeTab === 'titular')) {
+        this.activeTab = 'catastral';
+      }
+    });
+
     this.nombreViaSubject.pipe(
       debounceTime(300), // Espera 300ms después de la última pulsación
       distinctUntilChanged(), // Solo emite si el valor ha cambiado

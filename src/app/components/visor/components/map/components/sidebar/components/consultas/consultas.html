@@ -18,7 +18,8 @@
             Búsqueda precisa usando el código de Sector, Manzana y Lote.</p>
         </div>
       </button>
-      <!-- Opción CUC -->
+      <!-- Opción CUC: restringida, solo visible con sesión iniciada (AuthService) -->
+      @if (isAuthenticated()) {
       <button (click)="activeTab = 'cuc'"
         [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'cuc', 'text-gray-800 hover:bg-gray-50': activeTab !== 'cuc'}"
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
@@ -32,6 +33,7 @@
             Único Catastral.</p>
         </div>
       </button>
+      }
       <!-- Opción Código Predial -->
       <button (click)="activeTab = 'predial'"
         [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'predial', 'text-gray-800 hover:bg-gray-50': activeTab !== 'predial'}"
@@ -96,7 +98,8 @@
             parque por su nombre.</p>
         </div>
       </button>
-      <!-- Opción Titular Catastral -->
+      <!-- Opción Titular Catastral: restringida, solo visible con sesión iniciada (AuthService) -->
+      @if (isAuthenticated()) {
       <button
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"
         disabled title="Próximamente disponible">
@@ -106,6 +109,7 @@
           <p class="text-xs text-gray-500 mt-0.5">Busca por código de titular catastral.</p>
         </div>
       </button>
+      }
       <!-- Opción Denominación del Predio -->
       <button
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"
@@ -150,8 +154,8 @@
         </div>
       </div>
       }
-      <!-- Formulario CUC -->
-      @if (activeTab === 'cuc') {
+      <!-- Formulario CUC (protegido: si se cierra sesión con la pestaña abierta, se oculta) -->
+      @if (activeTab === 'cuc' && isAuthenticated()) {
       <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="cuc-form">
         <div>
           <label for="cucInput"
@@ -265,8 +269,8 @@
         </div>
       </div>
       }
-      <!-- Formulario Titular Catastral -->
-      @if (activeTab === 'titular') {
+      <!-- Formulario Titular Catastral (protegido: si se cierra sesión con la pestaña abierta, se oculta) -->
+      @if (activeTab === 'titular' && isAuthenticated()) {
       <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="titular-form">
         <div>
           <label for="titularInput"

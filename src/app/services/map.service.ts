@@ -551,10 +551,15 @@ export class MapService {
    */
   private processSectionForLayerUpdate(section: Section, layerId: string, olLayer: TileLayer): Section {
     const updatedItems = section.items.map(item => {
-      // Solo procesamos subsecciones, ya que es donde se asocian las capas XYZ
+      // Subsecciones: asociamos la instancia dentro de su array de capas.
       if ('layers' in item) {
         const updatedLayers = this.updateLayersInSubSection(item.layers, layerId, olLayer);
         return { ...item, layers: updatedLayers };
+      }
+      // Capas directas de la sección (sin subsección): también deben poder
+      // recibir su instancia de capa XYZ (p. ej. las ortofotos de 'imaAereas').
+      if (item.type === 'layer' && item.id === layerId) {
+        return { ...item, olLayer };
       }
       return item;
     });
@@ -1044,34 +1049,30 @@ export class MapService {
     // Lógica especial para ortofotos: solo una puede estar activa a la vez.
     if (layerId.startsWith('ortofoto_')) {
       this.sections.update(currentSections => {
-        let isTurningOn = true; // Asumimos que vamos a encender una capa.
+        // Localizamos la capa clicada esté donde esté (capa directa o dentro de una subsección).
+        const clicked = currentSections
+          .flatMap(sec => sec.items)
+          .flatMap(item => ('layers' in item ? item.layers : item.type === 'layer' ? [item] : []))
+          .find(l => l.id === layerId);
+        // Si ya estaba visible, se apaga (comportamiento de radio-button).
+        const isTurningOn = !clicked?.visible;
 
-        // Primero, determinamos si la capa clicada ya está visible.
-        const sectionsWithOrtoState = currentSections.map(sec => {
-          if (sec.id === 'imaAereas') {
-            sec.items.forEach(item => {
-              if (item.id === 'ortofotos' && 'layers' in item) {
-                const clickedLayer = item.layers.find(l => l.id === layerId);
-                if (clickedLayer?.visible) {
-                  isTurningOn = false; // Si ya está visible, la vamos a apagar.
-                }
-              }
-            });
-          }
-          return sec;
-        });
+        // Apaga todas las ortofotos y deja encendida únicamente la clicada.
+        const radioUpdate = (l: LayerItem): LayerItem =>
+          l.id.startsWith('ortofoto_') ? { ...l, visible: l.id === layerId ? isTurningOn : false } : l;
 
-        // Ahora aplicamos los cambios.
-        return sectionsWithOrtoState.map(sec => {
-          if (sec.id !== 'imaAereas') return sec;
-          const newItems = sec.items.map(item => {
-            if (item.id !== 'ortofotos' || !('layers' in item)) return item;
-            // Desactivamos todas las ortofotos y luego activamos solo la clicada si es necesario.
-            const newLayers = item.layers.map(l => ({ ...l, visible: l.id === layerId ? isTurningOn : false }));
-            return { ...item, layers: newLayers };
-          });
-          return { ...sec, items: newItems };
-        });
+        return currentSections.map(sec => ({
+          ...sec,
+          items: sec.items.map(item => {
+            if ('layers' in item) {
+              // Subsección que contiene ortofotos: aplicamos el radio a sus capas.
+              if (!item.layers.some(l => l.id.startsWith('ortofoto_'))) return item;
+              return { ...item, layers: item.layers.map(radioUpdate) };
+            }
+            // Capa directa de la sección.
+            return item.type === 'layer' && item.id.startsWith('ortofoto_') ? radioUpdate(item) : item;
+          }),
+        }));
       });
     } else {
       // Lógica original para el resto de las capas.

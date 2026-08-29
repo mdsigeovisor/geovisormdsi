@@ -211,6 +211,10 @@ export class DriverService {
       overlayColor: 'rgba(0, 0, 0, 0.6)',
       animate: true,
       duration: 300,
+      nextBtnText: 'Siguiente',
+      prevBtnText: 'Anterior',
+      doneBtnText: 'Finalizar',
+      progressText: '{{current}} de {{total}}',
       steps: this.steps(),
       // onHighlighted se dispara cuando un elemento es resaltado (cada paso).
       // Lo usamos para marcar el tour como activo.

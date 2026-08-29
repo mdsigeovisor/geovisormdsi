@@ -58,6 +58,9 @@ const NORMATIVA_LAYERS: WmsLayerConfig[] = [
   { id: 'tusne', layerName: `${wp}vw_tg_tusne`, zIndex: 2, title: 'Levantamiento Topográfico' },
 ];
 
+const ACCESIBILIDAD: WmsLayerConfig[] = [
+  { id: 'cruces_accesibilidad', layerName: `${wp}cruces_Sector_Vecinal_01`, zIndex: 2, title: 'Accesibilidad' },
+];
 /**
  * Configuración centralizada para las capas WMS que se cargarán inicialmente en el mapa.
  * Mover esta configuración a un archivo dedicado facilita el mantenimiento y la adición
@@ -72,5 +75,6 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   ...SECTORES_LAYERS,
   ...VUELOS_LAYERS,
   ...NORMATIVA_LAYERS,
+  ...ACCESIBILIDAD
 ];
 

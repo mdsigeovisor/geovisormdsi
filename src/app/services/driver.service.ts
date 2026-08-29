@@ -31,7 +31,7 @@ export class DriverService {
           side: 'bottom',
           align: 'start',
           title: 'Geovisor Catastral',
-          description: 'Municipalidad de San Isidro. Logo institucional de la aplicación.',
+             description: '<div style="text-align: center;"><img src="assets/images/logo_visor.png" alt="Logo" style="max-width: 200px; margin-bottom: 8px;"></div> Municipalidad de San Isidro. Logo institucional de la aplicación.',
         },
       },
       {/* 2. Título - Navbar centro */

@@ -44,6 +44,7 @@ import {
   OlMap,
   Overlay,
   Point,
+  ScaleLine,
   Stroke,
   Style,
   Text,
@@ -55,6 +56,7 @@ import {
   View,
   WKT,
   XYZ,
+  defaultControls,
 } from '@app/modules/openlayers.module';
 
 export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
@@ -257,7 +259,6 @@ export class MapService {
     this.infoLayerConfig('cactus_yucca_2015', p => p['codigo'], id => `${environment.dataGis.catArbolesUrl}?codigo_i=${id}`, this.arboladoUrbano2015Url),
     this.infoLayerConfig('tusne', p => p['id_lote'] ?? p['codigo'] ?? p['id'], id => `${environment.dataGis.tusneUrlBase}/${id}.pdf`, this.tusneUrl),
   ];
-
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
    * de sus features, asigna la URL construida a la señal indicada.
@@ -351,6 +352,11 @@ export class MapService {
     const olMap = new OlMap({
       target,
       layers: [this.streetsLayer!, this.satelliteLayer!],
+      controls: defaultControls().extend([
+        new ScaleLine({
+          units: 'metric',
+        }),
+      ]),
       view: new View({
         center: fromLonLat(INITIAL_CENTER),
         zoom: INITIAL_ZOOM,
@@ -2220,4 +2226,3 @@ export class MapService {
     window.URL.revokeObjectURL(downloadUrl);
   }
 }
-

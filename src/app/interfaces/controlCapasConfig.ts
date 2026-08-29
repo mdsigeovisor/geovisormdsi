@@ -52,7 +52,8 @@ const SECCIONES_PUBLICAS: ReadonlySet<string> = new Set<string>([
   'numeracion_campo',
   'arbolado_urbano',
   'imaAereas',
-  'normativaUrbana'
+  'normativaUrbana',
+  'accesibilidad'
 ]);
 
 /** Marca como restringidas todas las secciones que no estén exentas en `SECCIONES_PUBLICAS`. */
@@ -167,11 +168,17 @@ const PANEL_BASE: Section[] = [
       capa('amUrbHomogeneo', 'Ambito Urbano Homogéneo'),
     ],
   },
+   {
+    id: 'accesibilidad',
+    title: 'Accesibilidad',
+    expanded: false,
+    items: [capa('cruces_accesibilidad', 'Accesibilidad', { showInLegend: true, visible:true})],
+  },
   {
     id: 'tusne',
     title: 'TUSNE',
     expanded: false,
-    items: [capa('tusne', 'Levantamiento Topográfico', { showInLegend: true })],
+    items: [capa('tusne', 'Levantamiento Topográfico', { showInLegend: true})],
   },
 ];
 

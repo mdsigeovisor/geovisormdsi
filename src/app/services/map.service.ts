@@ -1989,28 +1989,6 @@ export class MapService {
       });
       if (!geometria) return;
       source.addFeature(new Feature({ geometry: geometria }));
-
-      // Anillos del polígono convertidos a UTM 18S (metros reales) para medir
-      const geometriaUtm = formato.readGeometry(feature.geometry, {
-        dataProjection: srsOrigen,
-        featureProjection: 'EPSG:32718',
-      });
-      if (!geometriaUtm) return;
-      let anillosUtm: number[][][] = [];
-      if (geometriaUtm.getType() === 'Polygon') {
-        anillosUtm = (geometriaUtm as unknown as { getCoordinates(): number[][][] }).getCoordinates();
-      } else if (geometriaUtm.getType() === 'MultiPolygon') {
-        const poligonos = (geometriaUtm as unknown as { getCoordinates(): number[][][][] }).getCoordinates();
-        anillosUtm = poligonos.flat();
-      }
-
-      // Medidas por arista -> etiquetas en el punto medio (proyectadas a la vista)
-      this.calcularMedidasDeAnillos(anillosUtm).forEach(medida => {
-        const puntoVista = transform(medida.punto as [number, number], 'EPSG:32718', proyeccionVista);
-        const etiqueta = new Feature(new Point(puntoVista));
-        etiqueta.set('etiqueta', medida.texto);
-        source.addFeature(etiqueta);
-      });
     } catch (err) {
       console.error('No se pudo resaltar el lote seleccionado:', err);
     }

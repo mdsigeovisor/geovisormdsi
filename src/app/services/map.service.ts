@@ -126,7 +126,7 @@ export class MapService {
   private readonly ortofotoLayerConfigs = [
     // Generamos dinámicamente la configuración a partir de la lista de años importada.
     // Esto facilita la adición de nuevos años de ortofotos.
-    ...ORTOFOTO_YEARS.map(year => ({ year, zIndex: 1 }))
+    ...ORTOFOTO_YEARS.map(year => ({ year, zIndex: 5 }))
   ] as const;
   /**
    * Signal que gestiona las secciones y capas del visor.

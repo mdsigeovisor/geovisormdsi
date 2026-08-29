@@ -8,7 +8,7 @@
  */
 export interface OrtofotoLayerConfig {
   year: number;
-  zIndex: number;
+  zIndex: 1;
 }
 /**
  * Lista de años de las ortofotos disponibles.

@@ -278,3 +278,4 @@ export class MapComponent {
     this.mapService.panMapForSidebar(isOpen, 400);
   }
 }
+

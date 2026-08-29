@@ -17,27 +17,25 @@
               </div>
               <!-- Título, Subtítulo y Acciones -->
               <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="text-[11px] font-bold leading-tight block truncate"
-                      [ngClass]="{'text-white': section.expanded, 'text-gray-800': !section.expanded}">
-                        {{ section.title }}
-                    </span>
-                    <!-- Botones de acción -->
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                        <button (click)="toggleAllLayersInSection(section.id, true); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
-                          [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Mostrar todas">
-                            <i class="bi bi-eye-fill text-xs"></i>
-                        </button>
-                        <button (click)="toggleAllLayersInSection(section.id, false); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
-                          [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Ocultar todas">
-                            <i class="bi bi-eye-slash text-xs"></i>
-                        </button>
-                    </div>
-                  </div>
+                  <span class="text-[10px] font-bold leading-tight block truncate"
+                    [ngClass]="{'text-white': section.expanded, 'text-gray-800': !section.expanded}">
+                      {{ section.title }}
+                  </span>
                   @if (section.subtitle) {
                   <p class="text-[11px] mt-0.5 truncate"
                     [ngClass]="{'text-white/70': section.expanded, 'text-gray-400': !section.expanded}">{{ section.subtitle }}</p>
                   }
+                  <!-- Botones de acción -->
+                  <div class="flex items-center gap-1 mt-1">
+                      <button (click)="toggleAllLayersInSection(section.id, true); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
+                        [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Mostrar todas">
+                          <i class="bi bi-eye-fill text-xs"></i>
+                      </button>
+                      <button (click)="toggleAllLayersInSection(section.id, false); $event.stopPropagation()" class="h-6 w-6 flex items-center justify-center transition-all rounded-md"
+                        [ngClass]="{'text-white/60 hover:bg-white/10 hover:text-white': section.expanded, 'text-gray-400 hover:bg-gray-100 hover:text-primary': !section.expanded}" title="Ocultar todas">
+                          <i class="bi bi-eye-slash text-xs"></i>
+                      </button>
+                  </div>
               </div>
           </div>
           <!-- Chevron -->

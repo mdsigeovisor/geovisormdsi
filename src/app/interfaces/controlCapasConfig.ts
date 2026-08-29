@@ -52,8 +52,7 @@ const SECCIONES_PUBLICAS: ReadonlySet<string> = new Set<string>([
   'numeracion_campo',
   'arbolado_urbano',
   'imaAereas',
-  'normativaUrbana',
-  'accesibilidad'
+  'normativaUrbana',  
 ]);
 
 /** Marca como restringidas todas las secciones que no estén exentas en `SECCIONES_PUBLICAS`. */
@@ -67,7 +66,7 @@ const aplicarPoliticaAcceso = (secciones: Section[]): Section[] =>
 const PANEL_BASE: Section[] = [
   {
     id: 'catastral',
-    title: 'Información Catastral',
+    title: 'INFORMACION CATASTRAL',
     expanded: false,
     items: [
       subseccion('catastro', 'CARTOGRAFIA', [
@@ -168,11 +167,29 @@ const PANEL_BASE: Section[] = [
       capa('amUrbHomogeneo', 'Ambito Urbano Homogéneo'),
     ],
   },
-   {
+  {
     id: 'accesibilidad',
     title: 'Accesibilidad',
     expanded: false,
-    items: [capa('cruces_accesibilidad', 'Accesibilidad', { showInLegend: true, visible:true})],
+    items: [
+      subseccion('cruces', 'Cruces', [        
+        capa('cruces_accesibilidad_1', 'Sector Vecinal 01', { visible: false }),
+        capa('cruces_accesibilidad_2', 'Sector Vecinal 02', { visible: false }),
+        capa('cruces_accesibilidad_3', 'Sector Vecinal 03', { visible: false }),
+        capa('cruces_accesibilidad_4', 'Sector Vecinal 04', { visible: false }),
+        capa('cruces_accesibilidad_5', 'Sector Vecinal 05', { visible: false }),
+      ]),      
+    ],
+  },
+  {
+    id: 'tematica',
+    title: 'Informnacion Tematica',
+    expanded: false,
+    items: [
+      subseccion('cruces', 'Tramites atendidos', [        
+        capa('tem_parametros', 'Parámetros Urbanisticos y Edificatorios', { visible: false }),        
+      ]),      
+    ],
   },
   {
     id: 'tusne',

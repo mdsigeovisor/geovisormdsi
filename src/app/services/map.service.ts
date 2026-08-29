@@ -735,14 +735,41 @@ export class MapService {
       if (url) {
         this.http.get<WfsResponse>(url).subscribe(response => {
           if (response?.features?.length > 0) {
-            const codigoLote = String(response.features[0].properties['id_lote']);
+            const feature = response.features[0];
+            const codigoLote = String(feature.properties['id_lote']);
             if (codigoLote && codigoLote !== 'undefined') {
               this.openLoteInfoWindow(codigoLote);
+              // Resaltamos la geometría del lote en el mapa (igual que en búsqueda por código catastral)
+              this.resaltarGeometriaLote(feature, view.getProjection()?.getCode());
             }
           }
         });
       }
     });
+  }
+
+  /**
+   * Resalta la geometría de un lote en el mapa usando la capa de resaltado.
+   * @param feature Feature GeoJSON del lote.
+   * @param srsProyeccion SRS de la proyección actual del mapa (para transformación de coordenadas).
+   */
+  private resaltarGeometriaLote(feature: GeoJSONFeature, srsProyeccion?: string): void {
+    if (!feature.geometry) return;
+
+    // Limpiamos cualquier resaltado anterior para evitar confusiones
+    this.clearHighlightLayer();
+
+    const format = new GeoJSON();
+    // Leemos la geometría del feature y la transformamos a la proyección del mapa
+    const geometryOl = format.readGeometry(feature.geometry, {
+      dataProjection: srsProyeccion,
+      featureProjection: srsProyeccion
+    });
+
+    if (geometryOl) {
+      const featureToHighlight = new Feature({ geometry: geometryOl });
+      this.highlightLayer?.getSource()?.addFeature(featureToHighlight);
+    }
   }
   /**
    * Configuración por defecto (ficha pública) de las ventanas flotantes de lote.
@@ -1644,7 +1671,6 @@ export class MapService {
     });
     map.addLayer(this.highlightLayer);
   }
-
   /**
    * Configura la capa dedicada al lote seleccionado para impresión:
    * borde rojo grueso (con halo blanco para contraste sobre ortofotos)

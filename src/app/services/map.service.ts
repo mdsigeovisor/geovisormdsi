@@ -866,12 +866,16 @@ export class MapService {
    */
   closeLoteWindow(id: string): void {
     this.loteInfoWindows.update(wins => wins.filter(w => w.id !== id));
+    // Limpiamos el resaltado al cerrar la ventana
+    this.clearHighlightLayer();
   }
   /**
    * Cierra la última ventana abierta (la superior). Usado por la tecla Escape.
    */
   closeLastLoteWindow(): void {
     this.loteInfoWindows.update(wins => wins.slice(0, -1));
+    // Limpiamos el resaltado al cerrar la ventana
+    this.clearHighlightLayer();
   }
   /**
    * Mueve una ventana flotante a la posición indicada (arrastre).

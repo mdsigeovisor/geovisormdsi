@@ -6,9 +6,9 @@ const wp = environment.geoserver.workspacePrefix;
  * Grupos de configuración de capas WMS organizados por temática.
  */
 const ETIQUETAS_LAYERS: WmsLayerConfig[] = [
-  { id: 'lote_urbano', layerName: `${wp}vw_tg_lote_urbano`, zIndex: 0, title: 'Lote Urbano' },
-  { id: 'etiquetas_catastrales', layerName: `${wp}gc_mz_lote_catastral_etiqueta`, zIndex: 0, title: 'Etiquetas Catastrales' },
-  { id: 'denominacion_predio', layerName: `${wp}denominacion_predio`, zIndex: 0, title: 'Denominación del Predio' },  
+  { id: 'lote_urbano', layerName: `${wp}vw_tg_lote_urbano`, zIndex: 1, title: 'Lote Urbano' },
+  { id: 'etiquetas_catastrales', layerName: `${wp}gc_mz_lote_catastral_etiqueta`, zIndex: 1, title: 'Etiquetas Catastrales' },
+  { id: 'denominacion_predio', layerName: `${wp}denominacion_predio`, zIndex: 1, title: 'Denominación del Predio' },  
 ];
 
 const INFRAESTRUCTURA_LAYERS: WmsLayerConfig[] = [
@@ -25,9 +25,9 @@ const NUMERACION_LAYERS: WmsLayerConfig[] = [
 ];
 
 const AMBIENTAL_LAYERS: WmsLayerConfig[] = [
-  { id: 'arbolado_urbano_2024', layerName: `${wp}vw_arboles_2024`, zIndex: 0, title: 'Árboles 2024' },
-  { id: 'arbolado_urbano_2015', layerName: `${wp}vw_arboles_2015`, zIndex: 0, title: 'Árboles 2015' },
-  { id: 'cactus_yucca_2015', layerName: `${wp}vw_arboles_2015_cactus`, zIndex: 0, title: 'Cactus - Yucca 2015' },
+  { id: 'arbolado_urbano_2024', layerName: `${wp}vw_arboles_2024`, zIndex: 1, title: 'Árboles 2024' },
+  { id: 'arbolado_urbano_2015', layerName: `${wp}vw_arboles_2015`, zIndex: 1, title: 'Árboles 2015' },
+  { id: 'cactus_yucca_2015', layerName: `${wp}vw_arboles_2015_cactus`, zIndex: 1, title: 'Cactus - Yucca 2015' },
   { id: 'arearecreativa', layerName: `${wp}gc_area_verde`, zIndex: 1, title: 'Área Recreativa' },
 ];
 
@@ -72,7 +72,7 @@ const ACCESIBILIDAD: WmsLayerConfig[] = [
 ];
 
 const TEMATICA: WmsLayerConfig[] = [
-  { id: 'tem_parametros', layerName: `${wp}vw_manzanas_sector_vecinal_01`, zIndex: 0, title: 'Parámetros Urbanisticos y Edificatorios' },  
+  { id: 'tem_parametros', layerName: `${wp}view_parametros_urbanisticos`, zIndex: 0, title: 'Parámetros Urbanisticos y Edificatorios' },  
 ];
 /**
  * Configuración centralizada para las capas WMS que se cargarán inicialmente en el mapa.

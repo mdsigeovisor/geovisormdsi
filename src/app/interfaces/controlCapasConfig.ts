@@ -71,13 +71,69 @@ const PANEL_BASE: Section[] = [
     title: 'INFORMACION CATASTRAL',
     expanded: false,
     items: [
+      subseccion('tusne', 'TUSNE', [
+        capa('tusne', 'Levantamiento Topográfico', { visible: false, showInLegend: true }),
+      ]),
+      subseccion('sectorizacion', 'SECTORIZACION', [
+        capa('sec_catastrales', 'Sectores Catastrales', { visible: false, showInLegend: false }),
+        capa('sec_vecinal', 'Sectores Vecinales', { visible: false, showInLegend: false }),
+        capa('hab_urbana', 'Urbanizaciones', { visible: false, showInLegend: false }),
+        capa('sec_subvecinal', 'Sub Sectores - Junta Vecinales', { visible: false, showInLegend: false }),
+      ]),
+      subseccion('lotizacion', 'LOTIZACIÓN', [
+        capa('lote_urbano', 'Lote Urbano', { visible: false, showInLegend: false }),
+        capa('etiquetas_catastrales', 'Código Catastral', { visible: false, showInLegend: false }),
+        capa('denominacion_predio', 'Denominación del Predio (DESARROLLO)', { visible: false, showInLegend: false }),
+      ]),
+      subseccion('pto_geodesico', 'PUNTOS GEODESICOS', [
+        capa('puntos_geodesicos', 'Puntos Geodésicos', { visible: false, showInLegend: true })
+      ]),
+      subseccion('vias', 'VIAS', [
+        capa('vias', 'Nomenclatura de Vías', { visible: true, showInLegend: false }),
+        capa('seccion_vial', 'Sección vias (Inf. referewncial de campo)', { visible: false, showInLegend: false }),
+      ]),
+      subseccion('num_municipal', 'NÚMERACION MUNICIPAL', [
+        capa('', 'Numeración Municipal Oficial (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('num_municipal_2024', 'Numeración de campo 2024', { visible: false, showInLegend: false }),
+        capa('num_municipal_2022', 'Numeración de campo 2022', { visible: false, showInLegend: false }),
+      ]),
+      subseccion('arb_urbano', 'ARBOLADO URBANO', [
+        capa('arbolado_urbano_2024', 'Arboles 2024', { visible: false, showInLegend: true }),
+        capa('arbolado_urbano_2015', 'Arboles 2015', { visible: false, showInLegend: true }),
+        capa('cactus_yucca_2015', 'Cactus - Yucca 2015', { visible: false, showInLegend: true }),
+        capa('', 'Area verde San Isidro (Desarrollo)', { visible: false, showInLegend: true }),
+      ]),
+      subseccion('moviliario_urbano', 'MOVILIARIO URBANO', [
+        capa('', 'Subsectores vecinales 1-3 y 2-1 (2025)', { visible: false, showInLegend: true }),
+        capa('', 'Peticiones de gracia 2024', { visible: false, showInLegend: true }),
+        capa('', 'Comercio en vía pública 2022', { visible: false, showInLegend: true }),
+        capa('', 'Comercio en vía pública 2021', { visible: false, showInLegend: true }),
+        capa('', 'Comercio en vía pública 2017', { visible: false, showInLegend: true }),
+        capa('', 'Comercio en vía pública 2015', { visible: false, showInLegend: true }),
+        capa('', 'Comercio en vía pública 2012', { visible: false, showInLegend: true }),
+        capa('', 'Estacionamientos de bicicletas 2016', { visible: false, showInLegend: true }),
+        capa('', 'Juegos para niños 2016', { visible: false, showInLegend: true }),
+        capa('', 'Minigimnasios 2016', { visible: false, showInLegend: true }),
+        capa('', 'Postes de Iluminación Ornamentales 2016', { visible: false, showInLegend: true }),
+        capa('', 'Estacionamientos de motos', { visible: false, showInLegend: true }),
+        capa('', 'Bancas 2016', { visible: false, showInLegend: true }),
+        capa('', 'Bebederos 2016', { visible: false, showInLegend: true }),
+        capa('', 'Papeleras 2016', { visible: false, showInLegend: true }),
+        capa('', 'Parklets 2017', { visible: false, showInLegend: true }),
+        capa('', 'Parklets 2016', { visible: false, showInLegend: true }),
+        capa('', 'Piletas 2016', { visible: false, showInLegend: true }),
+        capa('', 'Intersección Semaforizada (2012)', { visible: false, showInLegend: true }),
+        capa('', 'Paneles Publicitarios 2018', { visible: false, showInLegend: true }),
+        capa('', 'Monumentos, Bustos y Toten 2021', { visible: false, showInLegend: true }),
+        capa('', 'Monumentos o esculturas 2016', { visible: false, showInLegend: true }),
+      ]),
       subseccion('catastro', 'CARTOGRAFIA', [
-        capa('num_cuadra', 'Cuadra', { visible: true }),
+        capa('num_cuadra', 'Cuadra', { visible: true, showInLegend: false }),
         capa('construcciones', 'Construcciones', { visible: true, showInLegend: false }),
         capa('lote', 'Lote', { visible: true, showInLegend: false }),
         capa('manzana', 'Manzana', { visible: true, showInLegend: false }),
-        capa('veredas', 'Veredas', { visible: true }),
-        capa('arearecreativa', 'Área Recreativa', { visible: true }),
+        capa('veredas', 'Veredas', { visible: true, showInLegend: false }),
+        capa('arearecreativa', 'Área Recreativa', { visible: true, showInLegend: false }),
       ]),
     ],
   },
@@ -87,9 +143,14 @@ const PANEL_BASE: Section[] = [
     expanded: false,
     items: [
       // Capas generadas dinámicamente a partir de la configuración de años.
-      // Van como capas directas (sin subsección), igual que 'arbolado_urbano';
-      // la regla "solo una ortofoto visible" vive en MapService.toggleLayerVisibility.
-      ...ORTOFOTO_YEARS.map(year => capa(`ortofoto_${year}`, `${year}`)),
+      // La regla "solo una ortofoto visible" vive en MapService.toggleLayerVisibility.
+      subseccion('ortofotos_historicas', 'Ortofotos Históricas', [
+        ...ORTOFOTO_YEARS.map(year => capa(`ortofoto_${year}`, `${year}`)),
+      ]),
+      subseccion('fotos_sin_procesar', 'Fotos sin Procesar', [
+        capa('fotos_sin_2018', 'Fotos sin Procesar - 2018', { visible: false, showInLegend: false }),
+        capa('fotos_sin_2024', 'Fotos sin Procesar - 2024', { visible: false, showInLegend: false }),
+      ]),
     ],
   },
   {
@@ -97,9 +158,22 @@ const PANEL_BASE: Section[] = [
     title: 'NORMATIVA URBANA',
     expanded: false,
     items: [
-      capa('etiq_zonificacion', 'Etiqueta Zonificación', { showInLegend: true }),
-      capa('zonificacion', 'Zonificación', { showInLegend: true }),
-      capa('amUrbHomogeneo', 'Ambito Urbano Homogéneo'),
+      capa('etiq_zonificacion', 'Etiqueta Zonificación', { visible: false, showInLegend: false }),
+      capa('zonificacion', 'Zonificación usos de suelo', { visible: false, showInLegend: false }),
+      capa('', 'Alturas Maximas de Edificacion (Desarrollo)', { visible: false, showInLegend: false }),
+      capa('', 'Sectores de Planeamiento Urbano (Desarrollo)', { visible: false, showInLegend: false }),
+      capa('', 'Ambitos Urbanos Homogéneos (Desarrollo)', { visible: false, showInLegend: false }),
+      capa('', 'Ambitos para promover la sostenibilidad de las zonas residenciales (Desarrollo)', { visible: false, showInLegend: false }),
+      capa('', 'Ambito de Normas Excepcionales para Zonas con caracteristicas Urbanas Especiales (Desarrollo)', { visible: false, showInLegend: false }),
+      capa('', 'Zonas de Sostenibilidad en locales destinados a estacionamientos de vehiculos (Desarrollo)', { visible: false, showInLegend: false }),
+      capa('', 'Retiro Frontales Normativos (Desarrollo)', { visible: false, showInLegend: false }),
+      capa('', 'Superficies limitadoras de Obstaculos (Desarrollo)', { visible: false, showInLegend: false }),
+      capa('', 'Modulos Comercio en via pública - Puntos aprobados (Desarrollo)', { visible: false, showInLegend: false }),
+      subseccion('zre_bosque_olivar', 'ZRE BOSQUE EL OLIVAR', [
+        capa('', 'Ambito de la ZRE Bosque El Olivar (Desarrollo)', { visible: false, showInLegend: false }),
+
+      ]),
+
     ],
   },
   {
@@ -107,19 +181,46 @@ const PANEL_BASE: Section[] = [
     title: 'INFRAESTRUCTURA URBANA',
     expanded: false,
     items: [
-      subseccion('cruces', 'CRUCES', [
-        capa('cruces_accesibilidad_1', 'Cruce Sector Vecinal 01', { visible: false, showInLegend:true}),
-        capa('cruces_accesibilidad_2', 'Cruce Sector Vecinal 02', { visible: false, showInLegend:true}),
-        capa('cruces_accesibilidad_3', 'Cruce Sector Vecinal 03', { visible: false, showInLegend:true}),
-        capa('cruces_accesibilidad_4', 'Cruce Sector Vecinal 04', { visible: false, showInLegend:true}),
-        capa('cruces_accesibilidad_5', 'Cruce Sector Vecinal 05', { visible: false, showInLegend:true}),
+      subseccion('cruces', 'Cruces', [
+        capa('cruces_accesibilidad_1', 'Cruce Sector Vecinal 01', { visible: false, showInLegend: true }),
+        capa('cruces_accesibilidad_2', 'Cruce Sector Vecinal 02', { visible: false, showInLegend: true }),
+        capa('cruces_accesibilidad_3', 'Cruce Sector Vecinal 03', { visible: false, showInLegend: true }),
+        capa('cruces_accesibilidad_4', 'Cruce Sector Vecinal 04', { visible: false, showInLegend: true }),
+        capa('cruces_accesibilidad_5', 'Cruce Sector Vecinal 05', { visible: false, showInLegend: true }),
       ]),
       subseccion('manzanas', 'Manzanas', [
-        capa('manzanas_cruces_accesibilidad_1','Manzana Sector Vecinal 01', { visible: false, showInLegend:true}),
-        capa('manzanas_cruces_accesibilidad_2','Manzana Sector Vecinal 02', { visible: false, showInLegend:true}),
-        capa('manzanas_cruces_accesibilidad_3','Manzana Sector Vecinal 02', { visible: false, showInLegend:true}),
-        capa('manzanas_cruces_accesibilidad_4','Manzana Sector Vecinal 02', { visible: false, showInLegend:true}),
-        capa('manzanas_cruces_accesibilidad_5','Manzana Sector Vecinal 02', { visible: false, showInLegend:true}),
+        capa('manzanas_cruces_accesibilidad_1', 'Manzana Sector Vecinal 01', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_2', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_3', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_4', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_5', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
+      ]),
+      subseccion('agua_alcantarillado', 'Agua y Alcantarillado', [
+        capa('', 'Pozos de SEDAPAL (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Red de agua potable SEDAPAL (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Red de agua alcantarillado SEDAPAL (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Hidrante 2016 (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Hidrante 2024 (Desarrollo)', { visible: false, showInLegend: true }),
+      ]),
+      subseccion('energia_electrica', 'Energia Electrica', [
+        capa('', 'Sub Estaciones Electricas 2017 (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Red de energia electrica (Desarrollo)', { visible: false, showInLegend: true }),
+      ]),
+      subseccion('telefonia_comunicaciones', 'Telefonica y Comunicaciones', [
+        capa('', 'Antena de telefonia (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Red de telefonia (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Fibra optica (Desarrollo)', { visible: false, showInLegend: true }),
+      ]),
+      subseccion('gas_natural', 'Gas Natural', [
+        capa('', 'Red de gas natural CALIDDA (Desarrollo)', { visible: false, showInLegend: true }),
+      ]),
+      subseccion('vial', 'Vial', [
+        capa('', 'Señalitica San Isidro 2026 (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Intersecciones semaforizadas (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Sistema de estacionamiento (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Señalización Vial 2016 (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Reductores de velocidad 2012 (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('', 'Superficies Lim. de Obstaculos (Desarrollo)', { visible: false, showInLegend: true }),
       ]),
     ],
   },
@@ -130,6 +231,8 @@ const PANEL_BASE: Section[] = [
     items: [
       subseccion('parametros', 'Tramites atendidos', [
         capa('tem_parametros', 'Parámetros Urbanisticos y Edificatorios', { visible: false }),
+        capa('amUrbHomogeneo', 'ORDENAR', { visible: false }),
+        
       ]),
     ],
   },
@@ -151,80 +254,22 @@ const PANEL_BASE: Section[] = [
 
 
 
-  {
-    id: 'sectorizacion',
-    title: 'Sectorización',
-    expanded: false,
-    items: [
-      capa('sec_catastrales', 'Sectores Catastrales'),
-      capa('sec_vecinal', 'Sectores Vecinales'),
-      capa('hab_urbana', 'Urbanizaciones'),
-      capa('sec_subvecinal', 'Sub Sectores - Junta Vecinales'),
-    ],
-  },
-  {
-    id: 'lotizacion',
-    title: 'Lotización',
-    expanded: false,
-    items: [
-      capa('lote_urbano', 'Lote Urbano'),
-      capa('etiquetas_catastrales', 'Código Catastral'),
-      capa('denominacion_predio', 'Denominación del Predio'),
-    ],
-  },
-  {
-    id: 'puntosGeodesicos',
-    title: 'Puntos Geodésicos',
-    expanded: false,
-    items: [capa('puntos_geodesicos', 'Puntos Geodésicos', { showInLegend: true })],
-  },
-  {
-    id: 'nomenclatura_vial',
-    title: 'Nomenclatura Vial',
-    expanded: false,
-    items: [
-      capa('vias', 'Nomenclatura de Vías', { visible: true }),
-      // Se conserva el label original tal cual (incluye typo y espacio final).
-      capa('seccion_vial', 'Sección vias (Inf. referewncial de campo) '),
-    ],
-  },
+
+
+
+
   {
     id: 'numeracion_campo',
     title: 'Numeración de Campo',
     expanded: false,
     items: [
-      capa('num_municipal_2024', 'Numeración de campo 2024', { showInLegend: false }),
-      capa('num_municipal_2022', 'Numeración de campo 2022', { showInLegend: false }),
+
       capa('puertas2024', 'Puertas 2024', { showInLegend: true }),
     ],
   },
-  {
-    id: 'arbolado_urbano',
-    title: 'Arbolado Urbano',
-    expanded: false,
-    items: [
-      capa('arbolado_urbano_2024', 'Arboles 2024', { showInLegend: true }),
-      capa('arbolado_urbano_2015', 'Arboles 2015', { showInLegend: true }),
-      capa('cactus_yucca_2015', 'Cactus - Yucca 2015', { showInLegend: true }),
-    ],
-  },
 
-  {
-    id: 'ortoAereas',
-    title: 'Fotográfias sin procesar',
-    expanded: false,
-    items: [
-      // Capas directas (sin subsección), igual que el resto del panel.
-      capa('fotos_sin_2018', 'Fotos sin Procesar - 2018'),
-      capa('fotos_sin_2024', 'Fotos sin Procesar - 2024'),
-    ],
-  },
-  {
-    id: 'tusne',
-    title: 'TUSNE',
-    expanded: false,
-    items: [capa('tusne', 'Levantamiento Topográfico', { showInLegend: true })],
-  },
+
+
 ];
 
 /**

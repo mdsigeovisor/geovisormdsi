@@ -24,12 +24,19 @@ const capa = (id: string, label: string, opciones: CapaOpciones = {}): LayerItem
 });
 
 /** Crea una subsección plegable con sus capas. */
-const subseccion = (id: string, title: string, layers: LayerItem[], expanded = false): SubSection => ({
+const subseccion = (
+  id: string,
+  title: string,
+  layers: LayerItem[],
+  expanded = false,
+  opciones: Partial<Pick<SubSection, 'requiresAuth' | 'subtitle'>> = {}
+): SubSection => ({
   type: 'subsection',
   id,
   title,
   expanded,
   layers,
+  ...opciones,
 });
 
 /* ------------------------------------------------------------------------- */
@@ -46,15 +53,10 @@ const SECCIONES_PUBLICAS: ReadonlySet<string> = new Set<string>([
   // Cartografía base: todas sus capas son visibles por defecto y deben poder
   // controlarse desde el panel también en modo público (sin sesión iniciada).
   'catastral',
-  'sectorizacion',
-  'lotizacion',
-  'nomenclatura_vial',
-  'numeracion_campo',
-  'arbolado_urbano',
   'imaAereas',
   'normativaUrbana',
-  'tematica',
-  'infraestructuraUrbana'
+  'infraestructuraUrbana',
+  'tematica'
 ]);
 
 /** Marca como restringidas todas las secciones que no estén exentas en `SECCIONES_PUBLICAS`. */
@@ -127,8 +129,8 @@ const PANEL_BASE: Section[] = [
         capa('', 'Monumentos, Bustos y Toten 2021', { visible: false, showInLegend: true }),
         capa('', 'Monumentos o esculturas 2016', { visible: false, showInLegend: true }),
       ]),
-      subseccion('catastro', 'CARTOGRAFIA', [
-        capa('num_cuadra', 'Cuadra', { visible: true, showInLegend: false }),
+      subseccion('base_grafica', 'BASE GRÁFICA', [
+        capa('num_cuadra', 'Número de Cuadra', { visible: true, showInLegend: false }),
         capa('construcciones', 'Construcciones', { visible: true, showInLegend: false }),
         capa('lote', 'Lote', { visible: true, showInLegend: false }),
         capa('manzana', 'Manzana', { visible: true, showInLegend: false }),
@@ -146,11 +148,11 @@ const PANEL_BASE: Section[] = [
       // La regla "solo una ortofoto visible" vive en MapService.toggleLayerVisibility.
       subseccion('ortofotos_historicas', 'Ortofotos Históricas', [
         ...ORTOFOTO_YEARS.map(year => capa(`ortofoto_${year}`, `${year}`)),
-      ]),
+      ], false, { requiresAuth: false }),
       subseccion('fotos_sin_procesar', 'Fotos sin Procesar', [
         capa('fotos_sin_2018', 'Fotos sin Procesar - 2018', { visible: false, showInLegend: false }),
         capa('fotos_sin_2024', 'Fotos sin Procesar - 2024', { visible: false, showInLegend: false }),
-      ]),
+      ], false, { requiresAuth: true }),
     ],
   },
   {
@@ -176,7 +178,7 @@ const PANEL_BASE: Section[] = [
         capa('', 'Zonificacion de Usos (Desarrollo)', { visible: false, showInLegend: false }),
         capa('', 'Alturas Maximas de Edificación (Desarrollo)', { visible: false, showInLegend: false }),
         capa('', 'Retiro Normativo (Desarrollo)', { visible: false, showInLegend: false }),
-      ]),
+      ], false, { requiresAuth: false }),
       subseccion('zre_camino_real', 'ZRE CAMINO REAL', [
         capa('', 'Ambito de la ZRE Camino Real (Desarrollo)', { visible: false, showInLegend: false }),
         capa('', 'Sectores de la Zona Monumental (Desarrollo)', { visible: false, showInLegend: false }),
@@ -184,16 +186,14 @@ const PANEL_BASE: Section[] = [
         capa('', 'Zonificación de Usos (Desarrollo)', { visible: false, showInLegend: false }),
         capa('', 'Alturas Maximas de Edificación (Desarrollo)', { visible: false, showInLegend: false }),
         capa('', 'Retiro Normativo (Desarrollo)', { visible: false, showInLegend: false }),
-      ]),
+      ], false, { requiresAuth: false }),
       subseccion('zre_costa_verde', 'ZRE COSTA VERDE', [
-        capa('', 'Ambito de la Costa Verde (Desarrollo)', { visible: false, showInLegend: false }),        
+        capa('', 'Ambito de la Costa Verde (Desarrollo)', { visible: false, showInLegend: false }),
         capa('', 'Zonificación de Usos (Desarrollo)', { visible: false, showInLegend: false }),
         capa('', 'Area Intangible de la Costa Verde (Desarrollo)', { visible: false, showInLegend: false }),
         capa('', 'Linea de mas alta marea (Desarrollo)', { visible: false, showInLegend: false }),
         capa('', 'Area de Intangibilidad (Desarrollo)', { visible: false, showInLegend: false }),
-      ]),
-
-    ],
+      ], false, { requiresAuth: false })],
   },
   {
     id: 'infraestructuraUrbana',
@@ -206,33 +206,33 @@ const PANEL_BASE: Section[] = [
         capa('cruces_accesibilidad_3', 'Cruce Sector Vecinal 03', { visible: false, showInLegend: true }),
         capa('cruces_accesibilidad_4', 'Cruce Sector Vecinal 04', { visible: false, showInLegend: true }),
         capa('cruces_accesibilidad_5', 'Cruce Sector Vecinal 05', { visible: false, showInLegend: true }),
-      ]),
+      ], false, { requiresAuth: false }),
       subseccion('manzanas', 'Manzanas', [
         capa('manzanas_cruces_accesibilidad_1', 'Manzana Sector Vecinal 01', { visible: false, showInLegend: true }),
         capa('manzanas_cruces_accesibilidad_2', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
         capa('manzanas_cruces_accesibilidad_3', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
         capa('manzanas_cruces_accesibilidad_4', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
         capa('manzanas_cruces_accesibilidad_5', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
-      ]),
+      ], false, { requiresAuth: false }),
       subseccion('agua_alcantarillado', 'Agua y Alcantarillado', [
         capa('', 'Pozos de SEDAPAL (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Red de agua potable SEDAPAL (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Red de agua alcantarillado SEDAPAL (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Hidrante 2016 (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Hidrante 2024 (Desarrollo)', { visible: false, showInLegend: true }),
-      ]),
+      ], false, { requiresAuth: false }),
       subseccion('energia_electrica', 'Energia Electrica', [
         capa('', 'Sub Estaciones Electricas 2017 (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Red de energia electrica (Desarrollo)', { visible: false, showInLegend: true }),
-      ]),
+      ], false, { requiresAuth: false }),
       subseccion('telefonia_comunicaciones', 'Telefonica y Comunicaciones', [
         capa('', 'Antena de telefonia (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Red de telefonia (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Fibra optica (Desarrollo)', { visible: false, showInLegend: true }),
-      ]),
+      ], false, { requiresAuth: false }),
       subseccion('gas_natural', 'Gas Natural', [
         capa('', 'Red de gas natural CALIDDA (Desarrollo)', { visible: false, showInLegend: true }),
-      ]),
+      ], false, { requiresAuth: false }),
       subseccion('vial', 'Vial', [
         capa('', 'Señalitica San Isidro 2026 (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Intersecciones semaforizadas (Desarrollo)', { visible: false, showInLegend: true }),
@@ -240,7 +240,7 @@ const PANEL_BASE: Section[] = [
         capa('', 'Señalización Vial 2016 (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Reductores de velocidad 2012 (Desarrollo)', { visible: false, showInLegend: true }),
         capa('', 'Superficies Lim. de Obstaculos (Desarrollo)', { visible: false, showInLegend: true }),
-      ]),
+      ], false, { requiresAuth: false }),
     ],
   },
   {
@@ -251,8 +251,8 @@ const PANEL_BASE: Section[] = [
       subseccion('parametros', 'Tramites atendidos', [
         capa('tem_parametros', 'Parámetros Urbanisticos y Edificatorios', { visible: false }),
         capa('amUrbHomogeneo', 'ORDENAR', { visible: false }),
-        
-      ]),
+
+      ], false, { requiresAuth: false }),
     ],
   },
 ];

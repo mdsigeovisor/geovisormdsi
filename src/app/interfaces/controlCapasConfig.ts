@@ -52,7 +52,9 @@ const SECCIONES_PUBLICAS: ReadonlySet<string> = new Set<string>([
   'numeracion_campo',
   'arbolado_urbano',
   'imaAereas',
-  'normativaUrbana',  
+  'normativaUrbana',
+  'tematica',
+  'infraestructuraUrbana'
 ]);
 
 /** Marca como restringidas todas las secciones que no estén exentas en `SECCIONES_PUBLICAS`. */
@@ -79,6 +81,76 @@ const PANEL_BASE: Section[] = [
       ]),
     ],
   },
+  {
+    id: 'imaAereas',
+    title: 'IMÁGENES AEREAS',
+    expanded: false,
+    items: [
+      // Capas generadas dinámicamente a partir de la configuración de años.
+      // Van como capas directas (sin subsección), igual que 'arbolado_urbano';
+      // la regla "solo una ortofoto visible" vive en MapService.toggleLayerVisibility.
+      ...ORTOFOTO_YEARS.map(year => capa(`ortofoto_${year}`, `${year}`)),
+    ],
+  },
+  {
+    id: 'normativaUrbana',
+    title: 'NORMATIVA URBANA',
+    expanded: false,
+    items: [
+      capa('etiq_zonificacion', 'Etiqueta Zonificación', { showInLegend: true }),
+      capa('zonificacion', 'Zonificación', { showInLegend: true }),
+      capa('amUrbHomogeneo', 'Ambito Urbano Homogéneo'),
+    ],
+  },
+  {
+    id: 'infraestructuraUrbana',
+    title: 'INFRAESTRUCTURA URBANA',
+    expanded: false,
+    items: [
+      subseccion('cruces', 'CRUCES', [
+        capa('cruces_accesibilidad_1', 'Cruce Sector Vecinal 01', { visible: false, showInLegend:true}),
+        capa('cruces_accesibilidad_2', 'Cruce Sector Vecinal 02', { visible: false, showInLegend:true}),
+        capa('cruces_accesibilidad_3', 'Cruce Sector Vecinal 03', { visible: false, showInLegend:true}),
+        capa('cruces_accesibilidad_4', 'Cruce Sector Vecinal 04', { visible: false, showInLegend:true}),
+        capa('cruces_accesibilidad_5', 'Cruce Sector Vecinal 05', { visible: false, showInLegend:true}),
+      ]),
+      subseccion('manzanas', 'Manzanas', [
+        capa('manzanas_cruces_accesibilidad_1','Manzana Sector Vecinal 01', { visible: false, showInLegend:true}),
+        capa('manzanas_cruces_accesibilidad_2','Manzana Sector Vecinal 02', { visible: false, showInLegend:true}),
+        capa('manzanas_cruces_accesibilidad_3','Manzana Sector Vecinal 02', { visible: false, showInLegend:true}),
+        capa('manzanas_cruces_accesibilidad_4','Manzana Sector Vecinal 02', { visible: false, showInLegend:true}),
+        capa('manzanas_cruces_accesibilidad_5','Manzana Sector Vecinal 02', { visible: false, showInLegend:true}),
+      ]),
+    ],
+  },
+  {
+    id: 'tematica',
+    title: 'INFORMACIÓN TEMÁTICA',
+    expanded: false,
+    items: [
+      subseccion('parametros', 'Tramites atendidos', [
+        capa('tem_parametros', 'Parámetros Urbanisticos y Edificatorios', { visible: false }),
+      ]),
+    ],
+  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   {
     id: 'sectorizacion',
     title: 'Sectorización',
@@ -136,17 +208,7 @@ const PANEL_BASE: Section[] = [
       capa('cactus_yucca_2015', 'Cactus - Yucca 2015', { showInLegend: true }),
     ],
   },
-  {
-    id: 'imaAereas',
-    title: 'Fotográfias Áereas',
-    expanded: false,
-    items: [
-      // Capas generadas dinámicamente a partir de la configuración de años.
-      // Van como capas directas (sin subsección), igual que 'arbolado_urbano';
-      // la regla "solo una ortofoto visible" vive en MapService.toggleLayerVisibility.
-      ...ORTOFOTO_YEARS.map(year => capa(`ortofoto_${year}`, `${year}`)),
-    ],
-  },
+
   {
     id: 'ortoAereas',
     title: 'Fotográfias sin procesar',
@@ -158,44 +220,10 @@ const PANEL_BASE: Section[] = [
     ],
   },
   {
-    id: 'normativaUrbana',
-    title: 'Normativa Urbana',
-    expanded: false,
-    items: [
-      capa('etiq_zonificacion', 'Etiqueta Zonificación', { showInLegend: true }),
-      capa('zonificacion', 'Zonificación', { showInLegend: true }),
-      capa('amUrbHomogeneo', 'Ambito Urbano Homogéneo'),
-    ],
-  },
-  {
-    id: 'accesibilidad',
-    title: 'Accesibilidad',
-    expanded: false,
-    items: [
-      subseccion('cruces', 'Cruces', [        
-        capa('cruces_accesibilidad_1', 'Sector Vecinal 01', { visible: false }),
-        capa('cruces_accesibilidad_2', 'Sector Vecinal 02', { visible: false }),
-        capa('cruces_accesibilidad_3', 'Sector Vecinal 03', { visible: false }),
-        capa('cruces_accesibilidad_4', 'Sector Vecinal 04', { visible: false }),
-        capa('cruces_accesibilidad_5', 'Sector Vecinal 05', { visible: false }),
-      ]),      
-    ],
-  },
-  {
-    id: 'tematica',
-    title: 'Informnacion Tematica',
-    expanded: false,
-    items: [
-      subseccion('cruces', 'Tramites atendidos', [        
-        capa('tem_parametros', 'Parámetros Urbanisticos y Edificatorios', { visible: false }),        
-      ]),      
-    ],
-  },
-  {
     id: 'tusne',
     title: 'TUSNE',
     expanded: false,
-    items: [capa('tusne', 'Levantamiento Topográfico', { showInLegend: true})],
+    items: [capa('tusne', 'Levantamiento Topográfico', { showInLegend: true })],
   },
 ];
 

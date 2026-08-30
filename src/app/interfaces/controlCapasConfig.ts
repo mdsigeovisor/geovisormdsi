@@ -158,7 +158,7 @@ const PANEL_BASE: Section[] = [
     title: 'NORMATIVA URBANA',
     expanded: false,
     items: [
-      capa('etiq_zonificacion', 'Etiqueta Zonificación', { visible: false, showInLegend: false }),
+      capa('etiq_zonificacion', 'Etiqueta', { visible: false, showInLegend: false }),
       capa('zonificacion', 'Zonificación usos de suelo', { visible: false, showInLegend: false }),
       capa('', 'Alturas Maximas de Edificacion (Desarrollo)', { visible: false, showInLegend: false }),
       capa('', 'Sectores de Planeamiento Urbano (Desarrollo)', { visible: false, showInLegend: false }),
@@ -171,7 +171,26 @@ const PANEL_BASE: Section[] = [
       capa('', 'Modulos Comercio en via pública - Puntos aprobados (Desarrollo)', { visible: false, showInLegend: false }),
       subseccion('zre_bosque_olivar', 'ZRE BOSQUE EL OLIVAR', [
         capa('', 'Ambito de la ZRE Bosque El Olivar (Desarrollo)', { visible: false, showInLegend: false }),
-
+        capa('', 'Sectores de la Zona Monumental (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Monumento El Olivar (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Zonificacion de Usos (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Alturas Maximas de Edificación (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Retiro Normativo (Desarrollo)', { visible: false, showInLegend: false }),
+      ]),
+      subseccion('zre_camino_real', 'ZRE CAMINO REAL', [
+        capa('', 'Ambito de la ZRE Camino Real (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Sectores de la Zona Monumental (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Monumento Camino Real (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Zonificación de Usos (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Alturas Maximas de Edificación (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Retiro Normativo (Desarrollo)', { visible: false, showInLegend: false }),
+      ]),
+      subseccion('zre_costa_verde', 'ZRE COSTA VERDE', [
+        capa('', 'Ambito de la Costa Verde (Desarrollo)', { visible: false, showInLegend: false }),        
+        capa('', 'Zonificación de Usos (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Area Intangible de la Costa Verde (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Linea de mas alta marea (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('', 'Area de Intangibilidad (Desarrollo)', { visible: false, showInLegend: false }),
       ]),
 
     ],
@@ -236,42 +255,7 @@ const PANEL_BASE: Section[] = [
       ]),
     ],
   },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  {
-    id: 'numeracion_campo',
-    title: 'Numeración de Campo',
-    expanded: false,
-    items: [
-
-      capa('puertas2024', 'Puertas 2024', { showInLegend: true }),
-    ],
-  },
-
-
-
 ];
-
 /**
  * Configuración centralizada para las secciones y capas del panel lateral.
  * Este array define la estructura completa del panel de capas, facilitando

@@ -19,9 +19,9 @@ const INFRAESTRUCTURA_LAYERS: WmsLayerConfig[] = [
 ];
 
 const NUMERACION_LAYERS: WmsLayerConfig[] = [
-  { id: 'num_municipal_2024', layerName: `${wp}vw_numeracion_campo_2024`, zIndex: 0, title: 'Numeración de campo 2024' },
-  { id: 'puertas2024', layerName: `${wp}vw_tg_puertas`, zIndex: 0, title: 'Puertas 2024' },
-  { id: 'num_municipal_2022', layerName: `${wp}vw_numeracion_campo_2022`, zIndex: 0, title: 'Numeración de campo 2022' },
+  { id: 'num_municipal_2024', layerName: `${wp}vw_numeracion_campo_2024`, zIndex: 1, title: 'Numeración de campo 2024' },
+  { id: 'puertas2024', layerName: `${wp}vw_tg_puertas`, zIndex: 1, title: 'Puertas 2024' },
+  { id: 'num_municipal_2022', layerName: `${wp}vw_numeracion_campo_2022`, zIndex: 1, title: 'Numeración de campo 2022' },
 ];
 
 const AMBIENTAL_LAYERS: WmsLayerConfig[] = [
@@ -32,7 +32,7 @@ const AMBIENTAL_LAYERS: WmsLayerConfig[] = [
 ];
 
 const CATASTRALES_LAYERS: WmsLayerConfig[] = [
-  { id: 'construcciones', layerName: `${wp}vw_tg_construcciones`, zIndex: 0, title: 'Construcciones' },
+  { id: 'construcciones', layerName: `${wp}vw_tg_construcciones`, zIndex: 1, title: 'Construcciones' },
   { id: 'lote', layerName: `${wp}vw_tg_lote`, zIndex: 0, title: 'Lote Catastral' },
   { id: 'manzana', layerName: `${wp}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
   { id: 'veredas', layerName: `${wp}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },

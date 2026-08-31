@@ -365,12 +365,18 @@ export class MapService {
       return existingMap;
     }
     this.setupBaseLayers();
+    const scaleLineElement = document.createElement('div');
+    scaleLineElement.id = 'scale-line-container';
+    target.appendChild(scaleLineElement);
+
     const olMap = new OlMap({
       target,
       layers: [this.streetsLayer!, this.satelliteLayer!],
       controls: defaultControls().extend([
         new ScaleLine({
           units: 'metric',
+          target: scaleLineElement,
+          className: 'ol-scale-line-custom',
         }),
       ]),
       view: new View({

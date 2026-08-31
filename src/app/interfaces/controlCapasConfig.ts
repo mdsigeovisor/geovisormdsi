@@ -56,7 +56,7 @@ const SECCIONES_PUBLICAS: ReadonlySet<string> = new Set<string>([
   'imaAereas',
   'normativaUrbana',
   'infraestructuraUrbana',
-  'tematica'
+  
 ]);
 
 /** Marca como restringidas todas las secciones que no estén exentas en `SECCIONES_PUBLICAS`. */
@@ -75,7 +75,7 @@ const PANEL_BASE: Section[] = [
     items: [
       subseccion('tusne', 'TUSNE', [
         capa('tusne', 'Levantamiento Topográfico', { visible: false, showInLegend: true }),
-      ]),
+      ], false, { requiresAuth: true }),
       subseccion('sectorizacion', 'SECTORIZACION', [
         capa('sec_catastrales', 'Sectores Catastrales', { visible: false, showInLegend: true }),
         capa('sec_vecinal', 'Sectores Vecinales', { visible: false, showInLegend: false }),
@@ -95,6 +95,7 @@ const PANEL_BASE: Section[] = [
         capa('seccion_vial', 'Sección vias (Inf. referewncial de campo)', { visible: false, showInLegend: false }),
       ]),
       subseccion('num_municipal', 'NÚMERACION MUNICIPAL', [
+        capa('puertas2024', 'Tipo - Puertas 2024', { visible: false, showInLegend: true }),
         capa('', 'Numeración Municipal Oficial (Desarrollo)', { visible: false, showInLegend: false }),
         capa('num_municipal_2024', 'Numeración de campo 2024', { visible: false, showInLegend: false }),
         capa('num_municipal_2022', 'Numeración de campo 2022', { visible: false, showInLegend: false }),
@@ -161,7 +162,7 @@ const PANEL_BASE: Section[] = [
     expanded: false,
     items: [
       capa('etiq_zonificacion', 'Etiqueta', { visible: false, showInLegend: false }),
-      capa('zonificacion', 'Zonificación usos de suelo', { visible: false, showInLegend: false }),
+      capa('zonificacion', 'Zonificación usos de suelo', { visible: false, showInLegend: true }),
       capa('', 'Alturas Maximas de Edificacion (Desarrollo)', { visible: false, showInLegend: false }),
       capa('', 'Sectores de Planeamiento Urbano (Desarrollo)', { visible: false, showInLegend: false }),
       capa('', 'Ambitos Urbanos Homogéneos (Desarrollo)', { visible: false, showInLegend: false }),

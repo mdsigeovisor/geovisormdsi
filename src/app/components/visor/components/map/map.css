@@ -55,3 +55,39 @@
 .animate-scale-in {
   animation: scaleIn 0.3s ease-out forwards;
 }
+
+/* ScaleLine - Barra de escala posicionada encima de las coordenadas (abajo) */
+#scale-line-container {
+  position: absolute !important;
+  bottom: 50px !important;
+  top: auto !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 100 !important;
+  pointer-events: none;
+}
+
+#scale-line-container .ol-scale-line-custom,
+#scale-line-container .ol-scale-line {
+  position: relative !important;
+  left: auto !important;
+  bottom: auto !important;
+  right: auto !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(45, 120, 14, 0.3) !important;
+  display: block !important;
+}
+
+#scale-line-container .ol-scale-line-inner {
+  border-color: #2d780e !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  border-top: none !important;
+  color: #2d780e !important;
+  font-weight: 600 !important;
+  font-size: 10px !important;
+  font-family: 'Arial', sans-serif !important;
+}

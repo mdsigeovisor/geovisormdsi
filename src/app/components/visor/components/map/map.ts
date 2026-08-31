@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect, HostListener, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetectorRef, effect, HostListener, signal, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 // Servicios y módulos
@@ -22,6 +22,7 @@ import { Leyenda } from './components/sidebar/components/leyenda/leyenda';
 @Component({
   selector: 'app-map',
   standalone: true,
+  encapsulation: ViewEncapsulation.None,
   imports: [
     CommonModule,
     Navbar,

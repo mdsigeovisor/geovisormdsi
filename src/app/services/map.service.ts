@@ -244,6 +244,8 @@ export class MapService {
   tusneUrl = signal<string | null>(null);
   /** URL con la información de un cruce de accesibilidad para mostrar en un modal. */
   cruceAccesibilidadUrl = signal<string | null>(null);
+  /** URL con la información de una manzana de accesibilidad para mostrar en un modal. */
+  cruceAccesibilidadManzanaUrl = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -266,6 +268,12 @@ export class MapService {
     this.infoLayerConfig('cruces_accesibilidad_3', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
     this.infoLayerConfig('cruces_accesibilidad_4', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
     this.infoLayerConfig('cruces_accesibilidad_5', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    // Manzanas de accesibilidad (5 capas: manzanas_cruces_accesibilidad_1 al 5)
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_1', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_2', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_3', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_4', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_5', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -943,6 +951,12 @@ export class MapService {
    */
   clearCruceAccesibilidadUrl(): void {
     this.cruceAccesibilidadUrl.set(null);
+  }
+  /**
+   * Limpia la URL de la manzana de accesibilidad, para cerrar el modal.
+   */
+  clearCruceAccesibilidadManzanaUrl(): void {
+    this.cruceAccesibilidadManzanaUrl.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

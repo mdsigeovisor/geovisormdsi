@@ -112,6 +112,9 @@ export class MapComponent {
     if (this.mapService.cruceAccesibilidadUrl()) {
       this.closeCruceAccesibilidadModal();
     }
+    if (this.mapService.cruceAccesibilidadManzanaUrl()) {
+      this.closeCruceAccesibilidadManzanaModal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -221,6 +224,13 @@ export class MapComponent {
    */
   closeCruceAccesibilidadModal(): void {
     this.mapService.clearCruceAccesibilidadUrl();
+  }
+
+  /**
+   * Cierra el modal de la manzana de accesibilidad.
+   */
+  closeCruceAccesibilidadManzanaModal(): void {
+    this.mapService.clearCruceAccesibilidadManzanaUrl();
   }
 
   /**

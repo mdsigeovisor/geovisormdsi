@@ -210,9 +210,9 @@ const PANEL_BASE: Section[] = [
       subseccion('manzanas', 'Manzanas', [
         capa('manzanas_cruces_accesibilidad_1', 'Manzana Sector Vecinal 01', { visible: false, showInLegend: true }),
         capa('manzanas_cruces_accesibilidad_2', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
-        capa('manzanas_cruces_accesibilidad_3', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
-        capa('manzanas_cruces_accesibilidad_4', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
-        capa('manzanas_cruces_accesibilidad_5', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_3', 'Manzana Sector Vecinal 03', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_4', 'Manzana Sector Vecinal 04', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_5', 'Manzana Sector Vecinal 05', { visible: false, showInLegend: true }),
       ], false, { requiresAuth: false }),
       subseccion('agua_alcantarillado', 'Agua y Alcantarillado', [
         capa('', 'Pozos de SEDAPAL (Desarrollo)', { visible: false, showInLegend: true }),

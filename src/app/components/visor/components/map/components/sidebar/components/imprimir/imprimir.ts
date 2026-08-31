@@ -775,8 +775,11 @@ export class Imprimir {
         `@page { size: ${this.formato()} ${this.orientacion() === 'horizontal' ? 'landscape' : 'portrait'}; margin: 8mm; }`;
       document.head.appendChild(this.estiloPagina);
 
-      // Esperamos a que la imagen del mapa se pinte antes de abrir el diálogo
-      setTimeout(() => window.print(), 250);
+      // Mostramos spinner durante 2 segundos antes de abrir la ventana de impresión
+      this.mensajeProceso.set('Cargando vista previa…');
+      setTimeout(() => {
+        window.print();
+      }, 2000);
     } catch (err) {
       console.error('Error preparando la impresión:', err);
       this.error.set(err instanceof Error ? err.message : 'No se pudo preparar la impresión.');

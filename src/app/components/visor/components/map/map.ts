@@ -55,6 +55,17 @@ export class MapComponent {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly drawMeasureService = inject(DrawMeasureService);
+  /** Rastrea errores de carga de iframe por URL para mostrar mensaje de error. */
+  private readonly iframeErrors = signal<Set<string>>(new Set());
+  /** Rastrea qué iframes han cargado correctamente para ocultar el spinner. */
+  private readonly iframeLoaded = signal<Set<string>>(new Set());
+  /** Posición del modal de cruces de accesibilidad */
+  cruceModalPosition = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+  /** Posición del modal de manzanas de accesibilidad */
+  manzanaModalPosition = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+  /** Estado de arrastre para los modales */
+  private cruceDragState: { startX: number; startY: number; originX: number; originY: number } | null = null;
+  private manzanaDragState: { startX: number; startY: number; originX: number; originY: number } | null = null;
 
   constructor() {
     // Usamos un 'effect' para reaccionar a los cambios de la signal 'isReady'.
@@ -223,6 +234,11 @@ export class MapComponent {
    * Cierra el modal del cruce de accesibilidad.
    */
   closeCruceAccesibilidadModal(): void {
+    const url = this.mapService.cruceAccesibilidadUrl();
+    if (url) {
+      this.clearIframeError(url);
+      this.iframeLoaded.update(loaded => { const s = new Set(loaded); s.delete(url); return s; });
+    }
     this.mapService.clearCruceAccesibilidadUrl();
   }
 
@@ -230,7 +246,126 @@ export class MapComponent {
    * Cierra el modal de la manzana de accesibilidad.
    */
   closeCruceAccesibilidadManzanaModal(): void {
+    const url = this.mapService.cruceAccesibilidadManzanaUrl();
+    if (url) {
+      this.clearIframeError(url);
+      this.iframeLoaded.update(loaded => { const s = new Set(loaded); s.delete(url); return s; });
+    }
     this.mapService.clearCruceAccesibilidadManzanaUrl();
+  }
+
+  /**
+   * Verifica si una URL tuvo error de carga en el iframe.
+   */
+  hasIframeError(url: string): boolean {
+    return this.iframeErrors().has(url);
+  }
+
+  /**
+   * Verifica si un iframe ha cargado correctamente.
+   */
+  isIframeLoaded(url: string): boolean {
+    return this.iframeLoaded().has(url);
+  }
+
+  /**
+   * Maneja el evento de carga exitosa del iframe.
+   */
+  onIframeLoad(url: string): void {
+    this.iframeLoaded.update(loaded => {
+      const newLoaded = new Set(loaded);
+      newLoaded.add(url);
+      return newLoaded;
+    });
+  }
+
+  /**
+   * Maneja el error de carga de un iframe.
+   */
+  onIframeError(url: string): void {
+    this.iframeErrors.update(errors => {
+      const newErrors = new Set(errors);
+      newErrors.add(url);
+      return newErrors;
+    });
+  }
+
+  /**
+   * Limpia el error de carga de un iframe (para reintentos).
+   */
+  clearIframeError(url: string): void {
+    this.iframeErrors.update(errors => {
+      const newErrors = new Set(errors);
+      newErrors.delete(url);
+      return newErrors;
+    });
+    // También limpiamos el estado de cargado para que reaparezca el spinner
+    this.iframeLoaded.update(loaded => {
+      const newLoaded = new Set(loaded);
+      newLoaded.delete(url);
+      return newLoaded;
+    });
+  }
+
+  /**
+   * Reintenta cargar la URL en el iframe.
+   */
+  retryIframe(url: string): void {
+    this.clearIframeError(url);
+  }
+
+  // ========== Métodos de arrastre para modales ==========
+
+  /** Inicia el arrastre del modal de cruces */
+  startCruceDrag(event: PointerEvent): void {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    this.cruceDragState = {
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: this.cruceModalPosition().x,
+      originY: this.cruceModalPosition().y
+    };
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  /** Arrastra el modal de cruces */
+  dragCruce(event: PointerEvent): void {
+    if (!this.cruceDragState) return;
+    const nx = this.cruceDragState.originX + (event.clientX - this.cruceDragState.startX);
+    const ny = this.cruceDragState.originY + (event.clientY - this.cruceDragState.startY);
+    this.cruceModalPosition.set({ x: nx, y: ny });
+  }
+
+  /** Finaliza el arrastre del modal de cruces */
+  endCruceDrag(): void {
+    this.cruceDragState = null;
+  }
+
+  /** Inicia el arrastre del modal de manzanas */
+  startManzanaDrag(event: PointerEvent): void {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    this.manzanaDragState = {
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: this.manzanaModalPosition().x,
+      originY: this.manzanaModalPosition().y
+    };
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  /** Arrastra el modal de manzanas */
+  dragManzana(event: PointerEvent): void {
+    if (!this.manzanaDragState) return;
+    const nx = this.manzanaDragState.originX + (event.clientX - this.manzanaDragState.startX);
+    const ny = this.manzanaDragState.originY + (event.clientY - this.manzanaDragState.startY);
+    this.manzanaModalPosition.set({ x: nx, y: ny });
+  }
+
+  /** Finaliza el arrastre del modal de manzanas */
+  endManzanaDrag(): void {
+    this.manzanaDragState = null;
   }
 
   /**

@@ -212,7 +212,7 @@ export class Consultas {
     this.nombreVia = suggestion.trim(); // Limpiamos espacios en blanco al seleccionar
     this.showViaSuggestions = false;
     this.viaSuggestions = [];
-    this.handleBuscarByDireccion(); // Ejecutamos la búsqueda de dirección automáticamente
+    // La búsqueda se ejecuta solo al presionar el botón "Consultar"
   }
 
   onNombreViaBlur() {

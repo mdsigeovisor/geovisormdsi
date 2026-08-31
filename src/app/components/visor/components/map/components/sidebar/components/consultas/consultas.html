@@ -202,10 +202,10 @@
             @if (showViaSuggestions && viaSuggestions.length > 0) {
             <div
               class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
-              @for (suggestion of viaSuggestions; track suggestion) {
+              @for (suggestion of viaSuggestions; track suggestion.codVia) {
               <button (click)="selectViaSuggestion(suggestion)"
                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
-                {{ suggestion }}
+                {{ suggestion.etiqueta }}
               </button>
               }
             </div>

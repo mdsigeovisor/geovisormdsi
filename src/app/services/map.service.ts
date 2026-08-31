@@ -13,6 +13,12 @@ export interface ViaNumero {
   codlote: string;
   codlotenumero: string;
 }
+
+/** Sugerencia de vía con su código, para el flujo de numeraciones. */
+export interface ViaSugerencia {
+  etiqueta: string;
+  codVia: string;
+}
 import { ORTOFOTO_YEARS } from '../interfaces/ortofotos';
 import { LAYER_PANEL_SECTIONS } from '../interfaces/controlCapasConfig';
 import {
@@ -1666,6 +1672,48 @@ export class MapService {
         if (!response?.features) return [];
         if (propertiesOnly) return [...new Set(response.features.map(f => f.properties['etiquetado_ext']))];
         return response.features;
+      })
+    );
+  }
+  /**
+   * Busca vías por nombre parcial (para el autocompletado) y devuelve también
+   * el código de vía (cod_via) de cada resultado, necesario para consultar las
+   * numeraciones del API listar-via-numero del Geovisor municipal.
+   * @param query El nombre (parcial) de la vía a buscar.
+   * @returns Un Observable con un array de sugerencias { etiqueta, codVia }.
+   */
+  searchViasConCodigo(query: string): Observable<ViaSugerencia[]> {
+    if (!query || query.trim().length < 3) {
+      return new Observable(subscriber => subscriber.next([]));
+    }
+    // Mismo comportamiento de normalización que searchVias
+    const normalizedQuery = query.trim().toUpperCase().replace(/^CA\s/, 'CA. ').replace(/^CA\./, 'CA.');
+    const url = environment.geoserver.owsUrl;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${environment.geoserver.workspacePrefix}vw_tg_via`)
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:32718')
+      .set('propertyName', 'etiquetado_ext,codi_via')
+      .set('cql_filter', `etiquetado_ext ILIKE '%${normalizedQuery}%'`);
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => {
+        if (!response?.features) return [];
+        // Devolvemos pares únicos etiqueta+codigo
+        const seen = new Set<string>();
+        const suggestions: ViaSugerencia[] = [];
+        for (const f of response.features) {
+          const etiqueta = String(f.properties['etiquetado_ext'] ?? '').trim();
+          const codVia = String(f.properties['codi_via'] ?? '').trim();
+          const key = `${etiqueta}|${codVia}`;
+          if (etiqueta && codVia && !seen.has(key)) {
+            seen.add(key);
+            suggestions.push({ etiqueta, codVia });
+          }
+        }
+        return suggestions;
       })
     );
   }

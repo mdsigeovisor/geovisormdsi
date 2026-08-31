@@ -5,7 +5,7 @@ import { MapService } from '@app/services/map.service';
 import { AuthService } from '@app/services/auth.service';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '@app/interfaces/geoLayers';
-import { ViaNumero } from '@app/services/map.service';
+import { ViaNumero, ViaSugerencia } from '@app/services/map.service';
 
 @Component({
   selector: 'app-consultas',
@@ -96,7 +96,7 @@ export class Consultas {
   }
   // --- Lógica para autocompletado de vías ---
   private readonly nombreViaSubject = new Subject<string>();
-  viaSuggestions: string[] = [];
+  viaSuggestions: ViaSugerencia[] = [];
   showViaSuggestions = false;
   // --- Lógica para autocompletado de parques ---
   private readonly nombreParqueSubject = new Subject<string>();
@@ -141,7 +141,7 @@ export class Consultas {
     this.nombreViaSubject.pipe(
       debounceTime(300), // Espera 300ms después de la última pulsación
       distinctUntilChanged(), // Solo emite si el valor ha cambiado
-      switchMap(partialName => this.mapService.searchVias(partialName, false, true))
+      switchMap(partialName => this.mapService.searchViasConCodigo(partialName))
     ).subscribe(suggestions => {
       this.viaSuggestions = suggestions || [];
       this.showViaSuggestions = (suggestions?.length ?? 0) > 0;
@@ -273,11 +273,16 @@ export class Consultas {
   }
 
   /** Ejecuta la búsqueda según la pestaña activa */
-  selectViaSuggestion(suggestion: string) {
-    this.nombreVia = suggestion.trim(); // Limpiamos espacios en blanco al seleccionar
+  selectViaSuggestion(suggestion: ViaSugerencia) {
+    // Asignamos el nombre de la vía y su código (codi_via del WFS)
+    this.nombreVia = suggestion.etiqueta.trim();
+    this.codVia = suggestion.codVia.trim();
     this.showViaSuggestions = false;
     this.viaSuggestions = [];
-    // La búsqueda se ejecuta solo al presionar el botón "Consultar"
+    // Acto 1: mostramos la vía resaltada en el mapa
+    this.mostrarViaSeleccionada();
+    // Acto 1: cargamos las numeraciones para el selector (acto 2)
+    this.consultarViaNumeros();
   }
 
   onNombreViaBlur() {
@@ -420,7 +425,7 @@ export class Consultas {
    * geometría MultiLineString, la resalta en el mapa (capa de resaltado,
    * color ámbar para líneas) y ajusta la vista a su extensión completa.
    */
-  private procesarViasEncontradas(features: GeoJSONFeature[]): void {
+  private procesarViasEncontradas(features: GeoJSONFeature[], cerrarPanel = true): void {
     const multiLineString: GeoJSONGeometry = {
       type: 'MultiLineString',
       // Usamos flatMap para manejar tanto LineString (un array de coordenadas)
@@ -434,7 +439,39 @@ export class Consultas {
     // fitToGeometry resalta la geometría y ajusta la vista a su extensión
     this.mapService.fitToGeometry(multiLineString, 'EPSG:32718', undefined, true);
     this.loading.set(false);
-    this.Close.emit(); // Cerramos el panel para una mejor visualización
+    if (cerrarPanel) {
+      this.Close.emit(); // Cerramos el panel para una mejor visualización
+    }
+  }
+
+  /**
+   * Acto 1 del flujo por dirección: al seleccionar una vía de las sugerencias,
+   * la dibuja resaltada en el mapa (sin cerrar el panel) y carga las
+   * numeraciones de esa vía para el selector de números.
+   */
+  private mostrarViaSeleccionada(): void {
+    if (!this.nombreVia.trim()) return;
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.mapService.searchVias(this.nombreVia, false, false)
+      .pipe(take(1))
+      .subscribe({
+        next: (features) => {
+          if (features && features.length > 0) {
+            // Dibujamos solo los segmentos de la vía seleccionada (mismo codi_via);
+            // si el filtro no arroja resultados, usamos todos los encontrados.
+            const propias = features.filter(f =>
+              String(f.properties['codi_via'] ?? '').trim() === this.codVia
+            );
+            this.procesarViasEncontradas(propias.length > 0 ? propias : features, false);
+          }
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Error al mostrar la vía seleccionada:', err);
+          this.loading.set(false);
+        }
+      });
   }
 
   private handleBuscarByParque() {

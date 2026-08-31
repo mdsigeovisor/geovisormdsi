@@ -495,11 +495,10 @@ export class Consultas {
   }
 
   selectParqueSuggestion(parque: GeoJSONFeature) {
+    // Solo se asigna el nombre al input; el mapa se actualiza
+    // únicamente al presionar el botón "Consultas".
     this.nombreParque = parque.properties['denominaci'];
     this.showParqueSuggestions = false;
-    // Resaltamos la geometría del parque seleccionado y centramos el mapa en él.
-    this.mapService.fitToGeometry(parque.geometry, 'EPSG:32718', undefined, true);
-    this.Close.emit(); // Cerramos el panel para una mejor visualización.
     this.parqueSuggestions = [];
   }
 

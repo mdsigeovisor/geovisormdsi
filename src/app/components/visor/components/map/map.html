@@ -8,44 +8,40 @@
     <span class="mt-4 text-white/70 text-sm font-bold tracking-[0.2em] animate-pulse uppercase">
       Cargando...... Geovisor Catastral de la Municipalidad de San Isidro
     </span>
-    <img src="/assets/images/logo.png" alt="Logo San Isidro" class="mt-8 h-20 w-auto [filter:drop-shadow(0_0_12px_rgba(255,255,255,0.7))]">
+    <img src="/assets/images/logo.png" alt="Logo San Isidro"
+      class="mt-8 h-20 w-auto [filter:drop-shadow(0_0_12px_rgba(255,255,255,0.7))]">
   </div>
 </div>
 }
 <app-navbar [tourActivo]="isTourActive()" (login)="openLoginModal()" (tour)="startTour()"></app-navbar>
 <app-sidebar (onToggle)="handleSidebarToggle($event)"></app-sidebar>
-<div #mapContainer id="mapContainer" class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'"></div>
+<div #mapContainer id="mapContainer" class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'">
+</div>
 <app-funciones></app-funciones>
 
 <!-- Logo institucional del visor: esquina inferior izquierda,
      desplazado a la derecha del sidebar (w-12) para no superponerse -->
-<img src="/assets/images/logo_visor.png"
-     alt="Logo San Isidro"
-     draggable="false"
-     class="absolute left-16 bottom-6 z-[5] h-20 w-auto pointer-events-none select-none [filter:drop-shadow(0_0_12px_rgba(255,255,255,0.7))]" />
+<img src="/assets/images/logo_visor.png" alt="Logo San Isidro" draggable="false"
+  class="absolute left-16 bottom-6 z-[5] h-20 w-auto pointer-events-none select-none [filter:drop-shadow(0_0_12px_rgba(255,255,255,0.7))]" />
 <!-- Ventanas flotantes de información del lote (no bloquean el mapa; varias pueden estar abiertas) -->
 @for (win of mapService.loteInfoWindows(); track win.id) {
-<div class="fixed flex flex-col bg-white rounded-lg shadow-2xl border border-gray-300 max-w-[92vw] animate-scale-in overflow-hidden"
-     [style.left.px]="win.x" [style.top.px]="win.y"
-     [style.width.px]="win.width ?? 700"
-     [style.height.px]="win.heightPx ?? 520"
-     [style.z-index]="win.zIndex ?? 1040"
-     (pointerdown)="focusLote(win)">
+<div
+  class="fixed flex flex-col bg-white rounded-lg shadow-2xl border border-gray-300 max-w-[92vw] animate-scale-in overflow-hidden"
+  [style.left.px]="win.x" [style.top.px]="win.y" [style.width.px]="win.width ?? 700"
+  [style.height.px]="win.heightPx ?? 520" [style.z-index]="win.zIndex ?? 1040" (pointerdown)="focusLote(win)">
   <!-- Barra de título arrastrable -->
-  <div class="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50 cursor-move select-none touch-none"
-       (pointerdown)="startLoteDrag($event, win)"
-       (pointermove)="dragLote($event)"
-       (pointerup)="endLoteDrag()"
-       (pointercancel)="endLoteDrag()">
+  <div
+    class="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50 cursor-move select-none touch-none"
+    (pointerdown)="startLoteDrag($event, win)" (pointermove)="dragLote($event)" (pointerup)="endLoteDrag()"
+    (pointercancel)="endLoteDrag()">
     <h3 class="m-0 text-sm font-semibold text-gray-800 flex items-center gap-2">
       <i class="bi bi-building text-primary"></i>
       <span>{{ win.title || 'Información del Lote' }}</span>
       <span class="text-primary">{{ win.id }}</span>
     </h3>
-    <button class="w-8 h-8 rounded-full flex items-center justify-center bg-transparent border-none text-2xl leading-none cursor-pointer transition-colors hover:bg-gray-200"
-            (pointerdown)="$event.stopPropagation()"
-            (click)="closeLoteWindow(win.id)"
-            title="Cerrar">&times;</button>
+    <button
+      class="w-8 h-8 rounded-full flex items-center justify-center bg-transparent border-none text-2xl leading-none cursor-pointer transition-colors hover:bg-gray-200"
+      (pointerdown)="$event.stopPropagation()" (click)="closeLoteWindow(win.id)" title="Cerrar">&times;</button>
   </div>
   <div class="flex-grow p-0 overflow-hidden relative">
     <!-- Indicador de carga del iframe: se oculta cuando el iframe dispara 'load' -->
@@ -55,7 +51,7 @@
     </div>
     }
     <iframe class="relative w-full h-full border-0" [src]="getSafeUrl(win.url)" frameborder="0"
-            (load)="onLoteIframeLoad(win.id)"></iframe>
+      (load)="onLoteIframeLoad(win.id)"></iframe>
   </div>
 </div>
 }
@@ -68,11 +64,15 @@
 }
 <!-- Modal para foto de dron -->
 @if (mapService.fotoDroneUrl2018(); as url) {
-<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in" (click)="closeFotoDroneModal2018()" tabindex="-1">
-  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[520px] h-[55%] animate-scale-in" (click)="$event.stopPropagation()">
+<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in"
+  (click)="closeFotoDroneModal2018()" tabindex="-1">
+  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[520px] h-[55%] animate-scale-in"
+    (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
       <h3 class="m-0 text-lg font-semibold text-gray-800">Fotografía de Dron año 2018</h3>
-      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200" (click)="closeFotoDroneModal2018()" title="Cerrar">&times;</button>
+      <button
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+        (click)="closeFotoDroneModal2018()" title="Cerrar">&times;</button>
     </div>
     <div class="flex-grow p-0 overflow-hidden relative">
       <!-- Indicador de carga para el iframe -->
@@ -86,11 +86,15 @@
 }
 <!-- Modal para foto de dron -->
 @if (mapService.fotoDroneUrl2024(); as url) {
-<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in" (click)="closeFotoDroneModal2024()" tabindex="-1">
-  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[550px] h-[60%] animate-scale-in" (click)="$event.stopPropagation()">
+<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in"
+  (click)="closeFotoDroneModal2024()" tabindex="-1">
+  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[550px] h-[60%] animate-scale-in"
+    (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
       <h3 class="m-0 text-lg font-semibold text-gray-800">Fotografía de Dron año 2024</h3>
-      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200" (click)="closeFotoDroneModal2024()" title="Cerrar">&times;</button>
+      <button
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+        (click)="closeFotoDroneModal2024()" title="Cerrar">&times;</button>
     </div>
     <div class="flex-grow p-0 overflow-hidden relative">
       <!-- Indicador de carga para el iframe -->
@@ -104,11 +108,15 @@
 }
 <!-- Modal para Punto Geodésico -->
 @if (mapService.ptoGeodesicoUrl(); as url) {
-<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in" (click)="closePtoGeodesicoModal()" tabindex="-1">
-  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[600px] h-[70%] animate-scale-in" (click)="$event.stopPropagation()">
+<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in"
+  (click)="closePtoGeodesicoModal()" tabindex="-1">
+  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[600px] h-[70%] animate-scale-in"
+    (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
       <h3 class="m-0 text-lg font-semibold text-gray-800">Ficha de Punto Geodésico</h3>
-      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200" (click)="closePtoGeodesicoModal()" title="Cerrar">&times;</button>
+      <button
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+        (click)="closePtoGeodesicoModal()" title="Cerrar">&times;</button>
     </div>
     <div class="flex-grow p-0 overflow-hidden relative">
       <!-- Indicador de carga para el iframe -->
@@ -122,11 +130,15 @@
 }
 <!-- Modal para Arbolado Urbano 2015 -->
 @if (mapService.arboladoUrbano2015Url(); as url) {
-<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in" (click)="closeArboladoUrbano2015Modal()" tabindex="-1">
-  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[315px] h-[53%] animate-scale-in" (click)="$event.stopPropagation()">
+<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in"
+  (click)="closeArboladoUrbano2015Modal()" tabindex="-1">
+  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[315px] h-[53%] animate-scale-in"
+    (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
       <h3 class="m-0 text-sm font-semibold text-gray-800">Ficha de Arbolado Urbano - 2015</h3>
-      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200" (click)="closeArboladoUrbano2015Modal()" title="Cerrar">&times;</button>
+      <button
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+        (click)="closeArboladoUrbano2015Modal()" title="Cerrar">&times;</button>
     </div>
     <div class="flex-grow p-0 overflow-hidden relative">
       <!-- Indicador de carga para el iframe -->
@@ -140,11 +152,15 @@
 }
 <!-- Modal para Levantamiento Topográfico (TUSNE) -->
 @if (mapService.tusneUrl(); as url) {
-<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in" (click)="closeTusneModal()" tabindex="-1">
-  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[682px] h-[85%] animate-scale-in" (click)="$event.stopPropagation()">
+<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in"
+  (click)="closeTusneModal()" tabindex="-1">
+  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[682px] h-[85%] animate-scale-in"
+    (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
       <h3 class="m-0 text-sm font-semibold text-gray-800">Plano de Levantamiento Topográfico (TUSNE)</h3>
-      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200" (click)="closeTusneModal()" title="Cerrar">&times;</button>
+      <button
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+        (click)="closeTusneModal()" title="Cerrar">&times;</button>
     </div>
     <div class="flex-grow p-0 overflow-hidden relative">
       <!-- Indicador de carga para el iframe -->
@@ -159,43 +175,44 @@
 <!-- Modal para Cruce de Accesibilidad -->
 @if (mapService.cruceAccesibilidadUrl(); as url) {
 <div class="fixed inset-0 z-[1050] pointer-events-none">
-  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[315px] h-[53%] animate-scale-in pointer-events-auto"
-       [style.position]="'fixed'"
-       [style.top.px]="cruceModalPosition().y"
-       [style.left.px]="cruceModalPosition().x"
-       [style.transform]="'translate(-50%, -50%)'">
-    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg cursor-move select-none touch-none"
-         (pointerdown)="startCruceDrag($event)"
-         (pointermove)="dragCruce($event)"
-         (pointerup)="endCruceDrag()"
-         (pointercancel)="endCruceDrag()">
+  <div
+    class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[315px] h-[53%] animate-scale-in pointer-events-auto"
+    [style.position]="'fixed'" [style.top.px]="cruceModalPosition().y" [style.left.px]="cruceModalPosition().x"
+    [style.transform]="'translate(-50%, -50%)'">
+    <div
+      class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg cursor-move select-none touch-none"
+      (pointerdown)="startCruceDrag($event)" (pointermove)="dragCruce($event)" (pointerup)="endCruceDrag()"
+      (pointercancel)="endCruceDrag()">
       <h3 class="m-0 text-sm font-semibold text-gray-800">
         <i class="bi bi-grip-vertical text-gray-400 mr-2"></i>Ficha de Cruce de Accesibilidad
       </h3>
-      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
-              (pointerdown)="$event.stopPropagation()"
-              (click)="closeCruceAccesibilidadModal()"
-              title="Cerrar">&times;</button>
+      <button
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+        (pointerdown)="$event.stopPropagation()" (click)="closeCruceAccesibilidadModal()"
+        title="Cerrar">&times;</button>
     </div>
     <div class="flex-grow p-0 overflow-hidden relative">
       @if (hasIframeError(url)) {
-        <!-- Mensaje de error de carga -->
-        <div class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-b-lg p-6">
-          <i class="bi bi-exclamation-triangle-fill text-amber-500 text-3xl mb-3"></i>
-          <p class="text-sm font-semibold text-gray-700 text-center">Servicio no disponible</p>
-          <p class="text-xs text-gray-500 text-center mt-2">No se pudo cargar la información solicitada. Por favor, intente nuevamente.</p>
-          <button (click)="retryIframe(url)" class="mt-4 px-4 py-2 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
-            Reintentar
-          </button>
-        </div>
+      <!-- Mensaje de error de carga -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-b-lg p-6">
+        <i class="bi bi-exclamation-triangle-fill text-amber-500 text-3xl mb-3"></i>
+        <p class="text-sm font-semibold text-gray-700 text-center">Servicio no disponible</p>
+        <p class="text-xs text-gray-500 text-center mt-2">No se pudo cargar la información solicitada. Por favor,
+          intente nuevamente.</p>
+        <button (click)="retryIframe(url)"
+          class="mt-4 px-4 py-2 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
+          Reintentar
+        </button>
+      </div>
       } @else {
-        @if (!isIframeLoaded(url)) {
-          <!-- Indicador de carga para el iframe -->
-          <div class="absolute inset-0 flex items-center justify-center bg-white/50 rounded-b-lg z-10">
-            <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
-          </div>
-        }
-        <iframe class="relative w-full h-full border-0 rounded-b-lg" [src]="getSafeUrl(url)" frameborder="0" (load)="onIframeLoad(url)" (error)="onIframeError(url)"></iframe>
+      @if (!isIframeLoaded(url)) {
+      <!-- Indicador de carga para el iframe -->
+      <div class="absolute inset-0 flex items-center justify-center bg-white/50 rounded-b-lg z-10">
+        <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
+      </div>
+      }
+      <iframe class="relative w-full h-full border-0 rounded-b-lg" [src]="getSafeUrl(url)" frameborder="0"
+        (load)="onIframeLoad(url)" (error)="onIframeError(url)"></iframe>
       }
     </div>
   </div>
@@ -204,43 +221,44 @@
 <!-- Modal para Manzana de Accesibilidad -->
 @if (mapService.cruceAccesibilidadManzanaUrl(); as url) {
 <div class="fixed inset-0 z-[1050] pointer-events-none">
-  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[315px] h-[53%] animate-scale-in pointer-events-auto"
-       [style.position]="'fixed'"
-       [style.top.px]="manzanaModalPosition().y"
-       [style.left.px]="manzanaModalPosition().x"
-       [style.transform]="'translate(-50%, -50%)'">
-    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg cursor-move select-none touch-none"
-         (pointerdown)="startManzanaDrag($event)"
-         (pointermove)="dragManzana($event)"
-         (pointerup)="endManzanaDrag()"
-         (pointercancel)="endManzanaDrag()">
+  <div
+    class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[315px] h-[53%] animate-scale-in pointer-events-auto"
+    [style.position]="'fixed'" [style.top.px]="manzanaModalPosition().y" [style.left.px]="manzanaModalPosition().x"
+    [style.transform]="'translate(-50%, -50%)'">
+    <div
+      class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg cursor-move select-none touch-none"
+      (pointerdown)="startManzanaDrag($event)" (pointermove)="dragManzana($event)" (pointerup)="endManzanaDrag()"
+      (pointercancel)="endManzanaDrag()">
       <h3 class="m-0 text-sm font-semibold text-gray-800">
         <i class="bi bi-grip-vertical text-gray-400 mr-2"></i>Ficha de Manzana de Accesibilidad
       </h3>
-      <button class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
-              (pointerdown)="$event.stopPropagation()"
-              (click)="closeCruceAccesibilidadManzanaModal()"
-              title="Cerrar">&times;</button>
+      <button
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+        (pointerdown)="$event.stopPropagation()" (click)="closeCruceAccesibilidadManzanaModal()"
+        title="Cerrar">&times;</button>
     </div>
     <div class="flex-grow p-0 overflow-hidden relative">
       @if (hasIframeError(url)) {
-        <!-- Mensaje de error de carga -->
-        <div class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-b-lg p-6">
-          <i class="bi bi-exclamation-triangle-fill text-amber-500 text-3xl mb-3"></i>
-          <p class="text-sm font-semibold text-gray-700 text-center">Servicio no disponible</p>
-          <p class="text-xs text-gray-500 text-center mt-2">No se pudo cargar la información solicitada. Por favor, intente nuevamente.</p>
-          <button (click)="retryIframe(url)" class="mt-4 px-4 py-2 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
-            Reintentar
-          </button>
-        </div>
+      <!-- Mensaje de error de carga -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-b-lg p-6">
+        <i class="bi bi-exclamation-triangle-fill text-amber-500 text-3xl mb-3"></i>
+        <p class="text-sm font-semibold text-gray-700 text-center">Servicio no disponible</p>
+        <p class="text-xs text-gray-500 text-center mt-2">No se pudo cargar la información solicitada. Por favor,
+          intente nuevamente.</p>
+        <button (click)="retryIframe(url)"
+          class="mt-4 px-4 py-2 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
+          Reintentar
+        </button>
+      </div>
       } @else {
-        @if (!isIframeLoaded(url)) {
-          <!-- Indicador de carga para el iframe -->
-          <div class="absolute inset-0 flex items-center justify-center bg-white/50 rounded-b-lg z-10">
-            <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
-          </div>
-        }
-        <iframe class="relative w-full h-full border-0 rounded-b-lg" [src]="getSafeUrl(url)" frameborder="0" (load)="onIframeLoad(url)" (error)="onIframeError(url)"></iframe>
+      @if (!isIframeLoaded(url)) {
+      <!-- Indicador de carga para el iframe -->
+      <div class="absolute inset-0 flex items-center justify-center bg-white/50 rounded-b-lg z-10">
+        <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
+      </div>
+      }
+      <iframe class="relative w-full h-full border-0 rounded-b-lg" [src]="getSafeUrl(url)" frameborder="0"
+        (load)="onIframeLoad(url)" (error)="onIframeError(url)"></iframe>
       }
     </div>
   </div>
@@ -253,4 +271,3 @@
 <app-coordinate-info></app-coordinate-info>
 <!-- Modal global de Términos y Condiciones (se muestra al hacer zoom sobre el distrito) -->
 <app-terminos></app-terminos>
-

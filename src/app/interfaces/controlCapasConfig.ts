@@ -77,7 +77,7 @@ const PANEL_BASE: Section[] = [
         capa('tusne', 'Levantamiento Topográfico', { visible: false, showInLegend: true }),
       ]),
       subseccion('sectorizacion', 'SECTORIZACION', [
-        capa('sec_catastrales', 'Sectores Catastrales', { visible: false, showInLegend: false }),
+        capa('sec_catastrales', 'Sectores Catastrales', { visible: false, showInLegend: true }),
         capa('sec_vecinal', 'Sectores Vecinales', { visible: false, showInLegend: false }),
         capa('hab_urbana', 'Urbanizaciones', { visible: false, showInLegend: false }),
         capa('sec_subvecinal', 'Sub Sectores - Junta Vecinales', { visible: false, showInLegend: false }),
@@ -131,9 +131,9 @@ const PANEL_BASE: Section[] = [
       ]),
       subseccion('base_grafica', 'BASE GRÁFICA', [
         capa('num_cuadra', 'Número de Cuadra', { visible: true, showInLegend: false }),
-        capa('construcciones', 'Construcciones', { visible: true, showInLegend: false }),
-        capa('lote', 'Lote', { visible: true, showInLegend: false }),
-        capa('manzana', 'Manzana', { visible: true, showInLegend: false }),
+        capa('construcciones', 'Construcciones', { visible: true, showInLegend: true }),
+        capa('lote', 'Lote', { visible: true, showInLegend: true }),
+        capa('manzana', 'Manzana', { visible: true, showInLegend: true }),
         capa('veredas', 'Veredas', { visible: true, showInLegend: false }),
         capa('arearecreativa', 'Área Recreativa', { visible: true, showInLegend: false }),
       ]),

@@ -357,10 +357,10 @@ export class Consultas {
               type: 'GeometryCollection',
               geometries: features.map(f => f.geometry)
             };
-            // Ajustamos el mapa para que todas las geometrías de la vía sean visibles.
-            // La capa de resaltado se encargará de dibujar todos los segmentos.
+            // Ajustamos el mapa para que todas las geometrías del parque sean visibles.
+            // La capa de resaltado se encargará de dibujar todos los polígonos.
             this.mapService.fitToGeometry(geometryCollection, 'EPSG:32718', undefined, true);
-            // No se emite un SearchResult porque una vía no es un predio, solo se ubica en el mapa.
+            // No se emite un SearchResult porque un parque no es un predio, solo se ubica en el mapa.
             this.Close.emit(); // Cerramos el panel de búsqueda
           } else {
             this.searchError.set('No se encontraron parques con los criterios ingresados.');

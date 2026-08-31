@@ -5,7 +5,14 @@ import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import type { Coordinate } from 'ol/coordinate';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of, catchError } from 'rxjs';
+
+/** Registro de numeración de vía devuelto por el API del Geovisor. */
+export interface ViaNumero {
+  numero: string;
+  codlote: string;
+  codlotenumero: string;
+}
 import { ORTOFOTO_YEARS } from '../interfaces/ortofotos';
 import { LAYER_PANEL_SECTIONS } from '../interfaces/controlCapasConfig';
 import {
@@ -1590,6 +1597,38 @@ export class MapService {
       }
     }
     return undefined;
+  }
+  /**
+   * Lista los números de vía (numeraciones) para un código de vía dado,
+   * consultando el API del Geovisor municipal.
+   * Estrategia: primero intenta la ruta relativa "/WSGEOVISOR/..." (proxy de
+   * desarrollo o same-origin en producción) y, si falla (bloqueo CORS o proxy
+   * no configurado), reintenta con la URL absoluta del servidor de pruebas.
+   * @param codVia El código de la vía (ej. 'L271170').
+   * @returns Un Observable con un array de registros { numero, codlote, codlotenumero }.
+   */
+  listarViaNumeros(codVia: string): Observable<ViaNumero[]> {
+    const path = '/WSGEOVISOR/api/geovisor/listar-via-numero';
+    const absoluteUrl = 'https://test.munisanisidro.gob.pe' + path;
+    const params = new HttpParams().set('pvcCODVIA', codVia.trim());
+    const request = (url: string): Observable<ViaNumero[]> =>
+      this.http.get<ViaNumero[] | ViaNumero>(url, { params }).pipe(
+        map(response => {
+          if (Array.isArray(response)) return response;
+          // La respuesta del API viene envuelta: { status: 200, data: [...] }
+          if (response && typeof response === 'object') {
+            const wrapped = response as any;
+            if (Array.isArray(wrapped.data)) return wrapped.data;
+            if (Array.isArray(wrapped.result)) return wrapped.result;
+            return [response as ViaNumero];
+          }
+          return [];
+        })
+      );
+    return request(path).pipe(
+      catchError(() => request(absoluteUrl)), // Fallback: URL absoluta (CORS/producción)
+      catchError(() => of([]))
+    );
   }
   /**
    * Busca vías en el servicio WFS. Puede buscar por nombre parcial (para autocompletar)

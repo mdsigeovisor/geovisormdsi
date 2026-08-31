@@ -5,6 +5,7 @@ import { MapService } from '@app/services/map.service';
 import { AuthService } from '@app/services/auth.service';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '@app/interfaces/geoLayers';
+import { ViaNumero } from '@app/services/map.service';
 
 @Component({
   selector: 'app-consultas',
@@ -29,6 +30,11 @@ export class Consultas {
   codigoPredial = '';
   /** Campos para búsqueda por Dirección */
   nombreVia = '';
+  /** Campos para consulta de numeración por código de vía */
+  codVia = '';
+  viaNumeros: ViaNumero[] = [];
+  loadingViaNumeros = false;
+  viaNumerosError: string | null = null;
   // --- Lógica para autocompletado de vías ---
   private readonly nombreViaSubject = new Subject<string>();
   viaSuggestions: string[] = [];
@@ -218,6 +224,38 @@ export class Consultas {
   onNombreViaBlur() {
     // Ocultamos las sugerencias con un pequeño retardo para permitir el clic
     setTimeout(() => this.showViaSuggestions = false, 200);
+  }
+
+  /**
+   * Consulta las numeraciones (lotes) asociadas a un código de vía
+   * usando el endpoint listar-via-numero del Geovisor municipal.
+   */
+  consultarViaNumeros() {
+    const codVia = this.codVia.trim();
+    if (!codVia) {
+      this.viaNumerosError = 'Ingrese un código de vía para consultar.';
+      this.viaNumeros = [];
+      return;
+    }
+    this.loadingViaNumeros = true;
+    this.viaNumerosError = null;
+    this.viaNumeros = [];
+    this.mapService.listarViaNumeros(codVia)
+      .pipe(take(1))
+      .subscribe({
+        next: (registros) => {
+          this.loadingViaNumeros = false;
+          this.viaNumeros = registros;
+          if (registros.length === 0) {
+            this.viaNumerosError = 'No se encontraron numeraciones para el código de vía ingresado.';
+          }
+        },
+        error: (err) => {
+          console.error('Error al consultar numeraciones de vía:', err);
+          this.loadingViaNumeros = false;
+          this.viaNumerosError = 'Error de conexión con el servicio de numeraciones.';
+        }
+      });
   }
 
   onNombreParqueBlur() {

@@ -25,5 +25,11 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/WSGEOVISOR": {
+    "target": "https://test.munisanisidro.gob.pe",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
   }
 }

@@ -84,13 +84,13 @@ export class Consultas {
           this.mapService.drawSearchMarker(feature.geometry);
           this.emitResult(result);
         } else {
-          this.searchError.set('No se encontró el lote para el número seleccionado.');
+          this.searchError.set('Número de lote catastral no ubicado en el mapa (id_lote).');
         }
       },
       error: (err) => {
         console.error('Error al navegar al lote por numeración de vía:', err);
         this.loading.set(false);
-        this.searchError.set('Error de conexión con el servicio catastral.');
+        this.searchError.set('Número de lote catastral no ubicado en el mapa (id_lote).');
       }
     });
   }

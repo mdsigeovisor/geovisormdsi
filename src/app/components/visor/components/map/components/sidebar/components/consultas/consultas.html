@@ -225,6 +225,13 @@
           @if (viaNumerosError) {
           <p class="text-xs text-red-500 ml-1">{{ viaNumerosError }}</p>
           }
+          @if (searchError()) {
+          <div
+            class="p-2 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-red-600 animate-in fade-in zoom-in duration-200">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span class="text-[10px] font-bold uppercase tracking-tight">{{ searchError() }}</span>
+          </div>
+          }
 
           <!-- Selector de numeraciones (solo se muestra el dato 'numero') -->
           @if (viaNumeros.length > 0) {
@@ -373,7 +380,7 @@
       @if (loading()) {
       <span class="inline-block animate-spin mr-2">⌛</span> Buscando...
       } @else {
-      <i class="bi bi-search mr-2"></i> Consultas
+      <i class="bi bi-search mr-2"></i> Buscar
       }
     </button>
   </div>

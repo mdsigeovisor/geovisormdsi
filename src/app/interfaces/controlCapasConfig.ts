@@ -201,19 +201,19 @@ const PANEL_BASE: Section[] = [
     title: 'INFRAESTRUCTURA URBANA',
     expanded: false,
     items: [
-      subseccion('cruces', 'Cruces', [
-        capa('cruces_accesibilidad_1', 'Cruce Sector Vecinal 01', { visible: false, showInLegend: true }),
-        capa('cruces_accesibilidad_2', 'Cruce Sector Vecinal 02', { visible: false, showInLegend: true }),
-        capa('cruces_accesibilidad_3', 'Cruce Sector Vecinal 03', { visible: false, showInLegend: true }),
-        capa('cruces_accesibilidad_4', 'Cruce Sector Vecinal 04', { visible: false, showInLegend: true }),
-        capa('cruces_accesibilidad_5', 'Cruce Sector Vecinal 05', { visible: false, showInLegend: true }),
+      subseccion('cruces', 'Nivel de Accesibilidad – Cruces', [
+        capa('cruces_accesibilidad_1', 'Sector Vecinal 01', { visible: false, showInLegend: true }),
+        capa('cruces_accesibilidad_2', 'Sector Vecinal 02', { visible: false, showInLegend: true }),
+        capa('cruces_accesibilidad_3', 'Sector Vecinal 03', { visible: false, showInLegend: true }),
+        capa('cruces_accesibilidad_4', 'Sector Vecinal 04', { visible: false, showInLegend: true }),
+        capa('cruces_accesibilidad_5', 'Sector Vecinal 05', { visible: false, showInLegend: true }),
       ], false, { requiresAuth: false }),
-      subseccion('manzanas', 'Manzanas', [
-        capa('manzanas_cruces_accesibilidad_1', 'Manzana Sector Vecinal 01', { visible: false, showInLegend: true }),
-        capa('manzanas_cruces_accesibilidad_2', 'Manzana Sector Vecinal 02', { visible: false, showInLegend: true }),
-        capa('manzanas_cruces_accesibilidad_3', 'Manzana Sector Vecinal 03', { visible: false, showInLegend: true }),
-        capa('manzanas_cruces_accesibilidad_4', 'Manzana Sector Vecinal 04', { visible: false, showInLegend: true }),
-        capa('manzanas_cruces_accesibilidad_5', 'Manzana Sector Vecinal 05', { visible: false, showInLegend: true }),
+      subseccion('manzanas', 'Nivel de Accesibilidad – Manzanas', [
+        capa('manzanas_cruces_accesibilidad_1', 'Sector Vecinal 01', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_2', 'Sector Vecinal 02', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_3', 'Sector Vecinal 03', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_4', 'Sector Vecinal 04', { visible: false, showInLegend: true }),
+        capa('manzanas_cruces_accesibilidad_5', 'Sector Vecinal 05', { visible: false, showInLegend: true }),
       ], false, { requiresAuth: false }),
       subseccion('agua_alcantarillado', 'Agua y Alcantarillado', [
         capa('', 'Pozos de SEDAPAL (Desarrollo)', { visible: false, showInLegend: true }),

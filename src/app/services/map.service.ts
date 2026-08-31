@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import type { Coordinate } from 'ol/coordinate';
-import { Observable, map, of, catchError } from 'rxjs';
+import { Observable, map, of, catchError, throwError } from 'rxjs';
 
 /** Registro de numeración de vía devuelto por el API del Geovisor. */
 export interface ViaNumero {
@@ -1607,18 +1607,26 @@ export class MapService {
   /**
    * Lista los números de vía (numeraciones) para un código de vía dado,
    * consultando el API del Geovisor municipal.
-   * Estrategia: primero intenta la ruta relativa "/WSGEOVISOR/..." (proxy de
-   * desarrollo o same-origin en producción) y, si falla (bloqueo CORS o proxy
-   * no configurado), reintenta con la URL absoluta del servidor de pruebas.
+   * Estrategia de reintentos en orden:
+   *  1) Ruta relativa "/WSGEOVISOR/..." (same-origin: proxy de desarrollo o
+   *     el propio host municipal donde esté desplegada la app).
+   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
+   *  3) Host de producción: https://www.munisanisidro.gob.pe
+   * Si todos fallan, propaga el error (no devuelve vacío) para que la UI
+   * pueda distinguir "sin resultados" de "sin conexión".
    * @param codVia El código de la vía (ej. 'L271170').
    * @returns Un Observable con un array de registros { numero, codlote, codlotenumero }.
    */
   listarViaNumeros(codVia: string): Observable<ViaNumero[]> {
     const path = '/WSGEOVISOR/api/geovisor/listar-via-numero';
-    const absoluteUrl = 'https://test.munisanisidro.gob.pe' + path;
+    const hosts = [
+      '', // 1) Ruta relativa (same-origin / proxy de desarrollo)
+      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas
+      'https://www.munisanisidro.gob.pe' // 3) Host de producción
+    ];
     const params = new HttpParams().set('pvcCODVIA', codVia.trim());
     const request = (url: string): Observable<ViaNumero[]> =>
-      this.http.get<ViaNumero[] | ViaNumero>(url, { params }).pipe(
+      this.http.get<ViaNumero[] | ViaNumero>(url ? url + path : path, { params }).pipe(
         map(response => {
           if (Array.isArray(response)) return response;
           // La respuesta del API viene envuelta: { status: 200, data: [...] }
@@ -1631,9 +1639,20 @@ export class MapService {
           return [];
         })
       );
-    return request(path).pipe(
-      catchError(() => request(absoluteUrl)), // Fallback: URL absoluta (CORS/producción)
-      catchError(() => of([]))
+    // Encadenamos los intentos: pasamos al siguiente host solo si el anterior falla
+    return request(hosts[0]).pipe(
+      catchError(err => {
+        console.warn('listarViaNumeros: falló intento (ruta relativa), reintentando con test.munisanisidro.gob.pe', err);
+        return request(hosts[1]);
+      }),
+      catchError(err => {
+        console.warn('listarViaNumeros: falló intento (test), reintentando con www.munisanisidro.gob.pe', err);
+        return request(hosts[2]);
+      }),
+      catchError(err => {
+        console.error('listarViaNumeros: fallaron todos los intentos de conexión', err);
+        return throwError(() => err);
+      })
     );
   }
   /**

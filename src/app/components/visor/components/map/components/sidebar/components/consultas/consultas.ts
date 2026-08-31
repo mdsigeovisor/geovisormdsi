@@ -35,6 +35,17 @@ export class Consultas {
   viaNumeros: ViaNumero[] = [];
   loadingViaNumeros = false;
   viaNumerosError: string | null = null;
+  /** Número seleccionado en el selector de numeraciones */
+  numeroSeleccionado = '';
+
+  /**
+   * Lista única de números de vía disponibles (ej. 'S/N', '0000', '0110').
+   * Solo expone el campo 'numero'; el resto de los datos (codlote,
+   * codlotenumero) permanecen ocultos pero almacenados en viaNumeros.
+   */
+  get numerosDisponibles(): string[] {
+    return [...new Set(this.viaNumeros.map(r => (r.numero ?? '').trim()))].filter(n => n !== '');
+  }
   // --- Lógica para autocompletado de vías ---
   private readonly nombreViaSubject = new Subject<string>();
   viaSuggestions: string[] = [];

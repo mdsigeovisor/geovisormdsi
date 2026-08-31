@@ -236,24 +236,18 @@
           <p class="text-xs text-red-500 ml-1">{{ viaNumerosError }}</p>
           }
 
-          <!-- Listado de numeraciones -->
+          <!-- Selector de numeraciones (solo se muestra el dato 'numero') -->
           @if (viaNumeros.length > 0) {
-          <div
-            class="border border-gray-200 rounded-xl overflow-hidden animate-in fade-in duration-200">
-            <div class="grid grid-cols-3 bg-gray-50 px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              <span>Número</span>
-              <span>Cod. Lote</span>
-              <span>Cod. Lote-Número</span>
-            </div>
-            <div class="max-h-48 overflow-y-auto custom-scrollbar">
-              @for (registro of viaNumeros; track registro.codlotenumero) {
-              <div class="grid grid-cols-3 px-3 py-2 text-sm text-gray-700 border-t border-gray-100 hover:bg-primary/5 transition-colors">
-                <span class="font-medium">{{ registro.numero }}</span>
-                <span>{{ registro.codlote }}</span>
-                <span>{{ registro.codlotenumero }}</span>
-              </div>
+          <div class="animate-in fade-in duration-200">
+            <label for="numeroViaSelect"
+              class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Número</label>
+            <select id="numeroViaSelect" [(ngModel)]="numeroSeleccionado"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm text-gray-700 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+              <option value="" disabled selected>Seleccione un número...</option>
+              @for (numero of numerosDisponibles; track numero) {
+              <option [value]="numero">{{ numero }}</option>
               }
-            </div>
+            </select>
           </div>
           }
         </div>

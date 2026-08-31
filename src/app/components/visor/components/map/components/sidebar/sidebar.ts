@@ -10,6 +10,7 @@ import { About } from './components/about/about';
 import { Descargaspdf } from './components/descargaspdf/descargaspdf';
 import { Imprimir } from './components/imprimir/imprimir';
 import { UbicacionCoordenadas } from './components/coordenadas/coordenadas';
+import { Manual } from './components/manual/manual';
 
 @Component({
   selector: 'app-sidebar',
@@ -22,6 +23,7 @@ import { UbicacionCoordenadas } from './components/coordenadas/coordenadas';
     Descargaspdf,        
     FormsModule,
     Imprimir,
+    Manual,
     UbicacionCoordenadas
 
   ],
@@ -43,6 +45,8 @@ export class Sidebar  {
     { id: 'coordenadas', icon: 'bi bi-geo', label: 'Busqueda por Coordenadas'},
     { id: 'print', icon: 'bi-printer', label: 'Imprimir'},    
     { id: 'downloads', icon: 'bi-download', label: 'Descargas'},
+    { id: 'manual', icon: 'bi-book', label: 'Manual'},
+    
     //{ id: 'about', icon: 'bi-info-circle', label: 'Acerca de'},
   ];
   /** Obtiene el ID de la primera herramienta activa del Set */

@@ -77,6 +77,7 @@
                 *ngSwitchCase="'downloads'"
                 (onClose)="toggleSidebar()"
               ></app-descargaspdf>
+              <app-manual *ngSwitchCase="'manual'"></app-manual>
               <!-- Mensaje para herramientas sin componente aún -->
               <div
                 *ngSwitchDefault

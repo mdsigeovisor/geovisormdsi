@@ -1,0 +1,195 @@
+﻿<div class="flex flex-col h-full font-sans text-gray-800">
+  <!-- Botón: manual completo -->
+  <button (click)="abrirManualCompleto()"
+    class="shrink-0 mb-3 w-full px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-secondary transition-colors cursor-pointer shadow-sm">
+    <i class="bi bi-box-arrow-up-right"></i>
+    <span>Ver manual completo</span>
+  </button>
+
+  <!-- Accesos rápidos -->
+  <p class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2 px-1">Accesos rápidos</p>
+  <div class="grid grid-cols-2 gap-2 mb-4">
+    <a href="https://test.munisanisidro.gob.pe/WebObservatorioUrbano/" target="_blank" rel="noopener noreferrer"
+      class="flex items-center gap-2 p-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors text-xs font-semibold text-gray-700 cursor-pointer">
+      <i class="bi bi-broadcast text-primary"></i> Observatorio
+    </a>
+    <a href="manual.html#s10" target="_blank" rel="noopener noreferrer"
+      class="flex items-center gap-2 p-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors text-xs font-semibold text-gray-700 cursor-pointer">
+      <i class="bi bi-question-circle text-primary"></i> Preguntas frecuentes
+    </a>
+  </div>
+
+  <!-- Contenido del manual (acordeones) -->
+  <div class="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-2 pb-2">
+
+    <details open class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-info-circle-fill"></i> Introducción
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600 space-y-2">
+        <p>El <strong>Geovisor Catastral</strong> permite consultar y visualizar la información geoespacial, la cartografía oficial y los datos técnicos de los predios del distrito de San Isidro, sobre imágenes satelitales actualizadas.</p>
+        <p><strong>Requisitos:</strong> navegador actualizado (Chrome, Edge o Firefox) y conexión a Internet. La ruta principal del visor es <code class="bg-white px-1 rounded ring-1 ring-gray-200">/visor</code>.</p>
+        <p class="p-2 rounded-lg bg-amber-50 text-amber-900 border-l-4 border-amber-400"><i class="bi bi-exclamation-triangle-fill"></i> <strong>Importante:</strong> la información es estrictamente referencial (UTM WGS84‑18S / SIRGAS). No constituye certificado de catastro ni título de propiedad y no surte efectos jurídicos.</p>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-shield-check"></i> Primer ingreso
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600">
+        <p>Al entrar por primera vez se muestran los <strong>Términos y Condiciones</strong>:</p>
+        <ol class="list-decimal pl-4 mt-1 space-y-1">
+          <li>Lea el contenido del modal.</li>
+          <li>Marque «He leído y acepto los términos.»</li>
+          <li>Presione «Acepto e ingresar».</li>
+        </ol>
+        <p class="mt-1">Puede reconsultarlos desde el panel <strong>Acerca de</strong>.</p>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-search"></i> Consultas
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600">
+        <ul class="space-y-1">
+          <li><strong>Código Catastral</strong> (Sector·Manzana·Lote) — público</li>
+          <li><strong>Código CUC</strong> — requiere sesión</li>
+          <li><strong>Código Predial</strong> — público</li>
+          <li><strong>Dirección</strong> (vía y número) — público</li>
+          <li><strong>Habilitación Urbana</strong> — público</li>
+          <li><strong>Titular / Denominación / Parque</strong> — algunos requieren sesión</li>
+        </ul>
+        <p class="mt-1">Elija la pestaña, escriba el valor y haga clic en el resultado: el mapa se centrará en el predio.</p>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-stack"></i> Capas y Leyenda
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600 space-y-1">
+        <p><strong>Capas:</strong> active/desactive la información del mapa con los interruptores; use los botones de cada sección para activar/desactivar todas sus capas de una vez.</p>
+        <p><strong>Leyenda:</strong> ventana flotante con la simbología de las capas activas; arrastrable, minimizable y cerrable.</p>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-geo-alt"></i> Coordenadas
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600">
+        <p>Ubique un punto ingresando sus coordenadas:</p>
+        <ul class="list-disc pl-4 mt-1 space-y-1">
+          <li><strong>Geográficas:</strong> Latitud (Y) y Longitud (X). Ej.: -12.098, -77.043</li>
+          <li><strong>UTM:</strong> Este (X), Norte (Y) y Zona (17S / 18S / 19S). Ej.: 279530, 8659795, 18S</li>
+        </ul>
+        <p class="mt-1">Si los valores no son válidos se muestra un mensaje de error en rojo.</p>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-printer"></i> Imprimir / Descargas
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600 space-y-1">
+        <p><strong>Imprimir:</strong> genera un PDF de la vista actual con título, logo y fecha/hora (incluye cuadrícula, medidas y ficha del lote). Configure el mapa, complete el Paso 1 (selección del lote) y confirme. No cierre la página durante el proceso.</p>
+        <p><strong>Descargas:</strong> planos oficiales en PDF disponibles para abrir o descargar.</p>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-sliders"></i> Mapa y herramientas
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600">
+        <ul class="space-y-1">
+          <li><i class="bi bi-plus-lg text-primary"></i> / <i class="bi bi-dash-lg text-primary"></i> Zoom: acercar y alejar.</li>
+          <li><i class="bi bi-house-door-fill text-primary"></i> Home: vista general del distrito.</li>
+          <li><i class="bi bi-geo-alt-fill text-primary"></i> Mi ubicación: centra el mapa en su posición.</li>
+          <li><i class="bi bi-map text-primary"></i> Mapa base: alterna Satélite → Calles → Blanco.</li>
+          <li><i class="bi bi-tools text-primary"></i> Herramientas: medir distancias/áreas y dibujar.</li>
+          <li><i class="bi bi-mouse2 text-primary"></i> Mouse: rueda para zoom, arrastre para desplazarse.</li>
+        </ul>
+        <p class="mt-1">Haga clic sobre un lote para ver su <strong>ficha catastral</strong>.</p>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-shield-lock"></i> Inicio de sesión
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600">
+        <p>El acceso con credenciales desbloquea consultas por <strong>CUC</strong> y <strong>Titular</strong>, y capas restringidas:</p>
+        <ol class="list-decimal pl-4 mt-1 space-y-1">
+          <li>Pulse «Acceder» en la barra superior.</li>
+          <li>Ingrese usuario o correo y contraseña.</li>
+          <li>Confirme con el botón de ingreso o la tecla Enter.</li>
+        </ol>
+        <p class="mt-1">Para salir, pulse «Salir» y confirme en el diálogo.</p>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-signpost-split"></i> Tour interactivo
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600">
+        <p>Pulse el botón <strong>Tour (i)</strong> de la barra superior: la aplicación resalta cada elemento del visor con su explicación. Navegue con Anterior/Siguiente y finalice con «Finalizar» o el botón de cierre.</p>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-question-circle"></i> Preguntas frecuentes
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600 space-y-2">
+        <div>
+          <p class="font-semibold text-gray-800">¿Sirve para un trámite legal?</p>
+          <p>No; es referencial y no surte efectos jurídicos. Para certificados oficiales, diríjase a la Subgerencia de Planeamiento Urbano y Catastro.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-800">¿No ve la búsqueda por CUC?</p>
+          <p>Es restringida: debe iniciar sesión con credenciales autorizadas.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-800">¿No encuentra su predio?</p>
+          <p>Verifique el código (sector‑manzana‑lote) o la dirección, y que la capa catastral esté activa en Capas.</p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-800">¿Puede usarlo sin sesión?</p>
+          <p>Sí: mapa, capas, consultas públicas, impresión y descargas están disponibles para todos.</p>
+        </div>
+      </div>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-journal-bookmark"></i> Glosario
+      </summary>
+      <dl class="px-3 pb-3 text-xs leading-relaxed text-gray-600 space-y-1.5">
+        <div><dt class="inline font-bold text-primary">CUC:</dt> <dd class="inline">Código Único Catastral del predio.</dd></div>
+        <div><dt class="inline font-bold text-primary">Lote/Predio:</dt> <dd class="inline">unidad territorial dentro de una manzana.</dd></div>
+        <div><dt class="inline font-bold text-primary">Habilitación Urbana:</dt> <dd class="inline">núcleo urbano con trazado definido.</dd></div>
+        <div><dt class="inline font-bold text-primary">Capa:</dt> <dd class="inline">información geográfica superpuesta al mapa.</dd></div>
+        <div><dt class="inline font-bold text-primary">Leyenda:</dt> <dd class="inline">simbología del mapa.</dd></div>
+        <div><dt class="inline font-bold text-primary">Mapa base:</dt> <dd class="inline">fondo cartográfico (satélite, calles o blanco).</dd></div>
+        <div><dt class="inline font-bold text-primary">UTM WGS84‑18S / SIRGAS:</dt> <dd class="inline">sistema oficial de coordenadas del visor.</dd></div>
+      </dl>
+    </details>
+
+    <details class="group rounded-xl border border-gray-100 bg-gray-50 overflow-hidden">
+      <summary class="cursor-pointer select-none px-3 py-2 text-xs font-bold text-primary flex items-center gap-2 hover:bg-primary/5 transition-colors">
+        <i class="bi bi-headset"></i> Soporte
+      </summary>
+      <div class="px-3 pb-3 text-xs leading-relaxed text-gray-600">
+        <p>Consultas, reporte de errores o solicitudes de acceso: <strong>Subgerencia de Planeamiento Urbano y Catastro — Municipalidad de San Isidro</strong>. Observatorio Urbano:</p>
+        <a href="https://test.munisanisidro.gob.pe/WebObservatorioUrbano/" target="_blank" rel="noopener noreferrer" class="text-primary font-semibold hover:underline break-all">WebObservatorioUrbano</a>
+      </div>
+    </details>
+
+  </div>
+
+  <p class="shrink-0 pt-2 pb-1 text-center text-[10px] text-gray-400 border-t border-gray-100">Manual de Usuario · Geovisor Catastral v1.0.0</p>
+</div>

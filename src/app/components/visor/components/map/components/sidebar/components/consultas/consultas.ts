@@ -46,6 +46,54 @@ export class Consultas {
   get numerosDisponibles(): string[] {
     return [...new Set(this.viaNumeros.map(r => (r.numero ?? '').trim()))].filter(n => n !== '');
   }
+
+  /**
+   * Al seleccionar un número en el selector, navega al lote correspondiente
+   * usando el campo 'codlote' del registro (id_lote). Replica la lógica de
+   * la búsqueda catastral (búsqueda WFS + fit + marcador + panel de resultado)
+   * sin alterar dicha búsqueda.
+   */
+  irAloteSeleccionado() {
+    const numero = (this.numeroSeleccionado ?? '').trim();
+    if (!numero) return;
+    // Buscamos el registro que corresponde al número seleccionado
+    const registro = this.viaNumeros.find(r => (r.numero ?? '').trim() === numero);
+    if (!registro?.codlote) {
+      this.searchError.set('No se encontró el lote para el número seleccionado.');
+      return;
+    }
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.mapService.searchLoteByCodigoCatastral(registro.codlote).pipe(take(1)).subscribe({
+      next: (feature) => {
+        this.loading.set(false);
+        if (feature) {
+          const props = feature.properties as any;
+          const result: SearchResult = {
+            codigoCatastral: String(props['id_lote'] || registro.codlote).trim(),
+            direccion: props['direccion'] ?? props['ubicacion'] ?? "Ubicación no disponible",
+            propietario: props['propietario'] ?? "Información reservada",
+            area: props['area_lote'] ? `${props['area_lote']} m²` : "No disponible",
+            zonificacion: props['zonificacion'] ?? "No disponible",
+            fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80",
+            numeroPisos: props['pisos'] ?? 1,
+            geometry: feature.geometry
+          };
+          // Navegamos al polígono encontrado automáticamente
+          this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
+          this.mapService.drawSearchMarker(feature.geometry);
+          this.emitResult(result);
+        } else {
+          this.searchError.set('No se encontró el lote para el número seleccionado.');
+        }
+      },
+      error: (err) => {
+        console.error('Error al navegar al lote por numeración de vía:', err);
+        this.loading.set(false);
+        this.searchError.set('Error de conexión con el servicio catastral.');
+      }
+    });
+  }
   // --- Lógica para autocompletado de vías ---
   private readonly nombreViaSubject = new Subject<string>();
   viaSuggestions: string[] = [];

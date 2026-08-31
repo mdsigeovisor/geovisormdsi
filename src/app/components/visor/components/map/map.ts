@@ -109,6 +109,9 @@ export class MapComponent {
     if (this.mapService.tusneUrl()) {
       this.closeTusneModal();
     }
+    if (this.mapService.cruceAccesibilidadUrl()) {
+      this.closeCruceAccesibilidadModal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -211,6 +214,13 @@ export class MapComponent {
    */
   closeTusneModal(): void {
     this.mapService.clearTusneUrl();
+  }
+
+  /**
+   * Cierra el modal del cruce de accesibilidad.
+   */
+  closeCruceAccesibilidadModal(): void {
+    this.mapService.clearCruceAccesibilidadUrl();
   }
 
   /**

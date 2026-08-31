@@ -242,6 +242,8 @@ export class MapService {
   arboladoUrbano2015Url = signal<string | null>(null);
   /** URL del PDF de levantamiento topográfico (TUSNE) para mostrar en un modal. */
   tusneUrl = signal<string | null>(null);
+  /** URL con la información de un cruce de accesibilidad para mostrar en un modal. */
+  cruceAccesibilidadUrl = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -258,6 +260,12 @@ export class MapService {
     this.infoLayerConfig('arbolado_urbano_2015', p => p['codigo'], id => `${environment.dataGis.catArbolesUrl}?codigo_i=${id}`, this.arboladoUrbano2015Url),
     this.infoLayerConfig('cactus_yucca_2015', p => p['codigo'], id => `${environment.dataGis.catArbolesUrl}?codigo_i=${id}`, this.arboladoUrbano2015Url),
     this.infoLayerConfig('tusne', p => p['id_lote'] ?? p['codigo'] ?? p['id'], id => `${environment.dataGis.tusneUrlBase}/${id}.pdf`, this.tusneUrl),
+    // Cruces de accesibilidad (5 capas: cruces_accesibilidad_1 al 5)
+    this.infoLayerConfig('cruces_accesibilidad_1', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    this.infoLayerConfig('cruces_accesibilidad_2', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    this.infoLayerConfig('cruces_accesibilidad_3', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    this.infoLayerConfig('cruces_accesibilidad_4', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    this.infoLayerConfig('cruces_accesibilidad_5', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -929,6 +937,12 @@ export class MapService {
    */
   clearTusneUrl(): void {
     this.tusneUrl.set(null);
+  }
+  /**
+   * Limpia la URL del cruce de accesibilidad, para cerrar el modal.
+   */
+  clearCruceAccesibilidadUrl(): void {
+    this.cruceAccesibilidadUrl.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

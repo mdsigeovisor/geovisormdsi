@@ -62,6 +62,7 @@ export const environment = {
     get fotoDrone2024Url(): string { return `${this.webFilesUrl}/2024Drone.asp`; },
     get ptoGeodesicoUrl(): string { return `${this.webFilesUrl}/PtoGeodesico.asp`; },
     get catArbolesUrl(): string { return `${this.webFilesUrl}/Cat_Arboles_2014.asp`; },
+    get fichaAccCruceUrl(): string { return `${this.webFilesUrl}/Ficha_Acc_Cruce.asp`; },
     // --- Endpoints de fichas y fotografía (lote) ---
     get informacionUrl(): string { return `${this.webFilesUpperUrl}/LotePublico.asp`; },
     get informacionPrivadaUrl(): string { return `${this.webFilesUpperUrl}/informacion.asp`; },

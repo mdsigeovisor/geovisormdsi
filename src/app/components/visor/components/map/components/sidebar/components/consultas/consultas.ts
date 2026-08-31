@@ -520,6 +520,12 @@ export class Consultas {
     }
     // La búsqueda por dirección ahora tiene su propio manejador
     if (this.activeTab === 'direccion') {
+      // Acto 2: si ya hay una vía con numeraciones y un número seleccionado,
+      // el botón Consultar navega al lote correspondiente.
+      if (this.numeroSeleccionado && this.viaNumeros.length > 0) {
+        this.irAloteSeleccionado();
+        return;
+      }
       this.handleBuscarByDireccion();
       return;
     }

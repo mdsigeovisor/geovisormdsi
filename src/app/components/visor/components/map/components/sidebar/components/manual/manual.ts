@@ -14,6 +14,6 @@ import { CommonModule } from '@angular/common';
 export class Manual {
   /** Abre el manual completo (manual.html) en una pestana nueva. */
   abrirManualCompleto(): void {
-    window.open('manual.html', '_blank', 'noopener,noreferrer');
+    window.open('/manual.html', '_blank', 'noopener,noreferrer');
   }
 }

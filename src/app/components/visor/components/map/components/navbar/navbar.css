@@ -4,7 +4,7 @@
 
 .cash-register-font {
     font-family: 'DSEG7-Classic', 'Courier New', Courier, monospace;
-    color: #fef08a; /* yellow-200 */
-    text-shadow: 0 0 5px rgba(254, 240, 138, 0.5), 0 0 10px rgba(254, 240, 138, 0.3);
+    color: #2d780e; /* verde municipal */
+    text-shadow: 0 0 5px rgba(45, 120, 14, 0.2);
     letter-spacing: 0.05em;
 }

@@ -20,7 +20,26 @@ export class Navbar {
   private readonly authService = inject(AuthService);
   public isAuthenticated = this.authService.isAuthenticated;
   public visitCount = this.authService.visitCount;
+  public cargandoVisitas = this.authService.cargandoVisitas;
   public showLogoutModal = signal(false);
+
+  /**
+   * Formatea el número de visitas para una mejor legibilidad.
+   * - Menor a 1,000: número completo (ej: 999)
+   * - 1,000 a 999,999: formato K (ej: 1.5K, 999.9K)
+   * - 1,000,000+: formato M (ej: 1.2M, 15.8M)
+   */
+  formatearVisitas(valor: number): string {
+    if (valor >= 1_000_000) {
+      const millones = valor / 1_000_000;
+      return millones.toFixed(millones >= 10 ? 0 : 1) + 'M';
+    }
+    if (valor >= 1_000) {
+      const miles = valor / 1_000;
+      return miles.toFixed(miles >= 10 ? 0 : 1) + 'K';
+    }
+    return valor.toString();
+  }
 
     onLoginClick(): void {
     if (this.isAuthenticated()) {

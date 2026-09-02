@@ -1788,6 +1788,29 @@ export class MapService {
     return this.http.get<WfsResponse>(url, { params }).pipe(map(response => response?.features ?? null));
   }
   /**
+   * Consulta la capa de "Conformidad de Obra" (view_conformidadobra) para el
+   * dashboard del servicio tem_conforobra. Solicita únicamente los campos
+   * necesarios para el conteo: `txttipobra` (medición) y `codanoconformidad`
+   * (clasificación), ambos de tipo texto.
+   * @returns Observable con los features encontrados (o null si no hay resultados).
+   */
+  getConformidadObraData(): Observable<GeoJSONFeature[] | null> {
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}view_conformidadobra`)
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:32718')
+      .set('maxFeatures', '99999')
+      .set('propertyName', 'txttipobra,codanoconformidad');
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => response?.features ?? null)
+    );
+  }
+  /**
    * Configura la capa de resaltado para las geometrías encontradas del lote.
    */
   private setupHighlightLayer(): void {

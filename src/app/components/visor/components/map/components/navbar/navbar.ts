@@ -1,5 +1,6 @@
 import { Component, inject, Input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../../../../services/auth.service';
 
 
@@ -16,8 +17,10 @@ export class Navbar {
   login = output<void>();
   logout = output<void>();
   tour = output<void>();
+  dashboard = output<void>();
 
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   public isAuthenticated = this.authService.isAuthenticated;
   public visitCount = this.authService.visitCount;
   public cargandoVisitas = this.authService.cargandoVisitas;
@@ -52,6 +55,9 @@ export class Navbar {
   /** Inicia el recorrido interactivo (driver.js). */
   onTourClick(): void {
     this.tour.emit();
+  }
+  onDashboardClick(): void {
+    this.router.navigate(['/visor/dashboard']);
   }
   confirmLogout(): void {
     this.authService.logout();

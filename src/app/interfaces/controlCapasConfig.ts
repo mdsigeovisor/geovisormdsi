@@ -253,9 +253,26 @@ const PANEL_BASE: Section[] = [
         capa('tem_parametros', 'Parámetros Urbanisticos y Edificatorios', { visible: false, showInLegend: true }),
         capa('tem_conforobra', 'Conformidad de Obra', { visible: false, showInLegend: true }),
         capa('tem_li_anuncio', 'Licencia de Anuncio', { visible: false, showInLegend: true }),
+        capa('tem_li_edifica', 'Licencia de edificación', { visible: false, showInLegend: true }),
+        capa('tem_li_funcion', 'Licencia de funcionamiento', { visible: false, showInLegend: true }),
+        capa('tem_view_lote1', 'view_lote_a1', { visible: false, showInLegend: true }),
+        capa('tem_view_lote2', 'view_lote_a2', { visible: false, showInLegend: true }),
+        capa('tem_view_lote3', 'view_lote_a3', { visible: false, showInLegend: true }),
+        capa('tem_view_lote4', 'view_lote_a4', { visible: false, showInLegend: true }),
+        capa('tem_view_lote5', 'view_lote_a5', { visible: false, showInLegend: true }),
+        capa('tem_view_lote6', 'view_lote_a6', { visible: false, showInLegend: true }),
+        capa('tem_view_lote7', 'view_lote_a7', { visible: false, showInLegend: true }),
+        capa('tem_view_lote8', 'view_lote_a8', { visible: false, showInLegend: true }),
+        capa('tem_view_lote_ceju', 'tem_view_lote_ceju', { visible: false, showInLegend: true }),
+        capa('tem_view_lote_ceno', 'tem_view_lote_ceno', { visible: false, showInLegend: true }),
+        capa('tem_view_lote_cnmu', 'tem_view_lote_cnmu', { visible: false, showInLegend: true }),
+        capa('tem_view_lote_concarga', 'view_lote_concarga', { visible: false, showInLegend: true }),
+        capa('tem_view_lote_ley27157a', 'view_lote_ley_27157_a', { visible: false, showInLegend: true }),
+        capa('tem_view_lote_ley27157b', 'view_lote_ley_27157_b', { visible: false, showInLegend: true }),
+        capa('tem_view_lote_rrpp', 'view_lote_rrpp', { visible: false, showInLegend: true }),
 
-        
-        
+
+
 
       ], false, { requiresAuth: false }),
     ],

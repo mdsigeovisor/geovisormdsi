@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -8,104 +9,102 @@ import { firstValueFrom } from 'rxjs';
 export class AuthService {
   private http = inject(HttpClient);
 
-  // Espacio de nombres y clave para CounterAPI
-  private readonly NAMESPACE = 'munisanisidro_geovisor_visitas';
-  private readonly KEY = 'visitas';
-  private readonly API_BASE = 'https://api.counterapi.dev/v1';
+  // Configuración del contador de visitas (centralizado en environment.ts).
+  private readonly contador = environment.visitCounter;
 
-  // Clave para localStorage
+  // Clave para localStorage: solo se usa como RESPALDO (si la API no responde),
+  // nunca se suma a la API para no duplicar visitas.
   private readonly LOCAL_KEY = 'geovisor_visitas_local';
 
   // Señal para rastrear el estado de autenticación del usuario.
   public isAuthenticated = signal<boolean>(false);
 
-  // Señal para el contador de visitas.
+  // Señal para el contador de visitas (fuente única de verdad: la API).
   public visitCount = signal<number>(0);
 
   // Estado de carga del contador
   public cargandoVisitas = signal<boolean>(true);
 
   constructor() {
-    this.inicializarContador();
-  }
-
-  /**
-   * Inicializa el contador: obtiene el valor de la API y sincroniza con localStorage.
-   */
-  private async inicializarContador(): Promise<void> {
-    this.cargandoVisitas.set(true);
-
-    // Obtener visitas locales almacenadas
-    const visitasLocales = this.obtenerVisitasLocales();
-
-    try {
-      // Obtener contador de la API
-      const url = `${this.API_BASE}/${this.NAMESPACE}/${this.KEY}/up`;
-      const response = await firstValueFrom(
-        this.http.get<{ count: number }>(url)
-      );
-
-      // Sumar visitas locales a las de la API (por si la API no contó algunas)
-      const total = response.count + visitasLocales;
-      this.visitCount.set(total);
-    } catch (error) {
-      console.error('Error al obtener contador de API:', error);
-      // En caso de error, usar visitas locales + 1
-      const total = visitasLocales + 1;
-      this.visitCount.set(total);
-    } finally {
-      // Incrementar visita local
-      this.incrementarVisitaLocal();
+    if (this.contador.enabled) {
+      this.inicializarContador();
+    } else {
       this.cargandoVisitas.set(false);
     }
   }
 
   /**
-   * Registra una visita consumiendo CounterAPI.dev.
-   * Incrementa el contador en +1 y actualiza el valor mostrado.
+   * Construye la URL base del contador (endpoint + namespace + clave).
+   */
+  private urlContador(): string {
+    return `${this.contador.apiBase}/${this.contador.namespace}/${this.contador.key}`;
+  }
+
+  /**
+   * Inicializa el contador al cargar la aplicación.
+   * Incrementa la visita en la API (+1) y muestra el total GLOBAL.
+   * Los contadores locales solo sirven como respaldo temporal si la API
+   * no responde; NUNCA se suman a la API (evita el doble conteo).
+   */
+  private async inicializarContador(): Promise<void> {
+    this.cargandoVisitas.set(true);
+    try {
+      // /up incrementa en +1 el contador global y devuelve el nuevo total.
+      const response = await firstValueFrom(
+        this.http.get<{ count: number }>(`${this.urlContador()}/up`)
+      );
+      this.visitCount.set(response.count);
+    } catch (error) {
+      console.error('Error al obtener contador de API, usando respaldo local:', error);
+      // Respaldo: incrementar y mostrar solo las visitas locales registradas.
+      this.incrementarVisitaLocal();
+      this.visitCount.set(this.obtenerVisitasLocales());
+    } finally {
+      this.cargandoVisitas.set(false);
+    }
+  }
+
+  /**
+   * Registra una visita consumiendo la API del contador.
+   * Incrementa el contador global en +1 y actualiza el valor mostrado.
    */
   async registrarVisita(): Promise<void> {
     this.cargandoVisitas.set(true);
     try {
-      const url = `${this.API_BASE}/${this.NAMESPACE}/${this.KEY}/up`;
       const response = await firstValueFrom(
-        this.http.get<{ count: number }>(url)
+        this.http.get<{ count: number }>(`${this.urlContador()}/up`)
       );
-      const visitasLocales = this.obtenerVisitasLocales();
-      this.visitCount.set(response.count + visitasLocales);
+      this.visitCount.set(response.count);
     } catch (error) {
-      console.error('Error al registrar visita:', error);
+      console.error('Error al registrar visita, usando respaldo local:', error);
       this.incrementarVisitaLocal();
-      this.visitCount.update(v => v + 1);
+      this.visitCount.set(this.obtenerVisitasLocales());
     } finally {
       this.cargandoVisitas.set(false);
     }
   }
 
   /**
-   * Reinicia el contador de visitas a 0.
+   * Reinicia el contador a 0 (solo para administración).
    */
   async reiniciarContador(): Promise<void> {
     this.cargandoVisitas.set(true);
     try {
-      const url = `${this.API_BASE}/${this.NAMESPACE}/${this.KEY}/set?count=0`;
       const response = await firstValueFrom(
-        this.http.get<{ count: number }>(url)
+        this.http.get<{ count: number }>(`${this.urlContador()}/set?count=0`)
       );
       this.visitCount.set(response.count);
-      // Limpiar contador local
-      localStorage.removeItem(this.LOCAL_KEY);
     } catch (error) {
       console.error('Error al reiniciar contador:', error);
       this.visitCount.set(0);
-      localStorage.removeItem(this.LOCAL_KEY);
     } finally {
+      localStorage.removeItem(this.LOCAL_KEY);
       this.cargandoVisitas.set(false);
     }
   }
 
   /**
-   * Obtiene el número de visitas almacenadas localmente.
+   * Obtiene el número de visitas de respaldo almacenadas localmente.
    */
   private obtenerVisitasLocales(): number {
     const stored = localStorage.getItem(this.LOCAL_KEY);
@@ -113,7 +112,7 @@ export class AuthService {
   }
 
   /**
-   * Incrementa el contador local en 1.
+   * Incrementa el contador de respaldo local en 1.
    */
   private incrementarVisitaLocal(): void {
     const actuales = this.obtenerVisitasLocales();

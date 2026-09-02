@@ -14,6 +14,7 @@ import { Login } from '../../../auth/components/login/login'; // Import Login co
 import { CoordinateInfo } from './components/coordinate-info/coordinate-info';
 import { TermsModal } from './components/terminos/terminos';
 import { Leyenda } from './components/sidebar/components/leyenda/leyenda';
+import { Dashboard } from '../dashboard/dashboard';
 /**
  * Componente principal de la interfaz del mapa.
  * Coordina la visualización de la barra de herramientas, barra lateral y los controles
@@ -33,6 +34,7 @@ import { Leyenda } from './components/sidebar/components/leyenda/leyenda';
     CoordinateInfo,
     TermsModal,
     Leyenda,
+    Dashboard,
   ],
   templateUrl: './map.html',
   styleUrl: './map.css',
@@ -45,6 +47,16 @@ export class MapComponent {
   @ViewChild(Funciones) funcionesComponent!: Funciones;
 
   public showLoginModal = signal(false);
+  /** Controla la visibilidad del Dashboard de servicios temáticos. */
+  public dashboardVisible = signal(false);
+  /** Abre el Dashboard de Conformidad de Obra. */
+  abrirDashboard(): void {
+    this.dashboardVisible.set(true);
+  }
+  /** Cierra el Dashboard de Conformidad de Obra. */
+  closeDashboard(): void {
+    this.dashboardVisible.set(false);
+  }
 
   /** Conjunto de ids de ventanas de lote cuyo iframe ya terminó de cargar (para ocultar el spinner). */
   private readonly loteWindowsLoaded = signal<Set<string>>(new Set());

@@ -1,0 +1,155 @@
+<div class="animate-fade-in"
+  [class.fixed]="!fullPage"
+  [class.inset-0]="!fullPage"
+  [class.flex]="!fullPage"
+  [class.items-center]="!fullPage"
+  [class.justify-center]="!fullPage"
+  [class.bg-black/50]="!fullPage"
+  [class.backdrop-blur-sm]="!fullPage"
+  [class.p-4]="!fullPage"
+  [class.min-h-[100dvh]]="fullPage"
+  [class.bg-gray-100]="fullPage"
+  (click)="cerrar()">
+  <div
+    class="flex flex-col w-full max-w-[1200px] mx-auto overflow-hidden animate-scale-in"
+    [class.bg-white]="true"
+    [class.rounded-2xl]="!fullPage"
+    [class.shadow-2xl]="!fullPage"
+    [class.max-h-[92vh]]="!fullPage"
+    [class.min-h-full]="fullPage"
+    (click)="$event.stopPropagation()">
+    <!-- Cabecera -->
+    <div class="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-primary to-secondary text-white shrink-0">
+      <div class="flex items-center gap-3">
+        <span class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+          <i class="bi bi-clipboard-data text-2xl"></i>
+        </span>
+        <div>
+          <h2 class="m-0 text-lg font-bold leading-tight">Dashboard — {{ servicio.title }}</h2>
+          <p class="m-0 text-xs text-white/80">Medición por tipo de obra (txttipobra) · Clasificación por código de conformidad (codanoconformidad)</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button (click)="cargarDatos()" [disabled]="cargando()" title="Actualizar datos"
+          class="w-9 h-9 rounded-lg flex items-center justify-center bg-white/15 hover:bg-white/25 transition-colors disabled:opacity-40 cursor-pointer">
+          <i class="bi bi-arrow-clockwise text-lg" [class.animate-spin]="cargando()"></i>
+        </button>
+        <button (click)="cerrar()" [attr.title]="fullPage ? 'Volver al mapa' : 'Cerrar'"
+          class="flex items-center gap-2 px-3 h-9 rounded-lg bg-white/15 hover:bg-white/25 transition-colors cursor-pointer">
+          <i class="bi bi-arrow-left-short text-lg" [class.bi-x-lg]="!fullPage"></i>
+          <span class="text-sm font-medium" *ngIf="fullPage">Volver al mapa</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cuerpo -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar p-5 bg-gray-50">
+      @if (error(); as mensaje) {
+      <!-- Estado de error -->
+      <div class="flex flex-col items-center justify-center py-16 text-center">
+        <i class="bi bi-exclamation-triangle-fill text-amber-500 text-5xl mb-4"></i>
+        <p class="text-gray-700 font-semibold">No se pudo cargar la información</p>
+        <p class="text-gray-500 text-sm mt-1 max-w-md">{{ mensaje }}</p>
+        <button (click)="cargarDatos()"
+          class="mt-5 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-secondary transition-colors cursor-pointer">
+          Reintentar
+        </button>
+      </div>
+      } @else {
+
+      <!-- Tarjetas de resumen -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Registros totales</p>
+          <p class="m-0 text-3xl font-black text-primary">{{ totalRegistros }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tipos de obra</p>
+          <p class="m-0 text-3xl font-black text-primary">{{ tipObras.length }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Códigos de conformidad</p>
+          <p class="m-0 text-3xl font-black text-primary">{{ codConformidad.length }}</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Capa de origen</p>
+          <p class="m-0 text-sm font-semibold text-gray-700 truncate" title="{{ servicio.layerName }}">{{ servicio.layerName }}</p>
+        </div>
+      </div>
+
+      @if (cargando()) {
+      <div class="flex flex-col items-center justify-center py-16">
+        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-gray-500 text-sm mt-4">Consultando el servicio WFS…</p>
+      </div>
+      } @else {
+
+      @if (!totalRegistros) {
+      <div class="flex flex-col items-center justify-center py-16 text-center">
+        <i class="bi bi-inbox text-5xl text-gray-300 mb-4"></i>
+        <p class="text-gray-600 font-semibold">No hay registros en la capa</p>
+        <p class="text-gray-400 text-sm">La capa {{ servicio.layerName }} no devolvió resultados.</p>
+      </div>
+      } @else {
+<!-- Gráficos -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+        <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <h3 class="m-0 text-sm font-bold text-gray-700 mb-3">Conformidades por tipo de obra</h3>
+          <div class="relative" style="height: 320px;">
+            <canvas #chartBarra></canvas>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <h3 class="m-0 text-sm font-bold text-gray-700 mb-3">Distribución por tipo de obra</h3>
+          <div class="relative" style="height: 320px;">
+            <canvas #chartTorta></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de detalle -->
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100">
+          <h3 class="m-0 text-sm font-bold text-gray-700">Detalle por tipo de obra y código de conformidad</h3>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-gray-50 text-gray-500 text-left">
+                <th class="px-4 py-2.5 font-bold text-[11px] uppercase tracking-wider">Tipo de obra</th>
+                @for (codigo of codConformidad; track codigo) {
+                <th class="px-4 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center">{{ codigo }}</th>
+                }
+                <th class="px-4 py-2.5 font-bold text-[11px] uppercase tracking-wider text-center bg-primary text-white">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (tipo of tipObras; track tipo; let i = $index) {
+              <tr class="border-t border-gray-100 hover:bg-primary/5">
+                <td class="px-4 py-2.5 font-semibold text-gray-800">{{ tipo }}</td>
+                @for (col of codConformidad; track col; let j = $index) {
+                <td class="px-4 py-2.5 text-center text-gray-600">{{ matriz[i][j] }}</td>
+                }
+                <td class="px-4 py-2.5 text-center font-bold text-white bg-primary">{{ totalesPorTipo[i] }}</td>
+              </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="border-t-2 border-gray-200 bg-gray-50 font-bold text-gray-700">
+                <td class="px-4 py-2.5">Total general</td>
+                @for (total of totalesPorCodigo; track $index) {
+                <td class="px-4 py-2.5 text-center">{{ total }}</td>
+                }
+                <td class="px-4 py-2.5 text-center text-white bg-primary">{{ totalRegistros }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      }
+      }
+      }
+    </div>
+  </div>
+</div>
+

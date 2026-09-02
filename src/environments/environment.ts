@@ -3,6 +3,18 @@ export const environment = {
   version: 'v. 1.0.0',
   ambiente: 'Desarrollo',
 
+  // --- CONTADOR DE VISITAS ---
+  // Fuente centralizada para que el contador sume visitas de TODOS los usuarios
+  // (no solo del PC local). Base actual: CounterAPI.dev (servicio gratuito).
+  // Para migrar a un ASP propio del municipio, solo se reemplaza apiBase por el
+  // endpoint y se ajustan namespace/key (ver environment.prod.ts).
+  visitCounter: {
+    enabled: true,
+    apiBase: 'https://api.counterapi.dev/v1',
+    namespace: 'munisanisidro_geovisor_visitas',
+    key: 'visitas'
+  },
+
   // --- CONFIGURACIÓN DE GEOSERVER ---
   geoserver: {
     // Servidor MSI proporcionado

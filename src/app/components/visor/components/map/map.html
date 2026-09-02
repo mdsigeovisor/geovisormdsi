@@ -13,7 +13,8 @@
   </div>
 </div>
 }
-<app-navbar [tourActivo]="isTourActive()" (login)="openLoginModal()" (tour)="startTour()"></app-navbar>
+<app-navbar [tourActivo]="isTourActive()" (login)="openLoginModal()" (tour)="startTour()"
+  (dashboard)="abrirDashboard()"></app-navbar>
 <app-sidebar (onToggle)="handleSidebarToggle($event)"></app-sidebar>
 <div #mapContainer id="mapContainer" class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'">
 </div>
@@ -267,6 +268,10 @@
 <!-- Modal para Login -->
 @if (showLoginModal()) {
 <app-login (close)="closeLoginModal()"></app-login>
+}
+<!-- Dashboard de Conformidad de Obra -->
+@if (dashboardVisible()) {
+<app-dashboard (Close)="closeDashboard()"></app-dashboard>
 }
 <app-coordinate-info></app-coordinate-info>
 <!-- Modal global de Términos y Condiciones (se muestra al hacer zoom sobre el distrito) -->

@@ -75,6 +75,26 @@ const TEMATICA: WmsLayerConfig[] = [
   { id: 'tem_parametros', layerName: `${wp}view_parametros_urbanisticos`, zIndex: 3, title: 'Parámetros Urbanisticos y Edificatorios' },
   { id: 'tem_conforobra', layerName: `${wp}view_conformidadobra`, zIndex: 3, title: 'Conformidad de Obra' },
   { id: 'tem_li_anuncio', layerName: `${wp}view_licencia_anuncio`, zIndex: 3, title: 'Licencia de Anuncio' },
+  { id: 'tem_li_edifica', layerName: `${wp}view_licencia_edificacion`, zIndex: 3, title: 'Licencia de edificación' },
+  { id: 'tem_li_funcion', layerName: `${wp}view_licencias_funcionamiento`, zIndex: 3, title: 'Licencia de funcionamiento' },
+  { id: 'tem_view_lote1', layerName: `${wp}view_lote_a1`, zIndex: 3, title: 'view_lote_a1' },
+  { id: 'tem_view_lote2', layerName: `${wp}view_lote_a2`, zIndex: 3, title: 'view_lote_a2' },
+  { id: 'tem_view_lote3', layerName: `${wp}view_lote_a3`, zIndex: 3, title: 'view_lote_a3' },
+  { id: 'tem_view_lote4', layerName: `${wp}view_lote_a4`, zIndex: 3, title: 'view_lote_a4' },
+  { id: 'tem_view_lote5', layerName: `${wp}view_lote_a5`, zIndex: 3, title: 'view_lote_a5' },
+  { id: 'tem_view_lote6', layerName: `${wp}view_lote_a6`, zIndex: 3, title: 'view_lote_a6' },
+  { id: 'tem_view_lote7', layerName: `${wp}view_lote_a7`, zIndex: 3, title: 'view_lote_a7' },
+  { id: 'tem_view_lote8', layerName: `${wp}view_lote_a8`, zIndex: 3, title: 'view_lote_a8' },
+  { id: 'tem_view_lote_ceju', layerName: `${wp}view_lote_certificado_ceju`, zIndex: 3, title: 'view_lote_certificado_ceju' },
+  { id: 'tem_view_lote_ceno', layerName: `${wp}view_lote_certificado_ceno`, zIndex: 3, title: 'view_lote_certificado_ceno' },
+  { id: 'tem_view_lote_cnmu', layerName: `${wp}view_lote_certificado_cnmu`, zIndex: 3, title: 'view_lote_certificado_cnmu' },
+  { id: 'tem_view_lote_cnmu', layerName: `${wp}view_lote_certificado_cnmu`, zIndex: 3, title: 'view_lote_certificado_cnmu' },
+  { id: 'tem_view_lote_rnum', layerName: `${wp}view_lote_certificado_rnum`, zIndex: 3, title: 'view_lote_certificado_rnum' },
+  { id: 'tem_view_lote_concarga', layerName: `${wp}view_lote_concarga`, zIndex: 3, title: 'view_lote_concarga' },
+  { id: 'tem_view_lote_ley27157a', layerName: `${wp}view_lote_ley_27157_a`, zIndex: 3, title: 'view_lote_ley_27157_a' },
+  { id: 'tem_view_lote_ley27157b', layerName: `${wp}view_lote_ley_27157_b`, zIndex: 3, title: 'view_lote_ley_27157_b' },
+  { id: 'tem_view_lote_rrpp', layerName: `${wp}view_lote_rrpp`, zIndex: 3, title: 'view_lote_rrpp' },
+
 ];
 /**
  * Configuración centralizada para las capas WMS que se cargarán inicialmente en el mapa.

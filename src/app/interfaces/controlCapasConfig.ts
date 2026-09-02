@@ -250,8 +250,12 @@ const PANEL_BASE: Section[] = [
     expanded: false,
     items: [
       subseccion('parametros', 'Tramites atendidos', [
-        capa('tem_parametros', 'Parámetros Urbanisticos y Edificatorios', { visible: false }),
-        capa('amUrbHomogeneo', 'ORDENAR', { visible: false }),
+        capa('tem_parametros', 'Parámetros Urbanisticos y Edificatorios', { visible: false, showInLegend: true }),
+        capa('tem_conforobra', 'Conformidad de Obra', { visible: false, showInLegend: true }),
+        capa('tem_li_anuncio', 'Licencia de Anuncio', { visible: false, showInLegend: true }),
+
+        
+        
 
       ], false, { requiresAuth: false }),
     ],

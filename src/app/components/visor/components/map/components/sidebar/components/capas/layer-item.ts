@@ -11,13 +11,20 @@ import { LayerItem } from '@app/interfaces/geoLayers';
     <div class="flex items-center gap-3">
       <div class="relative flex items-center">
         <input type="checkbox" [id]="sectionId() + '-' + layer().id" [checked]="layer().visible"
-          (change)="toggleVisibility.emit()"
-          class="w-3 h-3 rounded-md border-gray-300 text-primary focus:ring-primary/20 cursor-pointer transition-all accent-primary" />
+          (change)="onToggle()" [disabled]="isBlocked()"
+          class="w-3 h-3 rounded-md border-gray-300 text-primary focus:ring-primary/20 transition-all accent-primary"
+          [ngClass]="isBlocked() ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'" />
       </div>
       <label [for]="sectionId() + '-' + layer().id"
-        class="flex-1 cursor-pointer font-bold text-gray-600 group-hover/item:text-primary transition-colors leading-tight"
-        [ngClass]="size() === 'small' ? 'text-[8px]' : 'text-[10px]'">
-        {{ layer().label }}
+        class="flex-1 font-bold text-gray-600 group-hover/item:text-primary transition-colors leading-tight"
+        [ngClass]="[size() === 'small' ? 'text-[8px]' : 'text-[10px]', isBlocked() ? 'opacity-50 cursor-not-allowed text-gray-400 group-hover/item:text-gray-400' : 'cursor-pointer']"
+        [title]="isBlocked() ? 'Capa en desarrollo' : null">
+        <span class="inline-flex items-center gap-1">
+          @if (isBlocked()) {
+          <i class="bi bi-lock-fill text-[9px]"></i>
+          }
+          {{ layer().label }}
+        </span>
       </label>
     </div>
     <!-- Control de Opacidad -->
@@ -37,4 +44,15 @@ export class LayerItemComponent {
   size = input<'normal' | 'small'>('normal');
   toggleVisibility = output<void>();
   opacityChange = output<Event>();
+
+  /** True si la capa está marcada como bloqueada (en desarrollo, sin servicio asociado). */
+  isBlocked(): boolean {
+    return !!this.layer().disabled;
+  }
+
+  /** Emite el cambio de visibilidad solo si la capa no está bloqueada. */
+  onToggle(): void {
+    if (this.isBlocked()) return;
+    this.toggleVisibility.emit();
+  }
 }

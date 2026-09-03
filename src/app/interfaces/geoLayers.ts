@@ -32,6 +32,12 @@ export interface LayerItem {
   showInLegend: boolean;
   /** Si es true, la capa solo se muestra en el panel cuando el usuario está autenticado. */
   requiresAuth?: boolean;
+  /**
+   * Si es true, la capa se muestra "bloqueada" en el panel: checkbox atenuado,
+   * candado y sin posibilidad de activarla. Se usa para capas en desarrollo
+   * (sin servicio WMS asociado).
+   */
+  disabled?: boolean;
   type: 'layer';
   id: string;
   label: string;

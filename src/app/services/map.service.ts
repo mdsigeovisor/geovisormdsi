@@ -1267,6 +1267,10 @@ export class MapService {
     if (layer.id !== layerId) {
       return layer;
     }
+    // Las capas bloqueadas (en desarrollo) no pueden modificarse desde la UI.
+    if (layer.disabled) {
+      return layer;
+    }
     const propsToApply = typeof newProps === 'function' ? newProps(layer) : newProps;
     return { ...layer, ...propsToApply };
   }
@@ -1287,11 +1291,11 @@ export class MapService {
             if (!sectionAllowed || (item.requiresAuth && !isAuthed)) return item;
             return {
               ...item,
-              layers: item.layers.map(l => ({ ...l, visible: (l.requiresAuth && !isAuthed) ? false : visible })),
+              layers: item.layers.map(l => ({ ...l, visible: (l.disabled || (l.requiresAuth && !isAuthed)) ? false : visible })),
             };
           }
           if (item.type === 'layer') {
-            return { ...item, visible: (item.requiresAuth && !isAuthed) ? false : visible };
+            return { ...item, visible: (item.disabled || (item.requiresAuth && !isAuthed)) ? false : visible };
           }
           return item;
         }),

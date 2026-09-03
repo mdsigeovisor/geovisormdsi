@@ -30,6 +30,8 @@ export class Navbar {
 
   /** URL de la encuesta de salida (abierta al cerrar sesión). */
   private readonly encuestaSalidaUrl = environment.encuestaSalidaUrl;
+  /** URL del Observatorio Urbano (abierta en otra pestaña). */
+  private readonly observatorioUrl = environment.observatorioUrl;
 
   /**
    * Formatea el número de visitas para una mejor legibilidad.
@@ -63,6 +65,24 @@ export class Navbar {
   }
   onDashboardClick(): void {
     this.router.navigate(['/visor/dashboard']);
+  }
+  /** Maneja la selección del selector de herramientas (Tour / Dashboard / Observatorio). */
+  onOpcionSeleccionada(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const opcion = select.value;
+    // Reinicia el selector a "Herramientas" para que se pueda volver a elegir.
+    select.value = '';
+    switch (opcion) {
+      case 'tour':
+        this.onTourClick();
+        break;
+      case 'dashboard':
+        this.onDashboardClick();
+        break;
+      case 'observatorio':
+        window.open(this.observatorioUrl, '_blank', 'noopener,noreferrer');
+        break;
+    }
   }
   confirmLogout(): void {
     this.authService.logout();

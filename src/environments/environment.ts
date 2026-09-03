@@ -8,6 +8,10 @@ export const environment = {
   // o sale del geovisor.
   encuestaSalidaUrl: 'https://forms.gle/zadpPzpAR6h8Ud2P7',
 
+  // --- OBSERVATORIO URBANO ---
+  // Enlace externo al Observatorio Urbano de la comuna (se abre en otra pestaña).
+  observatorioUrl: 'https://test.munisanisidro.gob.pe/WebObservatorioUrbano/',
+
   // --- CONTADOR DE VISITAS ---
   // Fuente centralizada para que el contador sume visitas de TODOS los usuarios
   // (no solo del PC local). Base actual: CounterAPI.dev (servicio gratuito).

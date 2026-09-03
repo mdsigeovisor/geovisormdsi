@@ -51,33 +51,26 @@ export class DriverService {
           description: 'Contador de visitas al geovisor. Cada carga de la página incrementa el contador.',
         },
       },
-      {/* 4. Observatorio - Navbar derecha */
-        element: '#btn-observatorio',
+      {/* 4. Menú de Herramientas - Navbar derecha (Tour / Dashboard / Observatorio) */
+        element: '#btn-menus',
         popover: {
           side: 'bottom',
           align: 'end',
-          title: 'Observatorio Urbano',
-          description: 'Enlace externo al Observatorio Urbano de la comuna. Se abre en una pestaña nueva.',
+          title: 'Herramientas',
+          description: 'Acceso rápido al Tour (recorrido interactivo), al Dashboard de Conformidad de Obra y al Observatorio Urbano (abre en una pestaña nueva).',
         },
       },
-      {/* 5. Botón Tour - Navbar derecha */
-        element: '#btn-tour',
-        popover: {
-          side: 'bottom',
-          align: 'end',
-          title: 'Recorrido interactivo',
-          description: 'Repite el tour de bienvenida en cualquier momento pulsando este botón.',
-        },
-      },
-      {/* 6. Mapa principal - Centro */
+      {/* 5. Mapa principal - Centro */
         element: '#mapContainer',
         popover: {
+          side: 'bottom',
+          align: 'end',
           title: 'Mapa principal',
           description:
             'Visualiza, navega y consulta la cartografía catastral. Usa la rueda del ratón o los controles para hacer zoom y arrastrar.',
         },
       },
-      {/* 7. Consultas - Sidebar izquierda */
+      {/* 6. Consultas - Sidebar izquierda */
         element: '#btn-sidebar-search',
         popover: {
           side: 'right',
@@ -86,7 +79,7 @@ export class DriverService {
             'Busca predios por código catastral, CUC, dirección, habilitación, titular, denominación o parque.',
         },
       },
-      {/* 8. Capas - Sidebar izquierda */
+      {/* 7. Capas - Sidebar izquierda */
         element: '#btn-sidebar-layers',
         popover: {
           side: 'right',
@@ -94,7 +87,7 @@ export class DriverService {
           description: 'Activa o desactiva las capas cartográficas visibles en el mapa.',
         },
       },
-      {/* 9. Leyenda - Sidebar izquierda */
+      {/* 8. Leyenda - Sidebar izquierda */
         element: '#btn-sidebar-legend',
         popover: {
           side: 'right',
@@ -102,7 +95,7 @@ export class DriverService {
           description: 'Visualiza la simbología de las capas activas en una ventana flotante.',
         },
       },
-      {/* 10. Coordenadas - Sidebar izquierda */
+      {/* 9. Coordenadas - Sidebar izquierda */
         element: '#btn-sidebar-coordenadas',
         popover: {
           side: 'right',
@@ -110,7 +103,7 @@ export class DriverService {
           description: 'Ubica un punto ingresando sus coordenadas geográficas.',
         },
       },
-      {/* 11. Imprimir - Sidebar izquierda */
+      {/* 10. Imprimir - Sidebar izquierda */
         element: '#btn-sidebar-print',
         popover: {
           side: 'right',
@@ -118,7 +111,7 @@ export class DriverService {
           description: 'Genera un PDF con la vista actual del mapa.',
         },
       },
-      {/* 12. Descargas - Sidebar izquierda */
+      {/* 11. Descargas - Sidebar izquierda */
         element: '#btn-sidebar-downloads',
         popover: {
           side: 'right',
@@ -126,7 +119,7 @@ export class DriverService {
           description: 'Accede a los formatos de descarga disponibles.',
         },
       },
-      {/* 13. Zoom In - Panel derecho */
+      {/* 12. Zoom In - Panel derecho */
         element: '#btn-zoom-in',
         popover: {
           side: 'right',
@@ -135,7 +128,7 @@ export class DriverService {
           description: 'Aumenta el nivel de zoom para ver más detalle del mapa.',
         },
       },
-      {/* 14. Zoom Out - Panel derecho */
+      {/* 13. Zoom Out - Panel derecho */
         element: '#btn-zoom-out',
         popover: {
           side: 'right',
@@ -144,7 +137,7 @@ export class DriverService {
           description: 'Reduce el nivel de zoom para ver una área más amplia.',
         },
       },
-      {/* 15. Vista general - Panel derecho */
+      {/* 14. Vista general - Panel derecho */
         element: '#btn-home',
         popover: {
           side: 'right',
@@ -153,7 +146,7 @@ export class DriverService {
           description: 'Restablece la vista del mapa a la extensión inicial del distrito.',
         },
       },
-      {/* 16. Geolocalización - Panel derecho */
+      {/* 15. Geolocalización - Panel derecho */
         element: '#btn-geolocalizacion',
         popover: {
           side: 'right',
@@ -162,7 +155,7 @@ export class DriverService {
           description: 'Centra el mapa en tu ubicación actual usando geolocalización del navegador.',
         },
       },
-      {/* 17. Cambio base - Panel derecho */
+      {/* 16. Cambio base - Panel derecho */
         element: '#btn-cambio-base',
         popover: {
           side: 'right',
@@ -171,7 +164,7 @@ export class DriverService {
           description: 'Alterna entre las vistas satélite, calles y mapa en blanco.',
         },
       },
-      {/* 18. Herramientas - Panel derecho */
+      {/* 17. Herramientas - Panel derecho */
         element: '#btn-herramientas',
         popover: {
           side: 'right',
@@ -180,7 +173,7 @@ export class DriverService {
           description: 'Abre el panel de herramientas para medir distancias, áreas y dibujar sobre el mapa.',
         },
       },
-      {/* 19. Botón Auth/Login - Último, Navbar derecha */
+      {/* 18. Botón Auth/Login - Último, Navbar derecha */
         element: '#btn-auth',
         popover: {
           side: 'bottom',

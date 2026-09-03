@@ -143,10 +143,6 @@ graph TB
 
 [Local](http://localhost:4200/)
 
-[Desarrollo](http://192.168.40.58:80)
+[Producción - URL](https://geovisorcatastral.munisanisidro.gob.pe)
 
-[Producción - IP](http://192.168.40.58:80)
-
-[Producción - URL](https://visor.mdsi.gob.pe/)
-
-[Producción - GeoServer](https://geoserver.mdsi.gob.pe/)
+[Producción - GeoServer](https://geomapas.munisanisidro.gob.pe)

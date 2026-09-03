@@ -19,6 +19,9 @@ export class AuthService {
   // Señal para rastrear el estado de autenticación del usuario.
   public isAuthenticated = signal<boolean>(false);
 
+  // Señal con el nombre de usuario que inició sesión.
+  public userName = signal<string>('');
+
   // Señal para el contador de visitas (fuente única de verdad: la API).
   public visitCount = signal<number>(0);
 
@@ -120,12 +123,14 @@ export class AuthService {
   }
 
   // Simula el inicio de sesión.
-  login(): void {
+  login(username?: string): void {
     this.isAuthenticated.set(true);
+    this.userName.set(username ?? '');
   }
 
   // Simula el cierre de sesión.
   logout(): void {
     this.isAuthenticated.set(false);
+    this.userName.set('');
   }
 }

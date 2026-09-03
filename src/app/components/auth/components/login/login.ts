@@ -124,7 +124,7 @@ export class Login implements AfterViewInit, OnDestroy {
         } else {
           localStorage.removeItem(CLAVE_RECORDADA);
         }
-        this.authService.login(); // Cambia el estado de autenticación
+        this.authService.login(user); // Cambia el estado de autenticación y guarda el nombre de usuario
         this.close.emit();        // Cierra el modal
       } else {
         this.error.set('Usuario o contraseña incorrectos.');

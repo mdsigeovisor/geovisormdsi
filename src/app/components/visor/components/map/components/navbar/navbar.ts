@@ -22,6 +22,7 @@ export class Navbar {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   public isAuthenticated = this.authService.isAuthenticated;
+  public userName = this.authService.userName;
   public visitCount = this.authService.visitCount;
   public cargandoVisitas = this.authService.cargandoVisitas;
   public showLogoutModal = signal(false);
@@ -44,7 +45,7 @@ export class Navbar {
     return valor.toString();
   }
 
-    onLoginClick(): void {
+  onLoginClick(): void {
     if (this.isAuthenticated()) {
       this.showLogoutModal.set(true);
     } else {

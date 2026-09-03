@@ -2,6 +2,7 @@ import { Component, inject, Input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../../../services/auth.service';
+import { environment } from '../../../../../../../environments/environment';
 
 
 @Component({
@@ -26,6 +27,9 @@ export class Navbar {
   public visitCount = this.authService.visitCount;
   public cargandoVisitas = this.authService.cargandoVisitas;
   public showLogoutModal = signal(false);
+
+  /** URL de la encuesta de salida (abierta al cerrar sesión). */
+  private readonly encuestaSalidaUrl = environment.encuestaSalidaUrl;
 
   /**
    * Formatea el número de visitas para una mejor legibilidad.
@@ -63,6 +67,8 @@ export class Navbar {
   confirmLogout(): void {
     this.authService.logout();
     this.showLogoutModal.set(false);
+    // Abre la encuesta de salida en una pestaña nueva.
+    window.open(this.encuestaSalidaUrl, '_blank', 'noopener,noreferrer');
     // Opcional: Redirigir a la página de inicio o recargar.
     // window.location.reload();
   }

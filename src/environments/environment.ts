@@ -3,6 +3,11 @@ export const environment = {
   version: 'v. 1.0.0',
   ambiente: 'Desarrollo',
 
+  // --- ENCUESTA DE SALIDA ---
+  // Se abre en una pestaña nueva cuando el usuario confirma el cierre de sesión
+  // o sale del geovisor.
+  encuestaSalidaUrl: 'https://forms.gle/zadpPzpAR6h8Ud2P7',
+
   // --- CONTADOR DE VISITAS ---
   // Fuente centralizada para que el contador sume visitas de TODOS los usuarios
   // (no solo del PC local). Base actual: CounterAPI.dev (servicio gratuito).

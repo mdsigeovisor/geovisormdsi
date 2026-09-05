@@ -142,6 +142,9 @@ export class MapComponent {
     if (this.mapService.bancas2016Url()) {
       this.closeBancas2016Modal();
     }
+    if (this.mapService.estacBicis2016Url()) {
+      this.closeEstacBicis2016Modal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -275,6 +278,13 @@ export class MapComponent {
    */
   closeBancas2016Modal(): void {
     this.mapService.clearBancas2016Url();
+  }
+
+  /**
+   * Cierra el modal del estacionamiento de bicicletas 2016.
+   */
+  closeEstacBicis2016Modal(): void {
+    this.mapService.clearEstacBicis2016Url();
   }
 
   /**

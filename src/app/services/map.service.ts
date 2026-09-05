@@ -261,6 +261,8 @@ export class MapService {
   cruceAccesibilidadManzanaUrl = signal<string | null>(null);
   /** URL con la información de una banca (2016) para mostrar en un modal. */
   bancas2016Url = signal<string | null>(null);
+  /** URL con la información de un estacionamiento de bicicletas (2016) para mostrar en un modal. */
+  estacBicis2016Url = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -291,6 +293,8 @@ export class MapService {
     this.infoLayerConfig('manzanas_cruces_accesibilidad_5', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
     // Bancas 2016
     this.infoLayerConfig('mu_bancas_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.bancas2016Url),
+    // Estacionamientos de bicicletas 2016
+    this.infoLayerConfig('mu_estac_bicis_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.estacBicis2016Url),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -986,6 +990,12 @@ export class MapService {
    */
   clearBancas2016Url(): void {
     this.bancas2016Url.set(null);
+  }
+  /**
+   * Limpia la URL del estacionamiento de bicicletas (2016), para cerrar el modal.
+   */
+  clearEstacBicis2016Url(): void {
+    this.estacBicis2016Url.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

@@ -130,7 +130,7 @@ const PANEL_BASE: Section[] = [
         // capa('', 'Comercio en vía pública 2017', { visible: false, showInLegend: true }),
         // capa('', 'Comercio en vía pública 2015', { visible: false, showInLegend: true }),
         // capa('', 'Comercio en vía pública 2012', { visible: false, showInLegend: true }),
-        // capa('', 'Estacionamientos de bicicletas 2016', { visible: false, showInLegend: true }),
+        capa('mu_estac_bicis_2016', 'Estacionamientos de bicicletas 2016', { visible: false, showInLegend: true }),
         // capa('', 'Juegos para niños 2016', { visible: false, showInLegend: true }),
         // capa('', 'Minigimnasios 2016', { visible: false, showInLegend: true }),
         // capa('', 'Postes de Iluminación Ornamentales 2016', { visible: false, showInLegend: true }),

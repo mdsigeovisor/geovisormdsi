@@ -98,6 +98,7 @@ const TEMATICA: WmsLayerConfig[] = [
 
 const MOVILIARIO_RBANO: WmsLayerConfig[] = [
   { id: 'mu_bancas_2016', layerName: `${wp}bancas_2016`, zIndex: 3, title: 'Bancas 2016' },
+  { id: 'mu_estac_bicis_2016', layerName: `${wp}estacionamientos_bicicletas_2016`, zIndex: 3, title: 'Estacionamiento de bicicletas 2016' },
 ]
 /**
  * Configuración centralizada para las capas WMS que se cargarán inicialmente en el mapa.

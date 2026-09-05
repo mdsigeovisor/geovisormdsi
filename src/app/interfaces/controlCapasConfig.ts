@@ -78,10 +78,10 @@ const PANEL_BASE: Section[] = [
     items: [
       /*Capas de la base grafica*/
       subseccion('base_grafica', 'BASE GRÁFICA', [
-        capa('num_cuadra', 'Cuadra', { visible: true, showInLegend: true }),
-        capa('construcciones', 'Construcciones', { visible: true, showInLegend: true }),
-        capa('lote', 'Lote', { visible: true, showInLegend: true }),
-        capa('manzana', 'Manzana', { visible: true, showInLegend: true }),
+        capa('num_cuadra', 'Cuadra', { visible: true, showInLegend: false }),
+        capa('construcciones', 'Construcciones', { visible: true, showInLegend: false }),
+        capa('lote', 'Lote', { visible: true, showInLegend: false }),
+        capa('manzana', 'Manzana', { visible: true, showInLegend: false }),
         capa('veredas', 'Veredas', { visible: true, showInLegend: false }),
         capa('arearecreativa', 'Área Recreativa', { visible: true, showInLegend: false }),
       ]),
@@ -173,7 +173,7 @@ const PANEL_BASE: Section[] = [
         capa('etiq_zonificacion', 'Etiqueta Zonificación', { visible: false, showInLegend: false }),
         capa('zonificacion', 'Zonificación usos del suelo', { visible: false, showInLegend: true }),
         capa('amUrbHomogeneo', 'Ambitos Urbanos Homogéneos', { visible: false, showInLegend: false, requiresAuth: true }),
-        capa('', 'Alturas Maximas de Edificacion (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('norm_alt_edific', 'Alturas Maximas de Edificacion', { visible: false, showInLegend: true }),
         capa('', 'Ambitos para promover la sostenibilidad de las zonas residenciales (Desarrollo)', { visible: false, showInLegend: false, requiresAuth: true }),
         capa('', 'Modulos Comercio en via pública - Puntos aprobados (Desarrollo)', { visible: false, showInLegend: false, requiresAuth: true }),
       ]),

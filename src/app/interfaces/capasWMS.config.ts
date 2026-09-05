@@ -29,6 +29,7 @@ const AMBIENTAL_LAYERS: WmsLayerConfig[] = [
   { id: 'arbolado_urbano_2015', layerName: `${wp}vw_arboles_2015`, zIndex: 1, title: 'Árboles 2015' },
   { id: 'cactus_yucca_2015', layerName: `${wp}vw_arboles_2015_cactus`, zIndex: 1, title: 'Cactus - Yucca 2015' },
   { id: 'arearecreativa', layerName: `${wp}gc_area_verde`, zIndex: 1, title: 'Área Recreativa' },
+  { id: 'nom_area_verde', layerName: `${wp}areas_verdes_de_san_isidro`, zIndex: 1, title: 'Área verde de San Isidro' },
 ];
 
 const CATASTRALES_LAYERS: WmsLayerConfig[] = [

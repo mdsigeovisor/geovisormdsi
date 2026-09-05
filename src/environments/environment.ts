@@ -93,6 +93,10 @@ export const environment = {
     // --- Planos de levantamiento topográfico (TUSNE) ---
     get tusneUrlBase(): string {
       return `${this.tusneServerUrl}/DataGIS_WGS84/32_LEVANTAMIENTO_TOPOGRAFICO_(TUSNE)`;
+    },
+    // --- Fichas PDF de Áreas Verdes de San Isidro ---
+    get areasVerdesUrlBase(): string {
+      return `${this.tusneServerUrl}/DataGIS_WGS84/19_AREAS%20VERDES%20DE%20SAN%20ISIDRO`;
     }
   }
 };

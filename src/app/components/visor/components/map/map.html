@@ -309,6 +309,28 @@
   </div>
 </div>
 }
+<!-- Modal para Área Verde de San Isidro (PDF) -->
+@if (mapService.areaVerdeUrl(); as url) {
+<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in"
+  (click)="closeAreaVerdeModal()" tabindex="-1">
+  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[682px] h-[85%] animate-scale-in"
+    (click)="$event.stopPropagation()">
+    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+      <h3 class="m-0 text-sm font-semibold text-gray-800">Ficha de Área Verde de San Isidro</h3>
+      <button
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+        (click)="closeAreaVerdeModal()" title="Cerrar">&times;</button>
+    </div>
+    <div class="flex-grow p-0 overflow-hidden relative">
+      <!-- Indicador de carga para el iframe -->
+      <div class="absolute inset-0 flex items-center justify-center bg-white/50 rounded-b-lg">
+        <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
+      </div>
+      <iframe class="relative w-full h-full border-0 rounded-b-lg" [src]="getSafeUrl(url)" frameborder="0"></iframe>
+    </div>
+  </div>
+</div>
+}
 <!-- Modal para Login -->
 @if (showLoginModal()) {
 <app-login (close)="closeLoginModal()"></app-login>

@@ -119,7 +119,7 @@ const PANEL_BASE: Section[] = [
         capa('arbolado_urbano_2024', 'Arboles 2024', { visible: false, showInLegend: true }),
         capa('arbolado_urbano_2015', 'Arboles 2015', { visible: false, showInLegend: true }),
         capa('cactus_yucca_2015', 'Cactus - Yucca 2015', { visible: false, showInLegend: true }),
-        capa('', 'Area verde San Isidro (Desarrollo)', { visible: false, showInLegend: true }),
+        capa('nom_area_verde', 'Area verde San Isidro', { visible: false, showInLegend: true }),
       ]),
       /*Mobiliario Urbano*/
       subseccion('moviliario_urbano', 'MOBILIARIO URBANO', [

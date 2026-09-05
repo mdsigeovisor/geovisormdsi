@@ -19,7 +19,7 @@ const INFRAESTRUCTURA_LAYERS: WmsLayerConfig[] = [
 ];
 
 const NUMERACION_LAYERS: WmsLayerConfig[] = [
-  { id: 'num_municipal_2024', layerName: `${wp}vw_numeracion_campo_2024`, zIndex: 3, title: 'Numeración de campo 2024' },  
+  { id: 'num_municipal_2024', layerName: `${wp}vw_numeracion_campo_2024`, zIndex: 3, title: 'Numeración de campo 2024' },
   { id: 'num_municipal_2022', layerName: `${wp}vw_numeracion_campo_2022`, zIndex: 3, title: 'Numeración de campo 2022' },
   { id: 'puertas2024', layerName: `${wp}vw_tg_puertas`, zIndex: 3, title: 'Puertas 2024' },
 ];
@@ -95,6 +95,10 @@ const TEMATICA: WmsLayerConfig[] = [
   { id: 'tem_view_lote_rrpp', layerName: `${wp}view_lote_rrpp`, zIndex: 3, title: 'view_lote_rrpp' },
 
 ];
+
+const MOVILIARIO_RBANO: WmsLayerConfig[] = [
+  { id: 'mu_bancas_2016', layerName: `${wp}bancas_2016`, zIndex: 3, title: 'Bancas 2016' },
+]
 /**
  * Configuración centralizada para las capas WMS que se cargarán inicialmente en el mapa.
  * Mover esta configuración a un archivo dedicado facilita el mantenimiento y la adición
@@ -110,6 +114,7 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   ...VUELOS_LAYERS,
   ...NORMATIVA_LAYERS,
   ...ACCESIBILIDAD,
-  ...TEMATICA
+  ...TEMATICA,
+  ...MOVILIARIO_RBANO,
 ];
 

@@ -139,6 +139,9 @@ export class MapComponent {
     if (this.mapService.cruceAccesibilidadManzanaUrl()) {
       this.closeCruceAccesibilidadManzanaModal();
     }
+    if (this.mapService.bancas2016Url()) {
+      this.closeBancas2016Modal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -265,6 +268,13 @@ export class MapComponent {
       this.iframeLoaded.update(loaded => { const s = new Set(loaded); s.delete(url); return s; });
     }
     this.mapService.clearCruceAccesibilidadManzanaUrl();
+  }
+
+  /**
+   * Cierra el modal de la banca 2016.
+   */
+  closeBancas2016Modal(): void {
+    this.mapService.clearBancas2016Url();
   }
 
   /**

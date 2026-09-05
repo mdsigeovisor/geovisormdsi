@@ -259,6 +259,8 @@ export class MapService {
   cruceAccesibilidadUrl = signal<string | null>(null);
   /** URL con la información de una manzana de accesibilidad para mostrar en un modal. */
   cruceAccesibilidadManzanaUrl = signal<string | null>(null);
+  /** URL con la información de una banca (2016) para mostrar en un modal. */
+  bancas2016Url = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -287,6 +289,8 @@ export class MapService {
     this.infoLayerConfig('manzanas_cruces_accesibilidad_3', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
     this.infoLayerConfig('manzanas_cruces_accesibilidad_4', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
     this.infoLayerConfig('manzanas_cruces_accesibilidad_5', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    // Bancas 2016
+    this.infoLayerConfig('mu_bancas_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.bancas2016Url),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -976,6 +980,12 @@ export class MapService {
    */
   clearCruceAccesibilidadManzanaUrl(): void {
     this.cruceAccesibilidadManzanaUrl.set(null);
+  }
+  /**
+   * Limpia la URL de la banca (2016), para cerrar el modal.
+   */
+  clearBancas2016Url(): void {
+    this.bancas2016Url.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

@@ -154,6 +154,9 @@ export class MapComponent {
     if (this.mapService.juegoNinos2016Url()) {
       this.closeJuegoNinos2016Modal();
     }
+    if (this.mapService.miniGimnasiosUrl()) {
+      this.closeMiniGimnasiosModal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -315,6 +318,13 @@ export class MapComponent {
    */
   closeJuegoNinos2016Modal(): void {
     this.mapService.clearJuegoNinos2016Url();
+  }
+
+  /**
+   * Cierra el modal de minigimnasios 2016.
+   */
+  closeMiniGimnasiosModal(): void {
+    this.mapService.clearMiniGimnasiosUrl();
   }
 
   /**

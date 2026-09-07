@@ -98,6 +98,10 @@ export const environment = {
     get tusneUrlBase(): string {
       return `${this.tusneServerUrl}/DataGIS_WGS84/32_LEVANTAMIENTO_TOPOGRAFICO_(TUSNE)`;
     },
+    // --- Fotos de Subsectores Vecinales 1-3 y 2-1 (2025) ---
+    get subsectoresVecinalesFotosUrl(): string {
+      return `${this.tusneServerUrl}/DataGIS_WGS84/30_EQUIPAMIENTO%20URBANO%20SUBSECTOR%20VECINAL%202-1%20y%203-1%20(2025)/Fotos`;
+    },
     // --- Fichas PDF de Áreas Verdes de San Isidro ---
     get areasVerdesUrlBase(): string {
       return `${this.tusneServerUrl}/DataGIS_WGS84/19_AREAS%20VERDES%20DE%20SAN%20ISIDRO`;

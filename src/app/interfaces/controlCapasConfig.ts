@@ -123,7 +123,7 @@ const PANEL_BASE: Section[] = [
       ]),
       /*Mobiliario Urbano*/
       subseccion('moviliario_urbano', 'MOBILIARIO URBANO', [
-        // capa('', 'Subsectores vecinales 1-3 y 2-1 (2025)', { visible: false, showInLegend: true }),
+        capa('mu_sub_sectores_vecinales_2025', 'Subsectores vecinales 1-3 y 2-1 (2025)', { visible: false, showInLegend: true }),
         // capa('', 'Peticiones de gracia 2024', { visible: false, showInLegend: true }),
         // capa('', 'Comercio en vía pública 2022', { visible: false, showInLegend: true }),
         // capa('', 'Comercio en vía pública 2021', { visible: false, showInLegend: true }),
@@ -138,7 +138,7 @@ const PANEL_BASE: Section[] = [
         capa('mu_bancas_2016', 'Bancas 2016', { visible: false, showInLegend: true }),
         // capa('', 'Bebederos 2016', { visible: false, showInLegend: true }),
         capa('mu_papelera_2016', 'Papeleras 2016', { visible: false, showInLegend: true }),
-        // capa('', 'Parklets 2017', { visible: false, showInLegend: true }),
+        capa('mu_parklet', 'Parklets', { visible: false, showInLegend: true }),
         // capa('', 'Parklets 2016', { visible: false, showInLegend: true }),
         // capa('', 'Piletas 2016', { visible: false, showInLegend: true }),
         // capa('', 'Intersección Semaforizada (2012)', { visible: false, showInLegend: true }),

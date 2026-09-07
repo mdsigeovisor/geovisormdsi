@@ -281,6 +281,8 @@ export class MapService {
   papelera2016Url = signal<string | null>(null);
   /** URL con la información de un poste de iluminación ornamental para mostrar en un modal. */
   postesIluminacionUrl = signal<string | null>(null);
+  /** URL con la fotografía de un componente de subsector vecinal (2025) para mostrar en un modal. */
+  subsectorVecinalUrl = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -331,6 +333,8 @@ export class MapService {
     this.infoLayerConfig('mu_papelera_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.papelera2016Url),
     // Postes de Iluminación Ornamentales
     this.infoLayerConfig('mu_postes_iluminacion', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.postesIluminacionUrl),
+    // Subsectores Vecinales 1-3 y 2-1 (2025) — fotografía del componente
+    this.infoLayerConfig('mu_sub_sectores_vecinales_2025', p => p['Foto'] ?? p['foto'], id => `${environment.dataGis.subsectoresVecinalesFotosUrl}/${id}`, this.subsectorVecinalUrl),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -1086,6 +1090,12 @@ export class MapService {
    */
   clearPostesIluminacionUrl(): void {
     this.postesIluminacionUrl.set(null);
+  }
+  /**
+   * Limpia la URL de la fotografía del subsector vecinal (2025), para cerrar el modal.
+   */
+  clearSubsectorVecinalUrl(): void {
+    this.subsectorVecinalUrl.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

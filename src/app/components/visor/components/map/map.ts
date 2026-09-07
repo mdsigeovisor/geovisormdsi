@@ -172,6 +172,9 @@ export class MapComponent {
     if (this.mapService.postesIluminacionUrl()) {
       this.closePostesIluminacionModal();
     }
+    if (this.mapService.subsectorVecinalUrl()) {
+      this.closeSubsectorVecinalModal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -375,6 +378,13 @@ export class MapComponent {
    */
   closePostesIluminacionModal(): void {
     this.mapService.clearPostesIluminacionUrl();
+  }
+
+  /**
+   * Cierra el modal de fotografía de subsectores vecinales 2025.
+   */
+  closeSubsectorVecinalModal(): void {
+    this.mapService.clearSubsectorVecinalUrl();
   }
 
   /**

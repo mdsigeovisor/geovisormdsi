@@ -519,12 +519,23 @@
         class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
         (click)="closeSubsectorVecinalModal()" title="Cerrar">&times;</button>
     </div>
-    <div class="flex-grow p-0 overflow-hidden relative bg-gray-100">
-      <!-- Indicador de carga para la fotografía -->
-      <div class="absolute inset-0 flex items-center justify-center bg-white/50">
-        <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
-      </div>
-      <iframe class="relative w-full h-full border-0" [src]="getSafeUrl(url)" frameborder="0"></iframe>
+    <div class="flex-grow p-0 overflow-hidden relative bg-gray-100 flex items-center justify-center">
+      <!-- Indicador de carga para la fotografía (se oculta al cargar o si falla) -->
+      @if (!mapService.subsectorVecinalImgLoaded() && !mapService.subsectorVecinalImgError()) {
+        <div class="absolute inset-0 flex items-center justify-center bg-white/50">
+          <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
+        </div>
+      }
+      <!-- Fotografía ajustada al modal conservando su proporción -->
+      <img class="relative max-w-full max-h-full w-auto h-auto object-contain" [src]="url"
+        alt="Fotografía - Subsector Vecinal (2025)" (load)="mapService.subsectorVecinalImgLoaded.set(true)"
+        (error)="mapService.setSubsectorVecinalImgError(true)">
+      @if (mapService.subsectorVecinalImgError()) {
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-600 p-4 text-center">
+          <span class="text-4xl mb-2">&#128247;</span>
+          <p class="m-0 font-medium">No se pudo cargar la fotografía.</p>
+        </div>
+      }
     </div>
   </div>
 </div>

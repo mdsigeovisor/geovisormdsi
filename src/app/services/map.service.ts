@@ -1100,6 +1100,22 @@ export class MapService {
    */
   clearSubsectorVecinalUrl(): void {
     this.subsectorVecinalUrl.set(null);
+    this.subsectorVecinalImgLoaded.set(false);
+    this.subsectorVecinalImgError.set(false);
+  }
+  /** Señal que indica si la fotografía del subsector vecinal (2025) se cargó correctamente. */
+  subsectorVecinalImgLoaded = signal<boolean>(false);
+  /** Señal que indica si la fotografía del subsector vecinal (2025) no pudo cargarse. */
+  subsectorVecinalImgError = signal<boolean>(false);
+  /**
+   * Marca el fin de la carga de la fotografía del subsector vecinal (2025).
+   * @param error `true` si la imagen falló al cargar; `false` si cargó bien.
+   */
+  setSubsectorVecinalImgError(error: boolean): void {
+    this.subsectorVecinalImgError.set(error);
+    if (error) {
+      this.subsectorVecinalImgLoaded.set(false);
+    }
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

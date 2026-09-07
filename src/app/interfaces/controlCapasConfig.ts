@@ -216,56 +216,49 @@ const PANEL_BASE: Section[] = [
     title: 'INFORMACIÓN TEMÁTICA',
     expanded: false,
     items: [
-      subseccion('zonaLimites', 'ZONA DE LIMITES', [
-        capa('', 'Emisión de Cuponeras 2026', { visible: false, showInLegend: true }),
-        capa('', 'Emisión de Cuponeras 2025', { visible: false, showInLegend: true }),
-        capa('', 'Procesos Judiciales 2025', { visible: false, showInLegend: true }),
-        capa('', 'Predios Recuperados', { visible: false, showInLegend: true }),
-        capa('', 'Informe Técnico Favorable (ITF) 2026', { visible: false, showInLegend: true }),
-      ]),
-      subseccion('vivVis', 'VIVIENDA DE INTERES SOCIAL (VIS)', [
-        capa('', 'VIS 2026 Proyectos-Anteproyectos', { visible: false, showInLegend: true }),
-        capa('', 'VIS 2025 con Proceso Judicial', { visible: false, showInLegend: true }),
-      ]),
-      subseccion('salud', 'SALUD', [
-        capa('', 'Centros de Salud 2024 (RENIPRESS)', { visible: false, showInLegend: true }),
-      ]),
-      subseccion('educacion', 'EDUCACION', [
-        capa('', 'Educación superior 2024 (ESCALE-MINEDU)', { visible: false, showInLegend: true }),
-        capa('', 'Instituciones Educativas (ESCALE-MINEDU)', { visible: false, showInLegend: true }),
-      ]),
+      // subseccion('zonaLimites', 'ZONA DE LIMITES', [
+      //   capa('', 'Emisión de Cuponeras 2026', { visible: false, showInLegend: true }),
+      //   capa('', 'Emisión de Cuponeras 2025', { visible: false, showInLegend: true }),
+      //   capa('', 'Procesos Judiciales 2025', { visible: false, showInLegend: true }),
+      //   capa('', 'Predios Recuperados', { visible: false, showInLegend: true }),
+      //   capa('', 'Informe Técnico Favorable (ITF) 2026', { visible: false, showInLegend: true }),
+      // ]),
+      // subseccion('vivVis', 'VIVIENDA DE INTERES SOCIAL (VIS)', [
+      //   capa('', 'VIS 2026 Proyectos-Anteproyectos', { visible: false, showInLegend: true }),
+      //   capa('', 'VIS 2025 con Proceso Judicial', { visible: false, showInLegend: true }),
+      // ]),
+      // subseccion('salud', 'SALUD', [
+      //   capa('', 'Centros de Salud 2024 (RENIPRESS)', { visible: false, showInLegend: true }),
+      // ]),
+      // subseccion('educacion', 'EDUCACION', [
+      //   capa('', 'Educación superior 2024 (ESCALE-MINEDU)', { visible: false, showInLegend: true }),
+      //   capa('', 'Instituciones Educativas (ESCALE-MINEDU)', { visible: false, showInLegend: true }),
+      // ]),
       subseccion('edifiExistentes', 'EDIFICACIONES EXISTENTES', [
-        capa('', 'Usos predominantes (Año 2021)', { visible: false, showInLegend: true }),
-        capa('', 'Usos Predominantes (Histórico)', { visible: false, showInLegend: true }),
-        capa('', 'Alturas de edificación existente (Histórico)', { visible: false, showInLegend: true }),
-        capa('', 'Año de Construcción', { visible: false, showInLegend: true }),
-        capa('', 'Obras privadas en Ejecución', { visible: false, showInLegend: true }),
+        // capa('', 'Usos predominantes (Año 2021)', { visible: false, showInLegend: true }),
+        // capa('', 'Usos Predominantes (Histórico)', { visible: false, showInLegend: true }),
+        // capa('', 'Alturas de edificación existente (Histórico)', { visible: false, showInLegend: true }),
+        // capa('', 'Año de Construcción', { visible: false, showInLegend: true }),
+        // capa('', 'Obras privadas en Ejecución', { visible: false, showInLegend: true }),
         capa('tem_view_lote_rrpp', 'Inmuebles con Informacion Registral', { visible: false, showInLegend: true }),
         capa('tem_view_lote_concarga', 'Cargas', { visible: false, showInLegend: true }),
         capa('tem_view_lote_ley27157a', 'Declatatoria de Fabrica - ley 27157 A', { visible: false, showInLegend: true }),
         capa('tem_view_lote_ley27157b', 'Declatatoria de Fabrica - ley 27157 B', { visible: false, showInLegend: true }),
       ]),
-      subseccion('comInternacional', 'COMUNIDAD INTERNACIONAL', [
-        capa('', 'Embajadas', { visible: false, showInLegend: true }),
-      ]),
-      subseccion('localesMunicipales', 'LOCALES MUNICIPALES', [
-        capa('', 'Sedes administrativas', { visible: false, showInLegend: true }),
-        capa('', 'Centros de Encuentro Vecinal', { visible: false, showInLegend: true }),
-      ]),
-      subseccion('segCiudadana', 'SEGURIDAD CIUDADANA', [
-        capa('', 'Seguridad 2023', { visible: false, showInLegend: true }),
-        capa('', 'Centros de Seguridad', { visible: false, showInLegend: true }),
-      ]),
-      subseccion('grd', 'GESTION DE RIESGOS DE DESASTRE (GRD)', [
-        capa('', 'Almacenes', { visible: false, showInLegend: true }),
-      ]),
-    ],
-  },
-  {
-    id: 'capas_tematica',
-    title: 'CAPAS TEMÁTICO',
-    expanded: false,
-    items: [
+      // subseccion('comInternacional', 'COMUNIDAD INTERNACIONAL', [
+      //   capa('', 'Embajadas', { visible: false, showInLegend: true }),
+      // ]),
+      // subseccion('localesMunicipales', 'LOCALES MUNICIPALES', [
+      //   capa('', 'Sedes administrativas', { visible: false, showInLegend: true }),
+      //   capa('', 'Centros de Encuentro Vecinal', { visible: false, showInLegend: true }),
+      // ]),
+      // subseccion('segCiudadana', 'SEGURIDAD CIUDADANA', [
+      //   capa('', 'Seguridad 2023', { visible: false, showInLegend: true }),
+      //   capa('', 'Centros de Seguridad', { visible: false, showInLegend: true }),
+      // ]),
+      // subseccion('grd', 'GESTION DE RIESGOS DE DESASTRE (GRD)', [
+      //   capa('', 'Almacenes', { visible: false, showInLegend: true }),
+      // ]),
       subseccion('', 'TRAMITES ATENDIDOS', [
         capa('tem_parametros', 'Parametros urbanisticos y Edificatorios', { visible: false, showInLegend: true }),
         capa('tem_li_edifica', 'Licencia de edificación', { visible: false, showInLegend: true }),
@@ -275,12 +268,12 @@ const PANEL_BASE: Section[] = [
         capa('tem_view_lote_cnmu', 'Certificados de Numeración municipal', { visible: false, showInLegend: true }),
         capa('tem_view_lote8', 'Visación de Plano', { visible: false, showInLegend: true }),
         capa('tem_view_lote6', 'Planos Catastrales', { visible: false, showInLegend: true }),
-        capa('', 'Verificación Catastral a Solicitud', { visible: false, showInLegend: true }),
-        capa('', 'Cargas registrales', { visible: false, showInLegend: true }),
+        // capa('', 'Verificación Catastral a Solicitud', { visible: false, showInLegend: true }),
+        // capa('', 'Cargas registrales', { visible: false, showInLegend: true }),
         capa('tem_view_lote_rrpp', 'Informacion registral', { visible: false, showInLegend: true }),
       ])
-    ]
-  },
+    ],
+  },  
   {
     id: 'tusne',
     title: 'TUSNE',

@@ -1,5 +1,6 @@
 import { WmsLayerConfig } from './geoLayers';
 import { environment } from '../../environments/environment';
+import WMTSTileGrid from 'ol/tilegrid/WMTS';
 
 const wp = environment.geoserver.workspacePrefix;
 /**
@@ -98,8 +99,13 @@ const TEMATICA: WmsLayerConfig[] = [
 
 ];
 
-const MOVILIARIO_RBANO: WmsLayerConfig[] = [
-  { id: 'mu_bancas_2016', layerName: `${wp}bancas_2016`, zIndex: 1, title: 'Bancas 2016' },
+const AGUA_Y_ALCANTARILLADO: WmsLayerConfig[] = [
+  { id: 'mu_hidrante_2016', layerName: `${wp}hidrantes_2016`, zIndex: 1, title: 'Hidrante 2016' },
+  { id: 'mu_hidrante_2024', layerName: `${wp}hidrantes_2024`, zIndex: 1, title: 'Hidrnate 2016' },
+];
+
+const MOVILIARIO_URBANO: WmsLayerConfig[] = [
+  { id: 'mu_bancas_2016', layerName: `${wp}bancas_2016`, zIndex: 1, title: 'Bancas 2016' },  
   { id: 'mu_estac_bicis_2016', layerName: `${wp}estacionamientos_bicicletas_2016`, zIndex: 1, title: 'Estacionamiento de bicicletas 2016' },
 ]
 /**
@@ -118,6 +124,7 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   ...NORMATIVA_LAYERS,
   ...ACCESIBILIDAD,
   ...TEMATICA,
-  ...MOVILIARIO_RBANO,
+  ...MOVILIARIO_URBANO,
+  ...AGUA_Y_ALCANTARILLADO
 ];
 

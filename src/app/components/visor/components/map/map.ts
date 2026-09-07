@@ -148,6 +148,9 @@ export class MapComponent {
     if (this.mapService.areaVerdeUrl()) {
       this.closeAreaVerdeModal();
     }
+    if (this.mapService.hidrante2016Url()) {
+      this.closeHidrante2016Modal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -295,6 +298,13 @@ export class MapComponent {
    */
   closeAreaVerdeModal(): void {
     this.mapService.clearAreaVerdeUrl();
+  }
+
+  /**
+   * Cierra el modal del hidrante 2016.
+   */
+  closeHidrante2016Modal(): void {
+    this.mapService.clearHidrante2016Url();
   }
 
   /**

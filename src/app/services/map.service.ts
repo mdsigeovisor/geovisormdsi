@@ -265,6 +265,8 @@ export class MapService {
   estacBicis2016Url = signal<string | null>(null);
   /** URL del PDF de un área verde de San Isidro para mostrar en un modal. */
   areaVerdeUrl = signal<string | null>(null);
+  /** URL con la información de un hidrante (2016) para mostrar en un modal. */
+  hidrante2016Url = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -299,6 +301,8 @@ export class MapService {
     this.infoLayerConfig('mu_estac_bicis_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.estacBicis2016Url),
     // Áreas verdes de San Isidro (PDF de ficha por id_lote)
     this.infoLayerConfig('nom_area_verde', p => p['id_lote'], id => `${environment.dataGis.areasVerdesUrlBase}/${id}.pdf`, this.areaVerdeUrl),
+    // Hidrantes 2016
+    this.infoLayerConfig('mu_hidrante_2016', p => p['codigo'], id => `${environment.dataGis.hidrante2016Url}?codigo_i=${id}`, this.hidrante2016Url),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -1006,6 +1010,12 @@ export class MapService {
    */
   clearAreaVerdeUrl(): void {
     this.areaVerdeUrl.set(null);
+  }
+  /**
+   * Limpia la URL del hidrante (2016), para cerrar el modal.
+   */
+  clearHidrante2016Url(): void {
+    this.hidrante2016Url.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

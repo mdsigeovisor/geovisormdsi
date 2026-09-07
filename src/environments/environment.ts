@@ -86,6 +86,7 @@ export const environment = {
     get fichaAccCruceUrl(): string { return `${this.webFilesUrl}/Ficha_Acc_Cruce.asp`; },
     get fichaAccManzaUrl(): string { return `${this.webFilesUrl}/Ficha_Acc_Manza.asp`; },
     get bancas2016Url(): string { return `${this.webFilesUrl}/2016_COMPONENTE2.asp`; },
+    get hidrante2016Url(): string { return `${this.webFilesUrl}/2016H01.asp`; },
     // --- Endpoints de fichas y fotografía (lote) ---
     get informacionUrl(): string { return `${this.webFilesUpperUrl}/LotePublico.asp`; },
     get informacionPrivadaUrl(): string { return `${this.webFilesUpperUrl}/informacion.asp`; },

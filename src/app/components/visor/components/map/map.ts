@@ -166,6 +166,9 @@ export class MapComponent {
     if (this.mapService.panelesPublicitarios2018Url()) {
       this.closePanelesPublicitarios2018Modal();
     }
+    if (this.mapService.papelera2016Url()) {
+      this.closePapelera2016Modal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -355,6 +358,13 @@ export class MapComponent {
    */
   closePanelesPublicitarios2018Modal(): void {
     this.mapService.clearPanelesPublicitarios2018Url();
+  }
+
+  /**
+   * Cierra el modal de papeleras 2016.
+   */
+  closePapelera2016Modal(): void {
+    this.mapService.clearPapelera2016Url();
   }
 
   /**

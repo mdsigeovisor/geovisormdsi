@@ -277,6 +277,8 @@ export class MapService {
   esculturas2016Url = signal<string | null>(null);
   /** URL con la información de un panel publicitario (2018) para mostrar en un modal. */
   panelesPublicitarios2018Url = signal<string | null>(null);
+  /** URL con la información de una papelera (2016) para mostrar en un modal. */
+  papelera2016Url = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -323,6 +325,8 @@ export class MapService {
     this.infoLayerConfig('mu_monu_esculturas_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.esculturas2016Url}?codigo_i=${id}`, this.esculturas2016Url),
     // Paneles publicitarios 2018
     this.infoLayerConfig('mu_paneles_publicitarios_2018', p => p['cod_compon'] ?? p['COD_COMPON'], id => `${environment.dataGis.panelesPublicitarios2018Url}?codigo_i=${id}`, this.panelesPublicitarios2018Url),
+    // Papeleras 2016
+    this.infoLayerConfig('mu_papelera_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.papelera2016Url),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -1066,6 +1070,12 @@ export class MapService {
    */
   clearPanelesPublicitarios2018Url(): void {
     this.panelesPublicitarios2018Url.set(null);
+  }
+  /**
+   * Limpia la URL de la papelera (2016), para cerrar el modal.
+   */
+  clearPapelera2016Url(): void {
+    this.papelera2016Url.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

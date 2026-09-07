@@ -151,6 +151,9 @@ export class MapComponent {
     if (this.mapService.hidrante2016Url()) {
       this.closeHidrante2016Modal();
     }
+    if (this.mapService.juegoNinos2016Url()) {
+      this.closeJuegoNinos2016Modal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -305,6 +308,13 @@ export class MapComponent {
    */
   closeHidrante2016Modal(): void {
     this.mapService.clearHidrante2016Url();
+  }
+
+  /**
+   * Cierra el modal de juegos para niños 2016.
+   */
+  closeJuegoNinos2016Modal(): void {
+    this.mapService.clearJuegoNinos2016Url();
   }
 
   /**

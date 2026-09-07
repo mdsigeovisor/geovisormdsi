@@ -334,7 +334,11 @@ export class MapService {
     // Postes de Iluminación Ornamentales
     this.infoLayerConfig('mu_postes_iluminacion', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.postesIluminacionUrl),
     // Subsectores Vecinales 1-3 y 2-1 (2025) — fotografía del componente
-    this.infoLayerConfig('mu_sub_sectores_vecinales_2025', p => p['Foto'] ?? p['foto'], id => `${environment.dataGis.subsectoresVecinalesFotosUrl}/${id}`, this.subsectorVecinalUrl),
+    this.infoLayerConfig('mu_sub_sectores_vecinales_2025', p => p['Foto'] ?? p['foto'], id => {
+      // El campo "Foto" ya incluye la extensión; si se recibe un valor sin ella (p. ej. "Foto_2"), se agrega ".jpg".
+      const nombre = /\.[a-zA-Z]{3,4}$/.test(id) ? id : `${id}.jpg`;
+      return `${environment.dataGis.subsectoresVecinalesFotosUrl}/${nombre}`;
+    }, this.subsectorVecinalUrl),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno

@@ -169,6 +169,9 @@ export class MapComponent {
     if (this.mapService.papelera2016Url()) {
       this.closePapelera2016Modal();
     }
+    if (this.mapService.postesIluminacionUrl()) {
+      this.closePostesIluminacionModal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -365,6 +368,13 @@ export class MapComponent {
    */
   closePapelera2016Modal(): void {
     this.mapService.clearPapelera2016Url();
+  }
+
+  /**
+   * Cierra el modal de postes de iluminación ornamentales.
+   */
+  closePostesIluminacionModal(): void {
+    this.mapService.clearPostesIluminacionUrl();
   }
 
   /**

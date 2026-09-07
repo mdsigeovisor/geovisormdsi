@@ -112,6 +112,7 @@ const MOVILIARIO_URBANO: WmsLayerConfig[] = [
   { id: 'mu_monu_esculturas_2016', layerName: `${wp}monumentos_esculturas_2016`, zIndex: 1, title: 'Monumentos o esculturas 2016' },
   { id: 'mu_paneles_publicitarios_2018', layerName: `${wp}paneles_publicitarios_2018`, zIndex: 1, title: 'Paneles publicitarios 2018' },
   { id: 'mu_papelera_2016', layerName: `${wp}papeleras_2016`, zIndex: 1, title: 'Papelera 2016' },
+  { id: 'mu_postes_iluminacion', layerName: `${wp}postes_iluminaciones_ornamentales`, zIndex: 1, title: 'Postes de Iluminación Ornamentales' },
 
   { id: 'mu_estac_bicis_2016', layerName: `${wp}estacionamientos_bicicletas_2016`, zIndex: 1, title: 'Estacionamiento de bicicletas 2016' },
 ]

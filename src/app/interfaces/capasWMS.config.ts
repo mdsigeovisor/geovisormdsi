@@ -107,7 +107,9 @@ const AGUA_Y_ALCANTARILLADO: WmsLayerConfig[] = [
 const MOVILIARIO_URBANO: WmsLayerConfig[] = [
   { id: 'mu_bancas_2016', layerName: `${wp}bancas_2016`, zIndex: 1, title: 'Bancas 2016' },
   { id: 'mu_juego_ninos_2016', layerName: `${wp}juegos_ninos_2016`, zIndex: 1, title: 'Juegos de niños 2016' },
-  { id: 'mu_mini_gimnasios', layerName: `${wp}mini_gimnasios_2016`, zIndex: 1, title: 'Mini gimnasios 2016' },
+  { id: 'mu_mini_gimnasios', layerName: `${wp}mini_gimnasios_2016`, zIndex: 1, title: 'Minigimnasios 2016' },
+  { id: 'mu_monu_bustos_toten_2021', layerName: `${wp}monumentos_bustos_toten_2021`, zIndex: 1, title: 'Monumentos, Bustos y Toten 2021' },
+
   { id: 'mu_estac_bicis_2016', layerName: `${wp}estacionamientos_bicicletas_2016`, zIndex: 1, title: 'Estacionamiento de bicicletas 2016' },
 ]
 /**

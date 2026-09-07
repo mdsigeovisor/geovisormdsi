@@ -157,6 +157,9 @@ export class MapComponent {
     if (this.mapService.miniGimnasiosUrl()) {
       this.closeMiniGimnasiosModal();
     }
+    if (this.mapService.monumentos2021Url()) {
+      this.closeMonumentos2021Modal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -325,6 +328,13 @@ export class MapComponent {
    */
   closeMiniGimnasiosModal(): void {
     this.mapService.clearMiniGimnasiosUrl();
+  }
+
+  /**
+   * Cierra el modal de monumentos, bustos y totem 2021.
+   */
+  closeMonumentos2021Modal(): void {
+    this.mapService.clearMonumentos2021Url();
   }
 
   /**

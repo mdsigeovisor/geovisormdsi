@@ -160,6 +160,9 @@ export class MapComponent {
     if (this.mapService.monumentos2021Url()) {
       this.closeMonumentos2021Modal();
     }
+    if (this.mapService.esculturas2016Url()) {
+      this.closeEsculturas2016Modal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -335,6 +338,13 @@ export class MapComponent {
    */
   closeMonumentos2021Modal(): void {
     this.mapService.clearMonumentos2021Url();
+  }
+
+  /**
+   * Cierra el modal de monumentos o esculturas 2016.
+   */
+  closeEsculturas2016Modal(): void {
+    this.mapService.clearEsculturas2016Url();
   }
 
   /**

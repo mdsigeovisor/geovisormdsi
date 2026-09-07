@@ -273,6 +273,8 @@ export class MapService {
   miniGimnasiosUrl = signal<string | null>(null);
   /** URL con la información de un monumento, busto o totem (2021) para mostrar en un modal. */
   monumentos2021Url = signal<string | null>(null);
+  /** URL con la información de un monumento o escultura (2016) para mostrar en un modal. */
+  esculturas2016Url = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -315,6 +317,8 @@ export class MapService {
     this.infoLayerConfig('mu_mini_gimnasios', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.miniGimnasiosUrl),
     // Monumentos, Bustos y Tótem 2021
     this.infoLayerConfig('mu_monu_bustos_toten_2021', p => p['CODCOMPCAT'] ?? p['codcompcat'], id => `${environment.dataGis.monumentos2021Url}?codigo_i=${id}`, this.monumentos2021Url),
+    // Monumentos o esculturas 2016
+    this.infoLayerConfig('mu_monu_esculturas_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.esculturas2016Url}?codigo_i=${id}`, this.esculturas2016Url),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -1046,6 +1050,12 @@ export class MapService {
    */
   clearMonumentos2021Url(): void {
     this.monumentos2021Url.set(null);
+  }
+  /**
+   * Limpia la URL del monumento o escultura (2016), para cerrar el modal.
+   */
+  clearEsculturas2016Url(): void {
+    this.esculturas2016Url.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

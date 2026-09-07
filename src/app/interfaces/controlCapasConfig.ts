@@ -144,7 +144,7 @@ const PANEL_BASE: Section[] = [
         // capa('', 'Intersección Semaforizada (2012)', { visible: false, showInLegend: true }),
         // capa('', 'Paneles Publicitarios 2018', { visible: false, showInLegend: true }),
         capa('mu_monu_bustos_toten_2021', 'Monumentos, Bustos y Toten 2021', { visible: false, showInLegend: true }),
-        // capa('', 'Monumentos o esculturas 2016', { visible: false, showInLegend: true }),
+        capa('mu_monu_esculturas_2016', 'Monumentos o esculturas 2016', { visible: false, showInLegend: true }),
       ], false, { requiresAuth: true }),
     ],
   },

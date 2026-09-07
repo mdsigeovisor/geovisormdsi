@@ -88,6 +88,7 @@ export const environment = {
     get bancas2016Url(): string { return `${this.webFilesUrl}/2016_COMPONENTE2.asp`; },
     get hidrante2016Url(): string { return `${this.webFilesUrl}/2016H01.asp`; },
     get monumentos2021Url(): string { return `${this.webFilesUrl}/2021_COMPONENTES.asp`; },
+    get esculturas2016Url(): string { return `${this.webFilesUrl}/2016_COMPONENTE3.asp`; },
     // --- Endpoints de fichas y fotografía (lote) ---
     get informacionUrl(): string { return `${this.webFilesUpperUrl}/LotePublico.asp`; },
     get informacionPrivadaUrl(): string { return `${this.webFilesUpperUrl}/informacion.asp`; },

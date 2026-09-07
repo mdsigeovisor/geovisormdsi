@@ -163,6 +163,9 @@ export class MapComponent {
     if (this.mapService.esculturas2016Url()) {
       this.closeEsculturas2016Modal();
     }
+    if (this.mapService.panelesPublicitarios2018Url()) {
+      this.closePanelesPublicitarios2018Modal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -345,6 +348,13 @@ export class MapComponent {
    */
   closeEsculturas2016Modal(): void {
     this.mapService.clearEsculturas2016Url();
+  }
+
+  /**
+   * Cierra el modal de paneles publicitarios 2018.
+   */
+  closePanelesPublicitarios2018Modal(): void {
+    this.mapService.clearPanelesPublicitarios2018Url();
   }
 
   /**

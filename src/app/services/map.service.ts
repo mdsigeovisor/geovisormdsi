@@ -275,6 +275,8 @@ export class MapService {
   monumentos2021Url = signal<string | null>(null);
   /** URL con la información de un monumento o escultura (2016) para mostrar en un modal. */
   esculturas2016Url = signal<string | null>(null);
+  /** URL con la información de un panel publicitario (2018) para mostrar en un modal. */
+  panelesPublicitarios2018Url = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -319,6 +321,8 @@ export class MapService {
     this.infoLayerConfig('mu_monu_bustos_toten_2021', p => p['CODCOMPCAT'] ?? p['codcompcat'], id => `${environment.dataGis.monumentos2021Url}?codigo_i=${id}`, this.monumentos2021Url),
     // Monumentos o esculturas 2016
     this.infoLayerConfig('mu_monu_esculturas_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.esculturas2016Url}?codigo_i=${id}`, this.esculturas2016Url),
+    // Paneles publicitarios 2018
+    this.infoLayerConfig('mu_paneles_publicitarios_2018', p => p['cod_compon'] ?? p['COD_COMPON'], id => `${environment.dataGis.panelesPublicitarios2018Url}?codigo_i=${id}`, this.panelesPublicitarios2018Url),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -1056,6 +1060,12 @@ export class MapService {
    */
   clearEsculturas2016Url(): void {
     this.esculturas2016Url.set(null);
+  }
+  /**
+   * Limpia la URL del panel publicitario (2018), para cerrar el modal.
+   */
+  clearPanelesPublicitarios2018Url(): void {
+    this.panelesPublicitarios2018Url.set(null);
   }
   /**
    * Dibuja un marcador en el mapa en la ubicación de la geometría proporcionada.

@@ -451,7 +451,10 @@ export class MapService {
         new ScaleLine({
           units: 'metric',
           target: scaleLineElement,
-          className: 'ol-scale-line-custom',
+          bar: true,
+          text: true,
+          minWidth: 140,
+          className: 'ol-scale-bar-custom',
         }),
       ]),
       view: new View({

@@ -65,27 +65,60 @@
   pointer-events: none;
 }
 
-#scale-line-container .ol-scale-line-custom,
-#scale-line-container .ol-scale-line {
+#scale-line-container .ol-scale-bar-custom,
+#scale-line-container .ol-scale-bar {
   position: relative !important;
   left: auto !important;
   bottom: auto !important;
   right: auto !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-radius: 6px !important;
-  padding: 4px 10px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-  border: 1px solid rgba(45, 120, 14, 0.3) !important;
-  display: block !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 3px !important;
+  background: transparent !important;
+  padding: 0 !important;
 }
 
-#scale-line-container .ol-scale-line-inner {
-  border-color: #2d780e !important;
-  border-width: 2px !important;
-  border-style: solid !important;
-  border-top: none !important;
+/* Etiqueta de texto (ej. "200 m") encima de la barra segmentada */
+#scale-line-container .ol-scale-bar-custom .ol-scale-bar-text,
+#scale-line-container .ol-scale-bar .ol-scale-bar-text {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(45, 120, 14, 0.3) !important;
+  border-radius: 4px !important;
+  padding: 1px 8px !important;
   color: #2d780e !important;
   font-weight: 600 !important;
   font-size: 10px !important;
   font-family: 'Arial', sans-serif !important;
+  text-align: center !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Cuadro de barras segmentadas (blanco/negro alternado) */
+#scale-line-container .ol-scale-bar-custom .ol-scale-singlebar,
+#scale-line-container .ol-scale-bar .ol-scale-singlebar {
+  border: 1px solid #2d780e !important;
+  border-radius: 3px !important;
+  overflow: hidden !important;
+  height: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  display: flex !important;
+}
+
+/* Segmentos alternados: pares en blanco, impares en verde oscuro */
+#scale-line-container .ol-scale-bar-custom .ol-scale-singlebar div,
+#scale-line-container .ol-scale-bar .ol-scale-singlebar div {
+  height: 100% !important;
+  border: none !important;
+  box-sizing: border-box !important;
+}
+
+#scale-line-container .ol-scale-bar-custom .ol-scale-singlebar div:nth-child(odd),
+#scale-line-container .ol-scale-bar .ol-scale-singlebar div:nth-child(odd) {
+  background: #2d780e !important;
+}
+
+#scale-line-container .ol-scale-bar-custom .ol-scale-singlebar div:nth-child(even),
+#scale-line-container .ol-scale-bar .ol-scale-singlebar div:nth-child(even) {
+  background: #ffffff !important;
 }

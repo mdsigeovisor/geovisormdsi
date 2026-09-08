@@ -452,9 +452,9 @@ export class MapService {
           units: 'metric',
           target: scaleLineElement,
           bar: true,
+          steps: 4,
           text: true,
           minWidth: 140,
-          className: 'ol-scale-bar-custom',
         }),
       ]),
       view: new View({

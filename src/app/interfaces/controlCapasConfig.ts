@@ -260,7 +260,7 @@ const PANEL_BASE: Section[] = [
       // subseccion('grd', 'GESTION DE RIESGOS DE DESASTRE (GRD)', [
       //   capa('', 'Almacenes', { visible: false, showInLegend: true }),
       // ]),
-      subseccion('', 'TRAMITES ATENDIDOS', [
+      subseccion('tramites_atendidos', 'TRAMITES ATENDIDOS', [
         capa('tem_parametros', 'Parametros urbanisticos y Edificatorios', { visible: false, showInLegend: true }),
         capa('tem_li_edifica', 'Licencia de edificación', { visible: false, showInLegend: true }),
         capa('tem_conforobra', 'Conformidad de Obra', { visible: false, showInLegend: true }),
@@ -272,6 +272,12 @@ const PANEL_BASE: Section[] = [
         // capa('', 'Verificación Catastral a Solicitud', { visible: false, showInLegend: true }),
         // capa('', 'Cargas registrales', { visible: false, showInLegend: true }),
         capa('tem_view_lote_rrpp', 'Informacion registral', { visible: false, showInLegend: true }),
+      ]),
+      subseccion('limites','LIMITES',[
+        capa('cuponeras_2026', 'Emisión de Cuponeras 2026', { visible: false, showInLegend: true }),
+        capa('cuponeras_2025', 'Emisión de Cuponeras 2025', { visible: false, showInLegend: true }),
+        capa('procesos_2025', 'Procesos Judiciales 2025', { visible: false, showInLegend: true }),
+        capa('predios_recuperados', 'Predios recuperados', { visible: false, showInLegend: true }),
       ])
     ],
   },

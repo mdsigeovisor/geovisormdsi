@@ -116,8 +116,15 @@ const MOVILIARIO_URBANO: WmsLayerConfig[] = [
   { id: 'mu_postes_iluminacion', layerName: `${wp}postes_iluminaciones_ornamentales`, zIndex: 1, title: 'Postes de Iluminación Ornamentales' },
   { id: 'mu_parklet', layerName: `${wp}parklet`, zIndex: 1, title: 'Parklet' },
   { id: 'mu_sub_sectores_vecinales_2025', layerName: `${wp}subsectores_vecinales_1_3_y_2_1_2025`, zIndex: 1, title: 'Subsectores Vecinales 1-3 y 2-1 (2025)' },
-
   { id: 'mu_estac_bicis_2016', layerName: `${wp}estacionamientos_bicicletas_2016`, zIndex: 1, title: 'Estacionamiento de bicicletas 2016' },
+
+  { id: 'cuponeras_2026', layerName: `${wp}cuponeras_2026`, zIndex: 1, title: 'Emisión de Cuponeras 2026' },
+  { id: 'cuponeras_2025', layerName: `${wp}cuponeras_2025_set`, zIndex: 1, title: 'Emisión de Cuponeras 2025' },
+  { id: 'procesos_2025', layerName: `${wp}ZL_PROCESO_JUDICIAL_AL_2025`, zIndex: 1, title: 'Procesos Judiciales 2025' },
+  { id: 'predios_recuperados', layerName: `${wp}PREDIOS_RECUPERADOS_A_SAN_ISIDRO`, zIndex: 1, title: 'Predios recuperados' },
+
+
+
 ]
 /**
  * Configuración centralizada para las capas WMS que se cargarán inicialmente en el mapa.

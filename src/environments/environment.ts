@@ -103,6 +103,12 @@ export const environment = {
       // Las fotos están en el servidor DataGIS (192.168.41.160), NO en el servidor TUSNE (192.168.41.61).
       return `${this.serverUrl}/DataGIS_WGS84/30_EQUIPAMIENTO%20URBANO%20SUBSECTOR%20VECINAL%202-1%20y%203-1%20(2025)/Fotos`;
     },
+    // --- Fotografías de Señaletica San Isidro (2026) ---
+    get senaleticaFotosUrl(): string {
+      // Las fotos están en el servidor de levantamientos (192.168.41.61).
+      // Base 31_SENALETICA: el campo "Foto" de la capa trae la ruta relativa (p. ej. "DCIM/JPEG_xxx.jpg").
+      return `${this.tusneServerUrl}/DataGIS_WGS84/31_SENALETICA`;
+    },
     // --- Fichas PDF de Áreas Verdes de San Isidro ---
     get areasVerdesUrlBase(): string {
       return `${this.tusneServerUrl}/DataGIS_WGS84/19_AREAS%20VERDES%20DE%20SAN%20ISIDRO`;

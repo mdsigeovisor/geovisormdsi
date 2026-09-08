@@ -170,12 +170,11 @@ const PANEL_BASE: Section[] = [
     expanded: false,
     items: [
       subseccion('normaUrbana', 'NORMATIVA URBANA', [
-        capa('etiq_zonificacion', 'Etiqueta Zonificación', { visible: false, showInLegend: false }),
         capa('zonificacion', 'Zonificación usos del suelo', { visible: false, showInLegend: true }),
         capa('amUrbHomogeneo', 'Ambitos Urbanos Homogéneos', { visible: false, showInLegend: false, requiresAuth: true }),
         capa('norm_alt_edific', 'Alturas Maximas de Edificacion', { visible: false, showInLegend: true }),
-        capa('', 'Ambitos para promover la sostenibilidad de las zonas residenciales (Desarrollo)', { visible: false, showInLegend: false, requiresAuth: true }),
-        capa('', 'Modulos Comercio en via pública - Puntos aprobados (Desarrollo)', { visible: false, showInLegend: false, requiresAuth: true }),
+        //capa('', 'Ambitos para promover la sostenibilidad de las zonas residenciales (Desarrollo)', { visible: false, showInLegend: false, requiresAuth: true }),
+        //capa('', 'Modulos Comercio en via pública - Puntos aprobados (Desarrollo)', { visible: false, showInLegend: false, requiresAuth: true }),
       ]),
       subseccion('sistema_vial', 'SISTEMA VIAL', [
         capa('', 'SISTEMA VIAL METROPOLITANO (ORD. N 341-MML)', { visible: false, showInLegend: true }),
@@ -206,9 +205,11 @@ const PANEL_BASE: Section[] = [
       subseccion('agua_alcantarillado', 'AGUA Y ALCANTARILLADO', [
         capa('mu_hidrante_2016', 'Hidrante 2024', { visible: false, showInLegend: true }),
         capa('mu_hidrante_2024', 'Hidrante 2016', { visible: false, showInLegend: true }),
-        capa('', 'Señaletica San Isidro 2026', { visible: false, showInLegend: true }),
-        capa('', 'Intersecciones Semaforizadas', { visible: false, showInLegend: true }),
       ]),
+      subseccion('vial', 'VIAL', [
+        capa('red_semaforizada', 'Intersecciones Semaforizadas', { visible: false, showInLegend: true }),
+        capa('senaletica_limite', 'Señaletica San Isidro 2026', { visible: false, showInLegend: true }),
+      ])
     ],
   },
   {
@@ -273,7 +274,7 @@ const PANEL_BASE: Section[] = [
         capa('tem_view_lote_rrpp', 'Informacion registral', { visible: false, showInLegend: true }),
       ])
     ],
-  },  
+  },
   {
     id: 'tusne',
     title: 'TUSNE',

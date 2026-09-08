@@ -14,9 +14,11 @@ const ETIQUETAS_LAYERS: WmsLayerConfig[] = [
 
 const INFRAESTRUCTURA_LAYERS: WmsLayerConfig[] = [
   { id: 'puntos_geodesicos', layerName: `${wp}vw_cu_punto_geodesico`, zIndex: 1, title: 'Puntos Geodésicos' },
-  { id: 'vias', layerName: `${wp}vw_tg_via`, zIndex: 1, title: 'Vías' },
-  { id: 'seccion_vial', layerName: `${wp}gc_seccion_vial`, zIndex: 1, title: 'Sección de Vías' },
+  { id: 'vias', layerName: `${wp}vw_tg_via`, zIndex: 1, title: 'Vías' },  
+  { id: 'seccion_vial', layerName: `${wp}gc_etiqueta-seccion-via`, zIndex: 2, title: 'Sección de Vías' },
   { id: 'num_cuadra', layerName: `${wp}vw_tg_cuadra`, zIndex: 1, title: 'Número de Cuadras' },
+  { id: 'red_semaforizada', layerName: `${wp}red_semaforica`, zIndex: 3, title: 'Intersecciones Semaforizadas' },
+  { id: 'senaletica_limite', layerName: `${wp}senaletica_limite`, zIndex: 3, title: 'Señaletica San Isidro 2026' },
 ];
 
 const NUMERACION_LAYERS: WmsLayerConfig[] = [
@@ -53,8 +55,7 @@ const VUELOS_LAYERS: WmsLayerConfig[] = [
   { id: 'fotos_sin_2024', layerName: `${wp}vw_tg_fotosSinProcesar_2024`, zIndex: 0, title: 'Fotos sin Procesar - 2024' },
 ];
 
-const NORMATIVA_LAYERS: WmsLayerConfig[] = [
-  { id: 'etiq_zonificacion', layerName: `${wp}vw_nor_zonificacion_poligono_puntos`, zIndex: 3, title: 'Etiqueta Zonificación' },
+const NORMATIVA_LAYERS: WmsLayerConfig[] = [  
   { id: 'zonificacion', layerName: `${wp}gcZonificacion`, zIndex: 2, title: 'Zonificación' },
   { id: 'amUrbHomogeneo', layerName: `${wp}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 1, title: 'Ámbito Urbano Homogéneo' },
   { id: 'norm_alt_edific', layerName: `${wp}nor_altura_edificacion`, zIndex: 2, title: 'Alturas maximas de edificacion normativa' },

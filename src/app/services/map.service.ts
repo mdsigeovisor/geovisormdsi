@@ -283,6 +283,8 @@ export class MapService {
   postesIluminacionUrl = signal<string | null>(null);
   /** URL con la fotografía de un componente de subsector vecinal (2025) para mostrar en un modal. */
   subsectorVecinalUrl = signal<string | null>(null);
+  /** URL con la fotografía de un componente de señaletica (2026) para mostrar en un modal. */
+  senaleticaUrl = signal<string | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -339,6 +341,14 @@ export class MapService {
       const nombre = /\.[a-zA-Z]{3,4}$/.test(id) ? id : `${id}.jpg`;
       return `${environment.dataGis.subsectoresVecinalesFotosUrl}/${nombre}`;
     }, this.subsectorVecinalUrl),
+    // Señaletica San Isidro (2026) — fotografía del componente (campo llave "Foto")
+    this.infoLayerConfig('senaletica_limite', p => p['Foto'] ?? p['foto'], id => {
+      // El campo "Foto" incluye la ruta relativa (p. ej. "DCIM/JPEG_20260218150353457.jpg").
+      // Si viniera sin extensión se agrega ".jpg", y si faltara la subcarpeta se antepone "DCIM/".
+      const nombre = /\.[a-zA-Z]{3,4}$/.test(id) ? id : `${id}.jpg`;
+      const ruta = nombre.includes('/') ? nombre : `DCIM/${nombre}`;
+      return `${environment.dataGis.senaleticaFotosUrl}/${ruta}`;
+    }, this.senaleticaUrl),
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -1115,6 +1125,28 @@ export class MapService {
     this.subsectorVecinalImgError.set(error);
     if (error) {
       this.subsectorVecinalImgLoaded.set(false);
+    }
+  }
+  /**
+   * Limpia la URL de la fotografía de la señaletica (2026), para cerrar el modal.
+   */
+  clearSenaleticaUrl(): void {
+    this.senaleticaUrl.set(null);
+    this.senaleticaImgLoaded.set(false);
+    this.senaleticaImgError.set(false);
+  }
+  /** Señal que indica si la fotografía de la señaletica (2026) se cargó correctamente. */
+  senaleticaImgLoaded = signal<boolean>(false);
+  /** Señal que indica si la fotografía de la señaletica (2026) no pudo cargarse. */
+  senaleticaImgError = signal<boolean>(false);
+  /**
+   * Marca el fin de la carga de la fotografía de la señaletica (2026).
+   * @param error `true` si la imagen falló al cargar; `false` si cargó bien.
+   */
+  setSenaleticaImgError(error: boolean): void {
+    this.senaleticaImgError.set(error);
+    if (error) {
+      this.senaleticaImgLoaded.set(false);
     }
   }
   /**

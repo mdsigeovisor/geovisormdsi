@@ -540,6 +540,39 @@
   </div>
 </div>
 }
+<!-- Modal para Fotografía de Señaletica San Isidro (2026) -->
+@if (mapService.senaleticaUrl(); as url) {
+<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in"
+  (click)="closeSenaleticaModal()" tabindex="-1">
+  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[520px] h-[80%] animate-scale-in"
+    (click)="$event.stopPropagation()">
+    <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+      <h3 class="m-0 text-lg font-semibold text-gray-800">Fotografía - Señaletica San Isidro (2026)</h3>
+      <button
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+        (click)="closeSenaleticaModal()" title="Cerrar">&times;</button>
+    </div>
+    <div class="flex-grow p-0 overflow-hidden relative bg-gray-100 flex items-center justify-center">
+      <!-- Indicador de carga para la fotografía (se oculta al cargar o si falla) -->
+      @if (!mapService.senaleticaImgLoaded() && !mapService.senaleticaImgError()) {
+        <div class="absolute inset-0 flex items-center justify-center bg-white/50">
+          <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
+        </div>
+      }
+      <!-- Fotografía ajustada al modal conservando su proporción -->
+      <img class="relative max-w-full max-h-full w-auto h-auto object-contain" [src]="url"
+        alt="Fotografía - Señaletica San Isidro (2026)" (load)="mapService.senaleticaImgLoaded.set(true)"
+        (error)="mapService.setSenaleticaImgError(true)">
+      @if (mapService.senaleticaImgError()) {
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-600 p-4 text-center">
+          <span class="text-4xl mb-2">&#128247;</span>
+          <p class="m-0 font-medium">No se pudo cargar la fotografía.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+}
 <!-- Modal para Login -->
 @if (showLoginModal()) {
 <app-login (close)="closeLoginModal()"></app-login>

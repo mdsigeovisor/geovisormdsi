@@ -175,6 +175,9 @@ export class MapComponent {
     if (this.mapService.subsectorVecinalUrl()) {
       this.closeSubsectorVecinalModal();
     }
+    if (this.mapService.senaleticaUrl()) {
+      this.closeSenaleticaModal();
+    }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
     }
@@ -385,6 +388,13 @@ export class MapComponent {
    */
   closeSubsectorVecinalModal(): void {
     this.mapService.clearSubsectorVecinalUrl();
+  }
+
+  /**
+   * Cierra el modal de fotografía de señaletica San Isidro 2026.
+   */
+  closeSenaleticaModal(): void {
+    this.mapService.clearSenaleticaUrl();
   }
 
   /**

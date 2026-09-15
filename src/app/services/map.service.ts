@@ -1879,11 +1879,23 @@ export class MapService {
    * @returns Un Observable con un array de sugerencias { etiqueta, codVia }.
    */
   searchViasConCodigo(query: string): Observable<ViaSugerencia[]> {
-    if (!query || query.trim().length < 3) {
+    if (!query || query.trim().length < 2) {
       return new Observable(subscriber => subscriber.next([]));
     }
-    // Mismo comportamiento de normalización que searchVias
-    const normalizedQuery = query.trim().toUpperCase().replace(/^CA\s/, 'CA. ').replace(/^CA\./, 'CA.');
+    // Búsqueda flexible por tokens: dividimos la consulta en palabras y exigimos
+    // que TODAS estén presentes en la etiqueta (orden y separación indiferentes).
+    // Así 'Ca. 21', 'CA 21', 'ca.21' o incluso '21' encuentran 'CA. 21'.
+    const tokens = query
+      .trim()
+      .toUpperCase()
+      .replace(/^CA\s+/, 'CA. ')
+      .replace(/^CA\.(?!\s)/, 'CA. ')
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(t => t.replace(/'/g, "''")); // escapamos comillas simples para el CQL
+    const cqlFilter = tokens
+      .map(token => `etiquetado_ext ILIKE '%${token}%'`)
+      .join(' AND ');
     const url = environment.geoserver.owsUrl;
     const params = new HttpParams()
       .set('service', 'WFS')
@@ -1893,7 +1905,7 @@ export class MapService {
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:32718')
       .set('propertyName', 'etiquetado_ext,codi_via')
-      .set('cql_filter', `etiquetado_ext ILIKE '%${normalizedQuery}%'`);
+      .set('cql_filter', cqlFilter);
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => {
         if (!response?.features) return [];

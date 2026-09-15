@@ -440,21 +440,19 @@ export class MapService {
       return existingMap;
     }
     this.setupBaseLayers();
-    const scaleLineElement = document.createElement('div');
-    scaleLineElement.id = 'scale-line-container';
-    target.appendChild(scaleLineElement);
 
     const olMap = new OlMap({
       target,
       layers: [this.streetsLayer!, this.satelliteLayer!],
       controls: defaultControls().extend([
+        // Barra de escala según la documentación oficial de OpenLayers,
+        // sin target personalizado (posición por defecto: esquina inferior izquierda)
         new ScaleLine({
           units: 'metric',
-          target: scaleLineElement,
           bar: true,
           steps: 4,
           text: true,
-          minWidth: 140,
+          minWidth: 100,
         }),
       ]),
       view: new View({

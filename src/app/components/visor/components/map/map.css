@@ -54,13 +54,14 @@
   animation: scaleIn 0.3s ease-out forwards;
 }
 
-/* ScaleLine - Barra de escala posicionada encima de las coordenadas (abajo) */
-#scale-line-container {
-  position: absolute !important;
-  bottom: 50px !important;
-  top: auto !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  z-index: 100 !important;
-  pointer-events: none;
+/* Barra de escala (modo bar:true → clase .ol-scale-bar): desplazada a la derecha
+   para que no la tape el sidebar.
+   - Sidebar cerrado: barra de iconos (48px) → left: 5.5rem
+   - Sidebar abierto: iconos + panel (368px) → left: 25.5rem */
+#mapContainer .ol-scale-bar {
+  left: 5.5rem !important;
+}
+
+#mapContainer.sidebar-open .ol-scale-bar {
+  left: 25.5rem !important;
 }

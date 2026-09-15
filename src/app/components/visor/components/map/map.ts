@@ -65,6 +65,8 @@ export class MapComponent {
   private readonly driverService = inject(DriverService);
   /** Estado del tour activo (proyectado al navbar para el resaltado del botón). */
   isTourActive = this.driverService.tourActivo;
+  /** Estado de apertura del sidebar; desplaza la barra de escala vía CSS. */
+  sidebarAbierto = false;
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly drawMeasureService = inject(DrawMeasureService);
@@ -572,6 +574,8 @@ export class MapComponent {
    * @param isOpen El estado de apertura del sidebar.
    */
   handleSidebarToggle(isOpen: boolean): void {
+    // Reflejamos el estado para que el CSS desplace la barra de escala
+    this.sidebarAbierto = isOpen;
     // El ancho del sidebar es de 400px según su CSS.
     this.mapService.panMapForSidebar(isOpen, 400);
   }

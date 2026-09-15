@@ -39,7 +39,7 @@ export class Sidebar  {
   isOpen = false;
   // Ítems de navegación vinculados a las herramientas del MapService
   menuItems: { id: string; icon: string; label: string}[] = [
-    { id: 'search', icon: 'bi-search', label: 'Consultas'},
+    { id: 'search', icon: 'bi-search', label: 'Busquedas'},
     { id: 'layers', icon: 'bi-layers', label: 'Capas'},
     { id: 'legend', icon: 'bi bi-map-fill', label: 'Leyenda'},
     { id: 'coordenadas', icon: 'bi bi-geo', label: 'Busqueda por Coordenadas'},

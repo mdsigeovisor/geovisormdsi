@@ -24,8 +24,7 @@ import { Manual } from './components/manual/manual';
     FormsModule,
     Imprimir,
     Manual,
-    UbicacionCoordenadas
-
+    UbicacionCoordenadas,
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',

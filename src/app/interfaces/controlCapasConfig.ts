@@ -298,3 +298,4 @@ const PANEL_BASE: Section[] = [
  * su mantenimiento y modificación sin alterar la lógica del `MapService`.
  */
 export const LAYER_PANEL_SECTIONS: Section[] = aplicarPoliticaAcceso(PANEL_BASE);
+

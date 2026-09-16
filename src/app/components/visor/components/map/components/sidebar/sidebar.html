@@ -18,16 +18,21 @@
             ></div>
             <!-- Círculo del Icono -->
             <div
-              class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+              class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300"
               [ngClass]="
                 isActive(item.id)
-                  ? 'bg-white/20 shadow-lg scale-110'
-                  : 'bg-transparent group-hover:bg-white/10'
+                  ? 'bg-white text-primary shadow-[0_4px_14px_rgba(0,0,0,0.45)] ring-2 ring-white scale-110'
+                  : 'bg-[#5d7013] text-gray-200 shadow-[0_2px_6px_rgba(0,0,0,0.35)] group-hover:bg-[#697f16] group-hover:text-white group-hover:scale-105'
               "
             >
               <i
-                class="text-[22px] transition-transform group-hover:scale-110"
+                class="text-[22px] transition-transform duration-300 group-hover:-translate-y-0.5"
                 [ngClass]="item.icon"
+                [ngStyle]="
+                  isActive(item.id)
+                    ? { 'text-shadow': '0 1px 2px rgba(0,0,0,0.25)' }
+                    : {}
+                "
               ></i>
             </div>
           </button>
@@ -37,9 +42,9 @@
       <div class="w-full py-4 border-t border-white/10 flex justify-center">
         <button
           (click)="toggleSidebar()"
-          class="w-10 h-10 rounded-full flex items-center justify-center text-gray-300 hover:text-white transition-all duration-300 hover:bg-white/10"
+          class="w-10 h-10 rounded-xl flex items-center justify-center text-gray-200 transition-all duration-300 bg-[#5d7013] hover:bg-white hover:text-primary shadow-[0_2px_6px_rgba(0,0,0,0.35)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.45)] hover:scale-105"
         >
-          <i class="text-[22px]" [ngClass]="isOpen ? 'bi-chevron-left' : 'bi-gear'"></i>
+          <i class="text-[20px]" [ngClass]="isOpen ? 'bi-chevron-left' : 'bi-gear'"></i>
         </button>
       </div>
     </div>

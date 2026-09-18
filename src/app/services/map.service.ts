@@ -764,7 +764,8 @@ export class MapService {
   listarDatosLote(codlote: string): Observable<LoteDatosHover | null> {
     const codigo = (codlote ?? '').trim();
     if (!codigo) return of(null);
-    const path = '/WSGEOVISOR/api/geovisor/listar-datos-lote';
+    // URL relativa centralizada en el environment (proxy inverso Nginx en QA/Prod)
+    const path = `${environment.geovisorApiUrl}/listar-datos-lote`;
     // Misma estrategia de hosts que listarViaNumeros
     const hosts = ['', 'https://test.munisanisidro.gob.pe', 'https://www.munisanisidro.gob.pe'];
     const params = new HttpParams().set('pvcCODLOTE', codigo);
@@ -1973,11 +1974,12 @@ export class MapService {
    * @returns Un Observable con un array de registros { numero, codlote, codlotenumero }.
    */
   listarViaNumeros(codVia: string): Observable<ViaNumero[]> {
-    const path = '/WSGEOVISOR/api/geovisor/listar-via-numero';
+    // URL relativa centralizada en el environment (proxy inverso Nginx en QA/Prod)
+    const path = `${environment.geovisorApiUrl}/listar-via-numero`;
     const hosts = [
-      '', // 1) Ruta relativa (same-origin / proxy de desarrollo)
-      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas
-      'https://www.munisanisidro.gob.pe' // 3) Host de producción
+      '', // 1) Ruta relativa (same-origin: proxy de desarrollo o Nginx de QA/Prod)
+      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas (fallback dev)
+      'https://www.munisanisidro.gob.pe' // 3) Host de producción (fallback)
     ];
     const params = new HttpParams().set('pvcCODVIA', codVia.trim());
     const request = (url: string): Observable<ViaNumero[]> =>

@@ -5,7 +5,7 @@ import { MapService } from '@app/services/map.service';
 import { AuthService } from '@app/services/auth.service';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '@app/interfaces/geoLayers';
-import { ViaNumero, ViaSugerencia } from '@app/services/map.service';
+import { ViaNumero, ViaSugerencia, TitularCatastral } from '@app/services/map.service';
 
 @Component({
   selector: 'app-consultas',
@@ -119,6 +119,10 @@ export class Consultas {
 
   /** Campos para búsqueda por Titular Catastral */
   codigoTitular = '';
+  /** Coincidencias de titulares obtenidas del API (se muestra solo txttitular). */
+  titulares: TitularCatastral[] = [];
+  /** Indica si ya se ejecutó una búsqueda de titulares (para mostrar la lista/vacío). */
+  titularesConsultados = false;
   /** Campos para búsqueda por Denominación del Predio */
   denominacionPredio = '';
   /** Campos para búsqueda por Nombre de Parque */
@@ -235,7 +239,11 @@ export class Consultas {
         this.habilitacionSuggestions = [];
         this.resetDependenciasHabilitacion();
       },
-      titular: () => this.codigoTitular = '',
+      titular: () => {
+        this.codigoTitular = '';
+        this.titulares = [];
+        this.titularesConsultados = false;
+      },
       denominacion: () => this.denominacionPredio = '',
       parque: () => this.nombreParque = '',
       catastral: () => this.codigoCatastral = '',      
@@ -528,6 +536,81 @@ export class Consultas {
       });
   }
 
+  /**
+   * Búsqueda por Titular Catastral: consulta el API del Geovisor con el
+   * apellido / razón social ingresado y muestra las coincidencias (solo el
+   * nombre del titular). La navegación al lote ocurre al seleccionar un
+   * resultado (ver irAlLoteDeTitular).
+   */
+  private handleBuscarByTitular() {
+    if (this.isSearchDisabled() || this.loading()) {
+      return;
+    }
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.titulares = [];
+    this.titularesConsultados = false;
+    // El API solo recibe mayúsculas: normalizamos el texto antes de consultarlo.
+    this.mapService.buscarTitularCatastral(this.codigoTitular.toUpperCase()).pipe(take(1)).subscribe({
+      next: (registros) => {
+        this.loading.set(false);
+        this.titularesConsultados = true;
+        this.titulares = registros;
+        if (registros.length === 0) {
+          this.searchError.set('No se encontraron titulares con el criterio ingresado.');
+        }
+      },
+      error: (err) => {
+        console.error('Error en la búsqueda por titular catastral:', err);
+        this.loading.set(false);
+        this.titularesConsultados = true;
+        this.searchError.set('Error de conexión con el servicio de titulares.');
+      }
+    });
+  }
+
+  /**
+   * Navega al lote asociado al titular seleccionado usando su `codlote`
+   * (id_lote). Replica la lógica de la búsqueda catastral: ajuste del mapa al
+   * polígono, marcador y panel de resultado, sin alterar dicha búsqueda.
+   */
+  irAlLoteDeTitular(registro: TitularCatastral) {
+    if (!registro?.codlote) {
+      this.searchError.set('No se encontró el lote para el titular seleccionado.');
+      return;
+    }
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.mapService.searchLoteByCodigoCatastral(registro.codlote).pipe(take(1)).subscribe({
+      next: (feature) => {
+        this.loading.set(false);
+        if (feature) {
+          const props = feature.properties as any;
+          const result: SearchResult = {
+            codigoCatastral: String(props['id_lote'] || registro.codlote).trim(),
+            direccion: props['direccion'] ?? props['ubicacion'] ?? "Ubicación no disponible",
+            propietario: registro.txttitular ?? props['propietario'] ?? "Información reservada",
+            area: props['area_lote'] ? `${props['area_lote']} m²` : "No disponible",
+            zonificacion: props['zonificacion'] ?? "No disponible",
+            fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80",
+            numeroPisos: props['pisos'] ?? 1,
+            geometry: feature.geometry
+          };
+          this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
+          this.mapService.drawSearchMarker(feature.geometry, `Titular: ${registro.txttitular}`);
+          this.emitResult(result);
+        } else {
+          this.searchError.set('Número de lote catastral no ubicado en el mapa (id_lote).');
+        }
+      },
+      error: (err) => {
+        console.error('Error al navegar al lote del titular:', err);
+        this.loading.set(false);
+        this.searchError.set('Error de conexión con el servicio catastral.');
+      }
+    });
+  }
+
   handleSearch() {
     if (this.isSearchDisabled() || this.loading()) {
       return; // No hacer nada si la búsqueda está deshabilitada o ya está cargando
@@ -536,6 +619,12 @@ export class Consultas {
     // por lo que el botón "Consultar" no debe hacer nada en esta pestaña.
     if (this.activeTab === 'parque') {
       this.handleBuscarByParque();
+      return;
+    }
+    // La búsqueda por titular catastral tiene su propio manejador:
+    // consulta el API y muestra la lista de coincidencias.
+    if (this.activeTab === 'titular') {
+      this.handleBuscarByTitular();
       return;
     }
     // La búsqueda por dirección ahora tiene su propio manejador

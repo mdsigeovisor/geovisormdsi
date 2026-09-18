@@ -7,6 +7,12 @@ import { easeOut } from 'ol/easing';
 import type { Coordinate } from 'ol/coordinate';
 import { Observable, map, of, catchError, throwError, take } from 'rxjs';
 
+/** Coincidencia de titular catastral devuelta por el API del Geovisor. */
+export interface TitularCatastral {
+  txttitular: string;
+  codlote: string;
+}
+
 /** Registro de numeración de vía devuelto por el API del Geovisor. */
 export interface ViaNumero {
   numero: string;
@@ -2012,6 +2018,52 @@ export class MapService {
       })
     );
   }
+
+  /**
+   * Busca titulares catastrales por apellido / razón social, consultando el API
+   * del Geovisor (`busqueda-titular-catastral`). Estrategia de reintentos en orden:
+   *  1) Ruta relativa "/WSGEOVISOR/api/geovisor/..." (proxy de desarrollo o same-origin)
+   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
+   *  3) Host de producción: https://www.munisanisidro.gob.pe
+   * Si todos fallan, propaga el error para que la UI distinga "sin resultados"
+   * de "sin conexión".
+   * @param razonSocial Apellido o razón social (búsqueda parcial).
+   * @returns Observable con la lista de coincidencias { txttitular, codlote }.
+   */
+  buscarTitularCatastral(razonSocial: string): Observable<TitularCatastral[]> {
+    const texto = (razonSocial ?? '').trim();
+    if (!texto) return of([]);
+    const path = `${environment.geovisorApiUrl}/busqueda-titular-catastral`;
+    const hosts = [
+      '', // 1) Ruta relativa (same-origin: proxy de desarrollo o Nginx de QA/Prod)
+      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas (fallback dev)
+      'https://www.munisanisidro.gob.pe' // 3) Host de producción (fallback)
+    ];
+    const params = new HttpParams().set('pvcTXTRAZONSOCIAL', texto);
+    const request = (url: string): Observable<TitularCatastral[]> =>
+      this.http.get<{ status?: number; data?: TitularCatastral[] }>(url ? url + path : path, { params }).pipe(
+        map(response => {
+          if (Array.isArray(response?.data)) return response.data;
+          return [];
+        })
+      );
+    // Encadenamos los intentos: pasamos al siguiente host solo si el anterior falla
+    return request(hosts[0]).pipe(
+      catchError(err => {
+        console.warn('buscarTitularCatastral: falló intento (ruta relativa), reintentando con test.munisanisidro.gob.pe', err);
+        return request(hosts[1]);
+      }),
+      catchError(err => {
+        console.warn('buscarTitularCatastral: falló intento (test), reintentando con www.munisanisidro.gob.pe', err);
+        return request(hosts[2]);
+      }),
+      catchError(err => {
+        console.error('buscarTitularCatastral: fallaron todos los intentos de conexión', err);
+        return throwError(() => err);
+      })
+    );
+  }
+
   /**
    * Busca vías en el servicio WFS. Puede buscar por nombre parcial (para autocompletar)
    * o por nombre exacto (para obtener la geometría).

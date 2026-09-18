@@ -100,13 +100,18 @@
       </button>
       <!-- Opción Titular Catastral: restringida, solo visible con sesión iniciada (AuthService) -->
       @if (isAuthenticated()) {
-      <button
-        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"
-        disabled title="Próximamente disponible">
-        <div class="text-primary/80 text-xl"><i class="bi bi-person-badge"></i></div>
+      <button (click)="activeTab = 'titular'"
+        [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'titular', 'text-gray-800 hover:bg-gray-50': activeTab !== 'titular'}"
+        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
+        <div class="text-xl" [ngClass]="{'text-white/80': activeTab === 'titular', 'text-primary/80': activeTab !== 'titular'}">
+          <i class="bi bi-person-badge"></i></div>
         <div>
-          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Titular Catastral</h3>
-          <p class="text-xs text-gray-500 mt-0.5">Busca por código de titular catastral.</p>
+          <h3 class="font-bold text-sm leading-tight"
+            [ngClass]="{'text-white': activeTab === 'titular', 'text-gray-800': activeTab !== 'titular'}">Por Titular
+            Catastral</h3>
+          <p class="text-xs mt-0.5"
+            [ngClass]="{'text-white/80': activeTab === 'titular', 'text-gray-500': activeTab !== 'titular'}">Busca por
+            apellido o razón social del titular.</p>
         </div>
       </button>
       }
@@ -126,7 +131,7 @@
   <!-- Fila Inferior: Contenido y Acciones -->
   <div class="flex-1 flex flex-col pt-4">
     <!-- Contenido de Tabs -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar px-3">
+    <div class="flex-1 overflow-y-auto custom-scrollbar px-3 pb-4">
       <!-- Formulario Catastral -->
       @if (activeTab === 'catastral') {
       <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="catastral-form">
@@ -301,18 +306,93 @@
       }
       <!-- Formulario Titular Catastral (protegido: si se cierra sesión con la pestaña abierta, se oculta) -->
       @if (activeTab === 'titular' && isAuthenticated()) {
-      <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="titular-form">
+      <div class="space-y-4 animate-in slide-in-from-right-2 duration-300" id="titular-form">
         <div>
           <label for="titularInput"
-            class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Código de
-            Titular</label>
-          <input type="text" [(ngModel)]="codigoTitular" placeholder="Ingrese su código"
-            class="w-full bg-primary/5 border-2 border-primary/10 rounded-2xl p-4 text-2xl font-mono text-center tracking-[0.2em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-black transition-all">
+            class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Apellido / Razón
+            Social</label>
+          <!-- Campo de búsqueda: Enter ejecuta la búsqueda; la X limpia el campo y los resultados -->
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-primary/40">
+              <i class="bi bi-person-badge"></i>
+            </span>
+            <input id="titularInput" type="text" [(ngModel)]="codigoTitular" placeholder="Ej: HUERTA"
+              (keyup.enter)="handleSearch()"
+              class="uppercase w-full bg-primary/5 border-2 border-primary/10 rounded-xl py-3 pl-10 pr-9 text-sm text-center focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-bold transition-all placeholder:lowercase placeholder:text-gray-300 placeholder:font-normal">
+            @if (codigoTitular.trim()) {
+            <button (click)="codigoTitular = ''; titulares = []; titularesConsultados = false; searchError.set(null)"
+              title="Limpiar"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-300 hover:text-gray-500 transition-colors">
+              <i class="bi bi-x-circle-fill text-sm"></i>
+            </button>
+            }
+          </div>
 
+          @if (searchError()) {
+          <div
+            class="mt-3 p-2 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-red-600 animate-in fade-in zoom-in duration-200">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span class="text-[10px] font-bold uppercase tracking-tight">{{ searchError() }}</span>
+          </div>
+          }
+
+          @if (!titularesConsultados && !loading() && !searchError()) {
           <p class="mt-3 text-[10px] text-gray-400 text-center italic">
-            Ingrese el código del titular para encontrar sus predios.
+            Ingrese un apellido o razón social y presione Buscar; luego seleccione un titular para ir a su lote.
           </p>
+          }
         </div>
+
+        <!-- Estado de carga: skeleton de la lista mientras consulta el API -->
+        @if (loading()) {
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2.5 animate-in fade-in duration-200">
+          @for (i of [1, 2, 3]; track i) {
+          <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 rounded-full bg-gray-100 animate-pulse shrink-0"></div>
+            <div class="h-2.5 rounded-full bg-gray-100 animate-pulse" [style.width.%]="70 - i * 10"></div>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Lista de coincidencias: solo se muestra el nombre del titular; el codlote
+             queda oculto y se usa para navegar al lote al hacer clic. -->
+        @if (!loading() && titulares.length > 0) {
+        <div>
+          <p
+            class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+            <i class="bi bi-collection"></i>
+            {{ titulares.length }} {{ titulares.length === 1 ? 'coincidencia' : 'coincidencias' }}
+            <span class="normal-case font-normal text-gray-300">— clic para ir al lote</span>
+          </p>
+          <div
+            class="bg-white border border-gray-200 rounded-xl shadow-sm max-h-40 overflow-y-auto custom-scrollbar relative z-10 animate-in fade-in duration-200">
+            @for (registro of titulares; track $index) {
+            <button (click)="irAlLoteDeTitular(registro)" [disabled]="loading()"
+              class="group w-full text-left px-3 py-2.5 text-xs text-gray-700 hover:bg-primary/5 transition-colors border-b border-gray-50 last:border-0 flex items-center gap-2.5">
+              <span
+                class="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                <i class="bi bi-person-fill text-[10px]"></i>
+              </span>
+              <span class="break-words leading-snug">{{ registro.txttitular }}</span>
+              <span class="ml-auto flex items-center gap-1.5 shrink-0">
+                <span class="text-[9px] text-gray-800 font-mono tracking-wide">{{ registro.codlote }}</span>
+                <i class="bi bi-chevron-right text-gray-300 group-hover:text-primary transition-colors"></i>
+              </span>
+            </button>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- Estado vacío: se buscó pero no hubo coincidencias -->
+        @if (!loading() && titularesConsultados && titulares.length === 0 && !searchError()) {
+        <div class="text-center py-6 animate-in fade-in duration-200">
+          <i class="bi bi-person-x text-3xl text-gray-200"></i>
+          <p class="mt-2 text-xs text-gray-400 font-medium">Sin coincidencias</p>
+          <p class="text-[10px] text-gray-300 mt-0.5">Intente con otro apellido o razón social.</p>
+        </div>
+        }
       </div>
       }
       <!-- Formulario Denominación del Predio -->
@@ -364,7 +444,7 @@
     }
   </div>
   <!-- Botones de Acción -->
-  <div class="flex gap-2 p-3 border-t border-gray-100 bg-white sticky bottom-0">
+  <div class="flex gap-2 p-3 border-t border-gray-100 bg-white sticky bottom-0 z-20 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
     <button (click)="handleClear()" [disabled]="loading()"
       class="flex-1 py-3 text-[11px] font-bold uppercase tracking-wider text-gray-400 border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-gray-600 transition-all">
       Limpiar

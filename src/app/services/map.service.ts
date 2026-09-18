@@ -35,6 +35,22 @@ export interface CucResultado {
   numeroint: string;
 }
 
+/** Registro de búsqueda por Código Predial devuelto por el API del Geovisor (`busqueda-codpredial`). */
+export interface CodPredialResultado {
+  txtcodipredrent: string;
+  txtcuc: string;
+  txttitular: string;
+  codlote: string;
+  codvia: string;
+  tipvia: string;
+  nomvia: string;
+  via: string;
+  numero: string;
+  txttipint: string;
+  codtipint: string;
+  numeroint: string;
+}
+
 /** Sugerencia de vía con su código, para el flujo de numeraciones. */
 export interface ViaSugerencia {
   etiqueta: string;
@@ -2087,6 +2103,50 @@ export class MapService {
       }),
       catchError(err => {
         console.error('buscarPorCuc: fallaron todos los intentos de conexión', err);
+        return throwError(() => err);
+      })
+    );
+  }
+  /**
+   * Busca predios por Código Predial consultando el API del Geovisor
+   * (`busqueda-codpredial`). Misma estrategia de reintentos que `buscarPorCuc`:
+   *  1) Ruta relativa "/WSGEOVISOR/api/geovisor/..." (proxy de desarrollo o same-origin)
+   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
+   *  3) Host de producción: https://www.munisanisidro.gob.pe
+   * Si todos fallan, propaga el error para que la UI distinga "sin resultados"
+   * de "sin conexión".
+   * @param codigoPredial Código de predio (ej. '270543112').
+   * @returns Observable con la lista de coincidencias { txtcodipredrent, txtcuc, txttitular, codlote, ... }.
+   */
+  buscarPorCodPredial(codigoPredial: string): Observable<CodPredialResultado[]> {
+    const codigo = (codigoPredial ?? '').trim();
+    if (!codigo) return of([]);
+    const path = `${environment.geovisorApiUrl}/busqueda-codpredial`;
+    const hosts = [
+      '', // 1) Ruta relativa (same-origin: proxy de desarrollo o Nginx de QA/Prod)
+      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas (fallback dev)
+      'https://www.munisanisidro.gob.pe' // 3) Host de producción (fallback)
+    ];
+    const params = new HttpParams().set('txtcodpredial', codigo);
+    const request = (url: string): Observable<CodPredialResultado[]> =>
+      this.http.get<{ status?: number; data?: CodPredialResultado[] }>(url ? url + path : path, { params }).pipe(
+        map(response => {
+          if (Array.isArray(response?.data)) return response.data;
+          return [];
+        })
+      );
+    // Encadenamos los intentos: pasamos al siguiente host solo si el anterior falla
+    return request(hosts[0]).pipe(
+      catchError(err => {
+        console.warn('buscarPorCodPredial: falló intento (ruta relativa), reintentando con test.munisanisidro.gob.pe', err);
+        return request(hosts[1]);
+      }),
+      catchError(err => {
+        console.warn('buscarPorCodPredial: falló intento (test), reintentando con www.munisanisidro.gob.pe', err);
+        return request(hosts[2]);
+      }),
+      catchError(err => {
+        console.error('buscarPorCodPredial: fallaron todos los intentos de conexión', err);
         return throwError(() => err);
       })
     );

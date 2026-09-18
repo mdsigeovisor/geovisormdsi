@@ -5,7 +5,7 @@ import { MapService } from '@app/services/map.service';
 import { AuthService } from '@app/services/auth.service';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '@app/interfaces/geoLayers';
-import { ViaNumero, ViaSugerencia, TitularCatastral, CucResultado } from '@app/services/map.service';
+import { ViaNumero, ViaSugerencia, TitularCatastral, CucResultado, CodPredialResultado } from '@app/services/map.service';
 
 @Component({
   selector: 'app-consultas',
@@ -73,6 +73,51 @@ export class Consultas {
   }
   /** Campos para búsqueda por Código Predial */
   codigoPredial = '';
+  /** Coincidencias devueltas por el API busqueda-codpredial para el código consultado. */
+  codPredialResultados: CodPredialResultado[] = [];
+  codPredialConsultado = false;
+  /** Clave del lote predial seleccionado (para resaltarlo en la lista). */
+  codPredialSeleccionado: string | null = null;
+
+  /** Clave única de un registro de Código Predial para track/selección. */
+  codPredialKey(r: CodPredialResultado): string {
+    return `${r.txtcodipredrent}-${r.codtipint}-${r.numeroint}-${r.numero}`;
+  }
+
+  /** Resumen del Código Predial consultado (titular, lote y dirección base). */
+  get codPredialResumen(): { codpredial: string; titular: string; codlote: string; direccionBase: string } | null {
+    const primero = this.codPredialResultados[0];
+    if (!primero) return null;
+    const direccionBase = [primero.tipvia, primero.nomvia]
+      .filter(p => (p ?? '').toString().trim() !== '')
+      .join(' ').trim();
+    return {
+      codpredial: (primero.txtcodipredrent ?? '').toString().trim(),
+      titular: (primero.txttitular ?? '').toString().trim() || 'Titular no disponible',
+      codlote: (primero.codlote ?? '').toString().trim(),
+      direccionBase,
+    };
+  }
+
+  /**
+   * Lotes únicos del resultado de Código Predial (agrupados por `codlote`).
+   * Replica el comportamiento de la búsqueda CUC: una fila por lote
+   * (ej. 2 registros con codlote 3112075014 → 1 fila).
+   */
+  get codPredialLotesUnicos(): { codlote: string; registro: CodPredialResultado; total: number }[] {
+    const mapa = new Map<string, { codlote: string; registro: CodPredialResultado; total: number }>();
+    for (const r of this.codPredialResultados) {
+      const cod = (r?.codlote ?? '').toString().trim();
+      if (!cod) continue;
+      const existente = mapa.get(cod);
+      if (existente) {
+        existente.total += 1;
+      } else {
+        mapa.set(cod, { codlote: cod, registro: r, total: 1 });
+      }
+    }
+    return [...mapa.values()];
+  }
   /** Campos para búsqueda por Dirección */
   nombreVia = '';
   /** Campos para consulta de numeración por código de vía */
@@ -275,7 +320,7 @@ export class Consultas {
 
     const clearActions: Record<typeof this.activeTab, () => void> = {
       cuc: () => { this.cuc = ''; this.cucResultados = []; this.cucConsultado = false; this.cucSeleccionado = null; },
-      predial: () => this.codigoPredial = '',
+      predial: () => { this.codigoPredial = ''; this.codPredialResultados = []; this.codPredialConsultado = false; this.codPredialSeleccionado = null; },
       direccion: () => {        
         this.nombreVia = '';        
       },
@@ -741,6 +786,91 @@ export class Consultas {
     });
   }
 
+  /**
+   * Consulta el API `busqueda-codpredial` con el Código Predial y muestra
+   * los lotes únicos encontrados (igual que la búsqueda CUC).
+   */
+  handleBuscarByCodPredial() {
+    const codigo = (this.codigoPredial ?? '').trim();
+    if (!codigo) {
+      this.searchError.set('Ingrese el Código Predial para buscar.');
+      return;
+    }
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.codPredialResultados = [];
+    this.codPredialConsultado = false;
+    this.codPredialSeleccionado = null;
+    this.mapService.buscarPorCodPredial(codigo).pipe(take(1)).subscribe({
+      next: (registros) => {
+        this.loading.set(false);
+        this.codPredialConsultado = true;
+        this.codPredialResultados = registros;
+        if (registros.length === 0) {
+          this.searchError.set('No se encontró el Código Predial ingresado.');
+        }
+      },
+      error: (err) => {
+        console.error('Error en la búsqueda por Código Predial:', err);
+        this.loading.set(false);
+        this.codPredialConsultado = true;
+        this.searchError.set('Error de conexión con el servicio catastral.');
+      }
+    });
+  }
+
+  /**
+   * Navega al lote asociado al registro de Código Predial seleccionado usando
+   * su `codlote` (id_lote). Replica la lógica CUC: ajuste del mapa al
+   * polígono, marcador y panel de resultado.
+   */
+  irAlLoteDeCodPredial(registro: CodPredialResultado) {
+    if (!registro?.codlote) {
+      this.searchError.set('No se encontró el lote para el Código Predial seleccionado.');
+      return;
+    }
+    this.codPredialSeleccionado = this.codPredialKey(registro);
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.mapService.searchLoteByCodigoCatastral(registro.codlote).pipe(take(1)).subscribe({
+      next: (feature) => {
+        this.loading.set(false);
+        if (feature) {
+          const props = feature.properties as any;
+          const direccionApi = [registro.tipvia, registro.nomvia, registro.numero]
+            .filter(p => (p ?? '').toString().trim() !== '')
+            .join(' ').trim();
+          const interiorApi = [registro.txttipint, registro.numeroint]
+            .filter(p => (p ?? '').toString().trim() !== '')
+            .join(' ').trim();
+          const direccion = ([direccionApi, interiorApi ? `Int. ${interiorApi}` : '']
+            .filter(p => p !== '').join(' - ').trim())
+            || (props['direccion'] ?? props['ubicacion'] ?? 'Ubicación no disponible');
+          const result: SearchResult = {
+            codigoCatastral: String(props['id_lote'] || registro.codlote).trim(),
+            direccion,
+            propietario: registro.txttitular ?? props['propietario'] ?? 'Información reservada',
+            area: props['area_lote'] ? `${props['area_lote']} m²` : 'No disponible',
+            zonificacion: props['zonificacion'] ?? 'No disponible',
+            fotoFrontis: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80',
+            numeroPisos: props['pisos'] ?? 1,
+            geometry: feature.geometry
+          };
+          this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
+          this.mapService.drawSearchMarker(feature.geometry, `Código Predial encontrado: ${registro.txtcodipredrent}`);
+          this.emitResult(result);
+        } else {
+          this.searchError.set('Número de lote catastral no ubicado en el mapa (id_lote).');
+        }
+      },
+      error: (err) => {
+        console.error('Error al navegar al lote del Código Predial:', err);
+        this.loading.set(false);
+        this.searchError.set('Error de conexión con el servicio catastral.');
+      }
+    });
+  }
+
   handleSearch() {
     if (this.isSearchDisabled() || this.loading()) {
       return; // No hacer nada si la búsqueda está deshabilitada o ya está cargando
@@ -801,15 +931,25 @@ export class Consultas {
         }
       });
     } else if (this.activeTab === 'cuc') {
-      // Nueva búsqueda CUC: consulta el API WSGEOVISOR/busqueda-cuc (txtcuc + txtip
-      // opcional) y muestra la lista de interiores. Al elegir uno se navega al
-      // lote usando su codlote (geometría WFS por código catastral).
+      // Búsqueda CUC: consulta el API WSGEOVISOR/busqueda-cuc (txtcuc) y
+      // muestra los lotes únicos. Al elegir uno se navega al lote usando su
+      // codlote (geometría WFS por código catastral).
       const codigo = (this.cuc ?? '').trim();
       if (!/^\d{8}$/.test(codigo)) {
         this.searchError.set('Ingrese los 08 dígitos del CUC para buscar.');
         return;
       }
       this.handleBuscarByCuc();
+    } else if (this.activeTab === 'predial') {
+      // Búsqueda por Código Predial: consulta el API WSGEOVISOR/busqueda-codpredial
+      // (txtcodpredial) y muestra los lotes únicos. Al elegir uno se navega al
+      // lote usando su codlote (geometría WFS por código catastral).
+      const codigo = (this.codigoPredial ?? '').trim();
+      if (!codigo) {
+        this.searchError.set('Ingrese el Código Predial para buscar.');
+        return;
+      }
+      this.handleBuscarByCodPredial();
     } else if (this.activeTab === 'habilitacion') {
       // Solo consultamos cuando los tres filtros están completos
       if (!this.nombreHabilitacion.trim() || !this.manzanaUrbana.trim() || !this.loteUrbano.trim()) {

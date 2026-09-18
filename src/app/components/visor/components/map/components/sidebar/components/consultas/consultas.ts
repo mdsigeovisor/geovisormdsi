@@ -5,7 +5,7 @@ import { MapService } from '@app/services/map.service';
 import { AuthService } from '@app/services/auth.service';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '@app/interfaces/geoLayers';
-import { ViaNumero, ViaSugerencia, TitularCatastral } from '@app/services/map.service';
+import { ViaNumero, ViaSugerencia, TitularCatastral, CucResultado } from '@app/services/map.service';
 
 @Component({
   selector: 'app-consultas',
@@ -26,6 +26,51 @@ export class Consultas {
   activeTab: 'catastral' | 'predial' | 'direccion' | 'habilitacion' | 'titular' | 'cuc' | 'denominacion' | 'parque' = 'catastral';
   /** Campos para búsqueda por CUC */
   cuc = '';
+  /** Coincidencias devueltas por el API busqueda-cuc para el CUC consultado. */
+  cucResultados: CucResultado[] = [];
+  cucConsultado = false;
+  /** Clave del interior seleccionado (para resaltarlo en la lista). */
+  cucSeleccionado: string | null = null;
+
+  /** Clave única de un registro CUC para track/selección en la lista. */
+  cucKey(r: CucResultado): string {
+    return `${r.txtcuc}-${r.codtipint}-${r.numeroint}-${r.numero}`;
+  }
+
+  /** Resumen del CUC consultado (titular, lote y dirección base del primer registro). */
+  get cucResumen(): { txtcuc: string; propietario: string; codlote: string; direccionBase: string } | null {
+    const primero = this.cucResultados[0];
+    if (!primero) return null;
+    const direccionBase = [primero.tipvia, primero.nomvia]
+      .filter(p => (p ?? '').toString().trim() !== '')
+      .join(' ').trim();
+    return {
+      txtcuc: (primero.txtcuc ?? '').toString().trim(),
+      propietario: (primero.txtpropietario ?? '').toString().trim() || 'Titular no disponible',
+      codlote: (primero.codlote ?? '').toString().trim(),
+      direccionBase,
+    };
+  }
+
+  /**
+   * Lotes únicos del resultado CUC (agrupados por `codlote`).
+   * Si varios interiores comparten el mismo lote (ej. 14 registros con
+   * codlote 3103006007), solo se muestra una fila por lote.
+   */
+  get cucLotesUnicos(): { codlote: string; registro: CucResultado; total: number }[] {
+    const mapa = new Map<string, { codlote: string; registro: CucResultado; total: number }>();
+    for (const r of this.cucResultados) {
+      const cod = (r?.codlote ?? '').toString().trim();
+      if (!cod) continue;
+      const existente = mapa.get(cod);
+      if (existente) {
+        existente.total += 1;
+      } else {
+        mapa.set(cod, { codlote: cod, registro: r, total: 1 });
+      }
+    }
+    return [...mapa.values()];
+  }
   /** Campos para búsqueda por Código Predial */
   codigoPredial = '';
   /** Campos para búsqueda por Dirección */
@@ -229,7 +274,7 @@ export class Consultas {
     this.mapService.clearSearchMarker(); // Limpia el marcador del mapa
 
     const clearActions: Record<typeof this.activeTab, () => void> = {
-      cuc: () => this.cuc = '',
+      cuc: () => { this.cuc = ''; this.cucResultados = []; this.cucConsultado = false; this.cucSeleccionado = null; },
       predial: () => this.codigoPredial = '',
       direccion: () => {        
         this.nombreVia = '';        
@@ -611,6 +656,91 @@ export class Consultas {
     });
   }
 
+  /**
+   * Consulta el API `busqueda-cuc` con el CUC (8 dígitos)
+   * y muestra la lista de interiores encontrados.
+   */
+  handleBuscarByCuc() {
+    const codigo = (this.cuc ?? '').trim();
+    if (!/^\d{8}$/.test(codigo)) {
+      this.searchError.set('Ingrese los 08 dígitos del CUC para buscar.');
+      return;
+    }
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.cucResultados = [];
+    this.cucConsultado = false;
+    this.cucSeleccionado = null;
+    this.mapService.buscarPorCuc(codigo).pipe(take(1)).subscribe({
+      next: (registros) => {
+        this.loading.set(false);
+        this.cucConsultado = true;
+        this.cucResultados = registros;
+        if (registros.length === 0) {
+          this.searchError.set('No se encontró el CUC ingresado.');
+        }
+      },
+      error: (err) => {
+        console.error('Error en la búsqueda por CUC:', err);
+        this.loading.set(false);
+        this.cucConsultado = true;
+        this.searchError.set('Error de conexión con el servicio catastral.');
+      }
+    });
+  }
+
+  /**
+   * Navega al lote asociado al registro CUC seleccionado usando su `codlote`
+   * (id_lote). Replica la lógica de la búsqueda catastral: ajuste del mapa al
+   * polígono, marcador y panel de resultado, sin alterar dicha búsqueda.
+   */
+  irAlLoteDeCuc(registro: CucResultado) {
+    if (!registro?.codlote) {
+      this.searchError.set('No se encontró el lote para el CUC seleccionado.');
+      return;
+    }
+    this.cucSeleccionado = this.cucKey(registro);
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.mapService.searchLoteByCodigoCatastral(registro.codlote).pipe(take(1)).subscribe({
+      next: (feature) => {
+        this.loading.set(false);
+        if (feature) {
+          const props = feature.properties as any;
+          const direccionApi = [registro.tipvia, registro.nomvia, registro.numero]
+            .filter(p => (p ?? '').toString().trim() !== '')
+            .join(' ').trim();
+          const interiorApi = [registro.txttipint, registro.numeroint]
+            .filter(p => (p ?? '').toString().trim() !== '')
+            .join(' ').trim();
+          const direccion = ([direccionApi, interiorApi ? `Int. ${interiorApi}` : '']
+            .filter(p => p !== '').join(' - ').trim())
+            || (props['direccion'] ?? props['ubicacion'] ?? 'Ubicación no disponible');
+          const result: SearchResult = {
+            codigoCatastral: String(props['id_lote'] || registro.codlote).trim(),
+            direccion,
+            propietario: registro.txtpropietario ?? props['propietario'] ?? 'Información reservada',
+            area: props['area_lote'] ? `${props['area_lote']} m²` : 'No disponible',
+            zonificacion: props['zonificacion'] ?? 'No disponible',
+            fotoFrontis: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80',
+            numeroPisos: props['pisos'] ?? 1,
+            geometry: feature.geometry
+          };
+          this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
+          this.mapService.drawSearchMarker(feature.geometry, `CUC encontrado: ${registro.txtcuc}`);
+          this.emitResult(result);
+        } else {
+          this.searchError.set('Número de lote catastral no ubicado en el mapa (id_lote).');
+        }
+      },
+      error: (err) => {
+        console.error('Error al navegar al lote del CUC:', err);
+        this.loading.set(false);
+        this.searchError.set('Error de conexión con el servicio catastral.');
+      }
+    });
+  }
+
   handleSearch() {
     if (this.isSearchDisabled() || this.loading()) {
       return; // No hacer nada si la búsqueda está deshabilitada o ya está cargando
@@ -671,36 +801,15 @@ export class Consultas {
         }
       });
     } else if (this.activeTab === 'cuc') {
-      this.loading.set(true);
-      this.searchError.set(null);
-      this.mapService.searchLoteByCuc(this.cuc).pipe(take(1)).subscribe({
-        next: (feature) => {
-          this.loading.set(false);
-          if (feature) {
-            const props = feature.properties as any;
-            const result: SearchResult = {
-              codigoCatastral: String(props['id_lote'] || 'N/A').trim(),
-              direccion: props['direccion'] ?? props['ubicacion'] ?? "Ubicación no disponible",
-              propietario: props['propietario'] ?? "Información reservada",
-              area: props['area_lote'] ? `${props['area_lote']} m²` : "No disponible",
-              zonificacion: props['zonificacion'] ?? "No disponible",
-              fotoFrontis: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80",
-              numeroPisos: props['pisos'] ?? 1,
-              geometry: feature.geometry
-            };
-            this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
-            this.mapService.drawSearchMarker(feature.geometry, `CUC encontrado: ${this.cuc}`);
-            this.emitResult(result);
-          } else {
-            this.searchError.set('No se encontró el lote con el CUC ingresado.');
-          }
-        },
-        error: (err) => {
-          console.error('Error en la búsqueda por CUC:', err);
-          this.searchError.set('Error de conexión con el servicio catastral.');
-          this.loading.set(false);
-        }
-      });
+      // Nueva búsqueda CUC: consulta el API WSGEOVISOR/busqueda-cuc (txtcuc + txtip
+      // opcional) y muestra la lista de interiores. Al elegir uno se navega al
+      // lote usando su codlote (geometría WFS por código catastral).
+      const codigo = (this.cuc ?? '').trim();
+      if (!/^\d{8}$/.test(codigo)) {
+        this.searchError.set('Ingrese los 08 dígitos del CUC para buscar.');
+        return;
+      }
+      this.handleBuscarByCuc();
     } else if (this.activeTab === 'habilitacion') {
       // Solo consultamos cuando los tres filtros están completos
       if (!this.nombreHabilitacion.trim() || !this.manzanaUrbana.trim() || !this.loteUrbano.trim()) {

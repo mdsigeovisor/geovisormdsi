@@ -20,6 +20,21 @@ export interface ViaNumero {
   codlotenumero: string;
 }
 
+/** Registro de búsqueda por CUC devuelto por el API del Geovisor (`busqueda-cuc`). */
+export interface CucResultado {
+  txtcuc: string;
+  txtpropietario: string;
+  codlote: string;
+  codvia: string;
+  tipvia: string;
+  nomvia: string;
+  via: string;
+  numero: string;
+  txttipint: string;
+  codtipint: string;
+  numeroint: string;
+}
+
 /** Sugerencia de vía con su código, para el flujo de numeraciones. */
 export interface ViaSugerencia {
   etiqueta: string;
@@ -863,40 +878,62 @@ export class MapService {
    * @param codlote Código catastral del lote (id_lote / codlote).
    * @returns Observable con los datos del lote o `null` si no se encontró.
    */
+  // listarDatosLote(codlote: string): Observable<LoteDatosHover | null> {
+  //   const codigo = (codlote ?? '').trim();
+  //   if (!codigo) return of(null);
+  //   // URL relativa centralizada en el environment (proxy inverso Nginx en QA/Prod)
+  //   const path = `${environment.geovisorApiUrl}/listar-datos-lote`;
+  //   // Misma estrategia de hosts que listarViaNumeros
+  //   const hosts = ['', 'https://test.munisanisidro.gob.pe'];
+  //   const params = new HttpParams().set('pvcCODLOTE', codigo);
+  //   const request = (url: string): Observable<LoteDatosHover | null> =>
+  //     this.http.get<{ status?: number; data?: LoteDatosHover[] }>(url ? url + path : path, { params }).pipe(
+  //       map(response => {
+  //         // La respuesta viene envuelta: { status, data: [...] }
+  //         const registro = response?.data?.[0];
+  //         if (registro && (registro.codlote || registro.codlotecatastral)) {
+  //           return { ...registro, codlote: registro.codlote || registro.codlotecatastral || codigo };
+  //         }
+  //         return null;
+  //       })
+  //     );
+  //   return request(hosts[0]).pipe(
+  //     catchError(err => {
+  //       console.warn('listarDatosLote: falló ruta relativa, reintentando con test.munisanisidro.gob.pe', err);
+  //       return request(hosts[1]);
+  //     }),
+  //     catchError(err => {
+  //       console.warn('listarDatosLote: falló test, reintentando con www.munisanisidro.gob.pe', err);
+  //       return request(hosts[2]);
+  //     }),
+  //     catchError(err => {
+  //       console.error('listarDatosLote: fallaron todos los intentos de conexión', err);
+  //       return of(null);
+  //     })
+  //   );
+  // }
   listarDatosLote(codlote: string): Observable<LoteDatosHover | null> {
-    const codigo = (codlote ?? '').trim();
-    if (!codigo) return of(null);
-    // URL relativa centralizada en el environment (proxy inverso Nginx en QA/Prod)
-    const path = `${environment.geovisorApiUrl}/listar-datos-lote`;
-    // Misma estrategia de hosts que listarViaNumeros
-    const hosts = ['', 'https://test.munisanisidro.gob.pe'];
-    const params = new HttpParams().set('pvcCODLOTE', codigo);
-    const request = (url: string): Observable<LoteDatosHover | null> =>
-      this.http.get<{ status?: number; data?: LoteDatosHover[] }>(url ? url + path : path, { params }).pipe(
-        map(response => {
-          // La respuesta viene envuelta: { status, data: [...] }
-          const registro = response?.data?.[0];
-          if (registro && (registro.codlote || registro.codlotecatastral)) {
-            return { ...registro, codlote: registro.codlote || registro.codlotecatastral || codigo };
-          }
-          return null;
-        })
-      );
-    return request(hosts[0]).pipe(
-      catchError(err => {
-        console.warn('listarDatosLote: falló ruta relativa, reintentando con test.munisanisidro.gob.pe', err);
-        return request(hosts[1]);
-      }),
-      catchError(err => {
-        console.warn('listarDatosLote: falló test, reintentando con www.munisanisidro.gob.pe', err);
-        return request(hosts[2]);
-      }),
-      catchError(err => {
-        console.error('listarDatosLote: fallaron todos los intentos de conexión', err);
-        return of(null);
-      })
-    );
-  }
+  const codigo = (codlote ?? '').trim();
+  if (!codigo) return of(null);
+
+  // URL relativa usando la configuración centralizada del environment
+  const url = `${environment.geovisorApiUrl}/listar-datos-lote`;
+  const params = new HttpParams().set('pvcCODLOTE', codigo);
+
+  return this.http.get<{ status?: number; data?: LoteDatosHover[] }>(url, { params }).pipe(
+    map(response => {
+      const registro = response?.data?.[0];
+      if (registro && (registro.codlote || registro.codlotecatastral)) {
+        return { ...registro, codlote: registro.codlote || registro.codlotecatastral || codigo };
+      }
+      return null;
+    }),
+    catchError(err => {
+      console.error('listarDatosLote: falló la conexión con el proxy inverso', err);
+      return of(null);
+    })
+  );
+}
 
   /**
    * Registra el evento `pointermove` del mapa: al pasar sobre la capa de lote
@@ -2009,27 +2046,48 @@ export class MapService {
     );
   }
   /**
-   * Busca un lote por su Código Único Catastral (CUC) consultando el servicio WFS de GeoServer.
-   * @param cuc Código Único Catastral
-   * @returns Observable con el feature encontrado o null
+   * Busca predios por Código Único Catastral (CUC) consultando el API
+   * del Geovisor (`busqueda-cuc`). Reemplaza la antigua búsqueda directa
+   * contra la tabla gráfica (WFS `vw_tg_lote`), eliminada.
+   * Estrategia de reintentos en orden:
+   *  1) Ruta relativa "/WSGEOVISOR/api/geovisor/..." (proxy de desarrollo o same-origin)
+   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
+   *  3) Host de producción: https://www.munisanisidro.gob.pe
+   * Si todos fallan, propaga el error para que la UI distinga "sin resultados"
+   * de "sin conexión".
+   * @param cuc Código Único Catastral (8 dígitos).
+   * @returns Observable con la lista de coincidencias { txtcuc, txtpropietario, codlote, ... }.
    */
-  searchLoteByCuc(cuc: string): Observable<GeoJSONFeature | null> {
-    const url = environment.geoserver.owsUrl;
-    const cucLimpio = cuc.trim();
-    const params = new HttpParams()
-      .set('service', 'WFS')
-      .set('version', '1.1.0')
-      .set('request', 'GetFeature')
-      .set('typeName', 'mdsibde2026:vw_tg_lote')
-      .set('outputFormat', 'application/json')
-      .set('srsName', 'EPSG:32718')
-      .set('cql_filter', `cuc = '${cucLimpio}'`);
-    return this.http.get<WfsResponse>(url, { params }).pipe(
-      map((response) => {
-        if (response?.features?.length > 0) {
-          return response.features[0];
-        }
-        return null;
+  buscarPorCuc(cuc: string): Observable<CucResultado[]> {
+    const codigo = (cuc ?? '').trim();
+    if (!codigo) return of([]);
+    const path = `${environment.geovisorApiUrl}/busqueda-cuc`;
+    const hosts = [
+      '', // 1) Ruta relativa (same-origin: proxy de desarrollo o Nginx de QA/Prod)
+      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas (fallback dev)
+      'https://www.munisanisidro.gob.pe' // 3) Host de producción (fallback)
+    ];
+    const params = new HttpParams().set('txtcuc', codigo);
+    const request = (url: string): Observable<CucResultado[]> =>
+      this.http.get<{ status?: number; data?: CucResultado[] }>(url ? url + path : path, { params }).pipe(
+        map(response => {
+          if (Array.isArray(response?.data)) return response.data;
+          return [];
+        })
+      );
+    // Encadenamos los intentos: pasamos al siguiente host solo si el anterior falla
+    return request(hosts[0]).pipe(
+      catchError(err => {
+        console.warn('buscarPorCuc: falló intento (ruta relativa), reintentando con test.munisanisidro.gob.pe', err);
+        return request(hosts[1]);
+      }),
+      catchError(err => {
+        console.warn('buscarPorCuc: falló intento (test), reintentando con www.munisanisidro.gob.pe', err);
+        return request(hosts[2]);
+      }),
+      catchError(err => {
+        console.error('buscarPorCuc: fallaron todos los intentos de conexión', err);
+        return throwError(() => err);
       })
     );
   }

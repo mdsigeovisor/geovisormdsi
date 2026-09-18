@@ -245,7 +245,6 @@ export class Consultas {
       clearActions[this.activeTab]();
     }
   }
-
   /** Valida si el botón de búsqueda debe estar deshabilitado */
   isSearchDisabled(): boolean {
     switch (this.activeTab) {
@@ -388,6 +387,9 @@ export class Consultas {
             this.buscarViaParcial();
             return;
           }
+          // Capturamos el código de vía del resultado y cargamos las numeraciones
+          // (listar-via-numero), igual que al elegir una sugerencia del autocompletado.
+          this.capturarCodVia(features);
           this.procesarViasEncontradas(features);
         },
         error: (err) => {
@@ -396,6 +398,21 @@ export class Consultas {
           this.loading.set(false);
         }
       });
+  }
+
+  /**
+   * Extrae el código de vía (codi_via) de los features encontrados y dispara
+   * la consulta de numeraciones, de modo que el selector de "Número" también
+   * se llene cuando el usuario consulta sin pasar por el autocompletado.
+   */
+  private capturarCodVia(features: GeoJSONFeature[]): void {
+    const codVia = features
+      .map(f => String(f.properties['codi_via'] ?? '').trim())
+      .find(cod => cod);
+    if (codVia) {
+      this.codVia = codVia;
+      this.consultarViaNumeros();
+    }
   }
 
   /**
@@ -411,6 +428,9 @@ export class Consultas {
             this.searchError.set('No se encontraron vías con los criterios ingresados.');
             return;
           }
+          // Mismo tratamiento que la búsqueda exacta: capturamos el código
+          // de vía y cargamos sus numeraciones.
+          this.capturarCodVia(features);
           this.procesarViasEncontradas(features);
         },
         error: () => {

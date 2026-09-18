@@ -75,27 +75,18 @@ const PANEL_BASE: Section[] = [
     id: 'catastral',
     title: 'INFORMACION CATASTRAL',
     expanded: false,
-    items: [
-      /*Capas de la base grafica*/
-      subseccion('base_grafica', 'BASE GRÁFICA', [
-        capa('num_cuadra', 'Cuadra', { visible: true, showInLegend: false }),
-        capa('construcciones', 'Construcciones', { visible: true, showInLegend: false }),
-        capa('lote', 'Lote', { visible: true, showInLegend: false }),
-        capa('manzana', 'Manzana', { visible: true, showInLegend: false }),
-        capa('veredas', 'Veredas', { visible: true, showInLegend: false }),
-        capa('arearecreativa', 'Área Recreativa', { visible: true, showInLegend: false }),
-      ]),
+    items: [     
       /*Capas de Sectores*/
       subseccion('sectorizacion', 'CAPAS SECTORIZACION', [
-        capa('sec_catastrales', 'Sectores Catastrales', { visible: false, showInLegend: true }),
-        capa('sec_vecinal', 'Sectores Vecinales', { visible: false, showInLegend: false }),
-        capa('hab_urbana', 'Urbanizaciones', { visible: false, showInLegend: false }),
-        capa('sec_subvecinal', 'Sub Sectores - Junta Vecinales', { visible: false, showInLegend: false }),
+        capa('sector-catastral', 'Sectores Catastrales', { visible: false, showInLegend: true }),
+        capa('sector-vecinal', 'Sectores Vecinales', { visible: false, showInLegend: true }),
+        capa('urbanizaciones', 'Urbanizaciones', { visible: false, showInLegend: true }),
+        capa('sub-sector-vecinal', 'Sub Sectores - Junta Vecinales', { visible: false, showInLegend: true }),
       ]),
       /*Etiquetas Sectorización*/
-      subseccion('lotizacion', 'LOTIZACIÓN', [
-        capa('lote_urbano', 'Lote Urbano', { visible: false, showInLegend: false }),
-        capa('etiquetas_catastrales', 'Código Catastral', { visible: false, showInLegend: false }),
+      subseccion('lotizacion', 'ETIQUETAS', [
+        capa('manzana-lote-urbano', 'Manzana y Lote Urbano', { visible: false, showInLegend: false }),
+        capa('manzana-lote-catastral', 'Manzana y Lote Catastral', { visible: false, showInLegend: false }),
         capa('denominacion_predio', 'Denominación del Predio (DESARROLLO)', { visible: false, showInLegend: false, disabled: true }),
       ]),
       /*Puntos Geodesicos*/
@@ -104,8 +95,8 @@ const PANEL_BASE: Section[] = [
       ], false, { requiresAuth: true }),
       /*Vias*/
       subseccion('vias', 'VIAS', [
-        capa('vias', 'Nomenclatura de Vías', { visible: true, showInLegend: false }),
-        capa('seccion_vial', 'Sección vias (Inf. referencial de campo)', { visible: false, showInLegend: false }),
+        capa('nombre-vias', 'Nomenclatura de Vías', { visible: true, showInLegend: false }),
+        capa('seccion-vial', 'Sección vias (Inf. referencial de campo)', { visible: false, showInLegend: false }),
       ]),
       /*Numeracion de campo*/
       subseccion('num_municipal', 'NÚMERACION DE CAMPO', [

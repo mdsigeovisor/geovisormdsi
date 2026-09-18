@@ -1770,12 +1770,24 @@ export class MapService {
    * @returns La instancia de la capa de OpenLayers o `undefined` si no se encuentra.
    */
   private getLayerById(id: string): ImageLayer<ImageWMS> | undefined {
+    // 1) Búsqueda declarativa: capas registradas en el panel (control de capas)
     for (const section of this.sections()) {
       for (const item of section.items) {
         const layers = 'layers' in item ? item.layers : (item.type === 'layer' ? [item] : []);
         const layerData = layers.find(l => l.id === id);
         if (layerData && layerData.olLayer instanceof ImageLayer) {
           return layerData.olLayer;
+        }
+      }
+    }
+    // 2) Respaldo: capas agregadas directamente al mapa desde INITIAL_WMS_LAYERS
+    //    pero sin declaración en el panel (p. ej. 'lote', capa de fondo que
+    //    alimenta el popup de información del lote y el pick de impresión).
+    const map = this._map();
+    if (map) {
+      for (const layer of map.getLayers().getArray()) {
+        if (layer.get('id') === id && layer instanceof ImageLayer) {
+          return layer;
         }
       }
     }

@@ -6,16 +6,41 @@ const wp = environment.geoserver.workspacePrefix;
 /**
  * Grupos de configuración de capas WMS organizados por temática.
  */
+const CATASTRALES_LAYERS: WmsLayerConfig[] = [
+  { id: 'construcciones', layerName: `${wp}vw_tg_construcciones`, zIndex: 1.5, title: 'Construcciones' },
+  { id: 'area-verde', layerName: `${wp}vw_tg_area_privada`, zIndex: 1, title: 'Área Recreativa' },
+  { id: 'area-verde', layerName: `${wp}vw_tg_area_rec`, zIndex: 1, title: 'Área Recreativa' },
+  { id: 'lim-distrital', layerName: `${wp}tg_limiteDistrital`, zIndex: 1, title: 'Manzana Catastral' },
+  { id: 'lote', layerName: `${wp}vw_tg_lote`, zIndex: 0.5, title: 'Lote Catastral' },
+  { id: 'manzana', layerName: `${wp}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
+  { id: 'com-vial', layerName: `${wp}vw_tg_comp_via`, zIndex: 0, title: 'Manzana Catastral' },
+  { id: 'lim-oceano', layerName: `${wp}tg_oceano`, zIndex: 0, title: 'Manzana Catastral' },
+  { id: 'manz-vecinas', layerName: `${wp}tg_manzana_colindante`, zIndex: 0, title: 'Manzana Catastral'},
+  { id: 'nom-distrito-vecinos', layerName: `${wp}tg_distrito_colin_nombres`, zIndex: 0, title: 'Manzana Catastral'},  
+];
+const SECTORES_LAYERS: WmsLayerConfig[] = [
+  { id: 'sector-catastral', layerName: `${wp}vw_tg_sec_catastro`, zIndex: 2, title: 'Sectores Catastrales' },
+  { id: 'sector-vecinal', layerName: `${wp}vw_tg_secvecinales`, zIndex: 2, title: 'Subsectores Vecinales' },
+  { id: 'urbanizaciones', layerName: `${wp}vw_tg_habilitacion`, zIndex: 2, title: 'Habilitación Urbana' },  
+  { id: 'sub-sector-vecinal', layerName: `${wp}vw_tg_subsecvecinales`, zIndex: 2, title: 'Sectores Vecinales' },  
+];
 const ETIQUETAS_LAYERS: WmsLayerConfig[] = [
-  { id: 'lote_urbano', layerName: `${wp}vw_tg_lote_urbano`, zIndex: 0, title: 'Lote Urbano' },
-  { id: 'etiquetas_catastrales', layerName: `${wp}gc_mz_lote_catastral_etiqueta`, zIndex: 0, title: 'Etiquetas Catastrales' },
-  { id: 'denominacion_predio', layerName: `${wp}denominacion_predio`, zIndex: 0, title: 'Denominación del Predio' },
+  { id: 'manzana-lote-urbano', layerName: `${wp}vw_tg_lote_urbano`, zIndex: 2, title: 'Lote Urbano' },
+  { id: 'manzana-lote-catastral', layerName: `${wp}vw_tg_lote_puntos`, zIndex: 2, title: 'Etiquetas Catastrales' },
+  { id: 'denominacion-predio', layerName: `${wp}denominacion_predio`, zIndex: 0, title: 'Denominación del Predio' },
+];
+const PUNTO_GEODESICOS: WmsLayerConfig[] = [
+  { id: 'puntos_geodesicos', layerName: `${wp}vw_cu_punto_geodesico`, zIndex: 2, title: 'Puntos Geodésicos' },
+];
+const NOMENCLATURA_SECCIONES: WmsLayerConfig[] = [
+  { id: 'nombre-vias', layerName: `${wp}vw_tg_via`, zIndex: 2, title: 'Vías' },  
+  { id: 'seccion-vial', layerName: `${wp}gc_etiqueta-seccion-via`, zIndex: 2, title: 'Sección de Vías' },  
 ];
 
+
 const INFRAESTRUCTURA_LAYERS: WmsLayerConfig[] = [
-  { id: 'puntos_geodesicos', layerName: `${wp}vw_cu_punto_geodesico`, zIndex: 0, title: 'Puntos Geodésicos' },
-  { id: 'vias', layerName: `${wp}vw_tg_via`, zIndex: 0, title: 'Vías' },  
-  { id: 'seccion_vial', layerName: `${wp}gc_etiqueta-seccion-via`, zIndex: 2, title: 'Sección de Vías' },
+  
+  
   { id: 'num_cuadra', layerName: `${wp}vw_tg_cuadra`, zIndex: 0, title: 'Número de Cuadras' },
   { id: 'red_semaforizada', layerName: `${wp}red_semaforica`, zIndex: 3, title: 'Intersecciones Semaforizadas' },
   { id: 'senaletica_limite', layerName: `${wp}senaletica_limite`, zIndex: 3, title: 'Señaletica San Isidro 2026' },
@@ -31,24 +56,13 @@ const AMBIENTAL_LAYERS: WmsLayerConfig[] = [
   { id: 'arbolado_urbano_2024', layerName: `${wp}vw_arboles_2024`, zIndex: 0, title: 'Árboles 2024' },
   { id: 'arbolado_urbano_2015', layerName: `${wp}vw_arboles_2015`, zIndex: 0, title: 'Árboles 2015' },
   { id: 'cactus_yucca_2015', layerName: `${wp}vw_arboles_2015_cactus`, zIndex: 0, title: 'Cactus - Yucca 2015' },
-  { id: 'arearecreativa', layerName: `${wp}gc_area_verde`, zIndex: 0, title: 'Área Recreativa' },
+  
   { id: 'nom_area_verde', layerName: `${wp}areas_verdes_de_san_isidro`, zIndex: 0, title: 'Área verde de San Isidro' },
 ];
 
-const CATASTRALES_LAYERS: WmsLayerConfig[] = [
-  { id: 'construcciones', layerName: `${wp}vw_tg_construcciones`, zIndex: 0, title: 'Construcciones' },
-  { id: 'lote', layerName: `${wp}vw_tg_lote`, zIndex: 0, title: 'Lote Catastral' },
-  { id: 'manzana', layerName: `${wp}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
-  { id: 'veredas', layerName: `${wp}vw_tg_comp_via`, zIndex: 0, title: 'Veredas' },
-  { id: 'mz_colindantes', layerName: `${wp}tg_manzana_colindante,tg_oceano,tg_distrito_colin_nombres,tg_limiteDistrital`, zIndex: 0, title: 'Cartografía otros distritos' },
-];
 
-const SECTORES_LAYERS: WmsLayerConfig[] = [
-  { id: 'hab_urbana', layerName: `${wp}gc_habilitacion_urbana`, zIndex: 0, title: 'Habilitación Urbana' },
-  { id: 'sec_subvecinal', layerName: `${wp}gc_subsector_vecinal`, zIndex: 0, title: 'Subsectores Vecinales' },
-  { id: 'sec_vecinal', layerName: `${wp}gc_sector_vecinal`, zIndex: 0, title: 'Sectores Vecinales' },
-  { id: 'sec_catastrales', layerName: `${wp}gc_sector_catastral`, zIndex: 0, title: 'Sectores Catastrales' },
-];
+
+
 
 const VUELOS_LAYERS: WmsLayerConfig[] = [
   { id: 'fotos_sin_2018', layerName: `${wp}vw_tg_fotosSinProcesar_2018`, zIndex: 0, title: 'Fotos sin Procesar - 2018' },
@@ -133,6 +147,8 @@ const MOVILIARIO_URBANO: WmsLayerConfig[] = [
  */
 export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   ...ETIQUETAS_LAYERS,
+  ...PUNTO_GEODESICOS,
+  ...NOMENCLATURA_SECCIONES,
   ...INFRAESTRUCTURA_LAYERS,
   ...NUMERACION_LAYERS,
   ...AMBIENTAL_LAYERS,

@@ -57,6 +57,54 @@
   </div>
 </div>
 }
+<!-- Popup flotante al pasar el mouse sobre un lote catastral: datos del API
+     listar-datos-lote. pointer-events-none para no bloquear el mapa; se oculta
+     al salir del lote o del mapa (mapService.loteHoverPosicion() === null). -->
+@if (mapService.loteHoverPosicion(); as pos) {
+<div class="fixed z-[1030] pointer-events-none select-none animate-in fade-in zoom-in-95 duration-150"
+  [style.left.px]="pos.x" [style.top.px]="pos.y" [style.max-width]="'calc(100vw - 1.5rem)'">
+  <div class="w-72 bg-white rounded-xl shadow-2xl border border-primary/25 overflow-hidden">
+    <!-- Encabezado: código del lote + CUC -->
+    @if (mapService.loteHoverDatos(); as datos) {
+    <div class="flex items-center gap-2 px-3 py-2 bg-primary text-white">
+      <i class="bi bi-geo-alt-fill text-sm shrink-0"></i>
+      <span class="text-xs font-bold tracking-wide truncate">{{ datos.codlote }}</span>
+      @if (datos.txtcuc) {
+      <span class="ml-auto text-[10px] bg-white/20 rounded-full px-2 py-0.5 whitespace-nowrap">CUC {{ datos.txtcuc }}</span>
+      }
+    </div>
+    }
+    <!-- Estado de carga -->
+    @if (mapService.loteHoverCargando()) {
+    <div class="flex items-center gap-2 px-3 py-2.5 text-xs text-gray-500">
+      <i class="bi bi-arrow-repeat animate-spin text-primary"></i>
+      <span>Consultando datos del lote…</span>
+    </div>
+    }
+    @if (mapService.loteHoverDatos(); as datos) {
+    <div class="px-3 py-2.5 space-y-1.5 text-xs">
+      <div class="flex items-center gap-3 text-gray-600">
+        @if (datos.txtmzaurbano) {
+        <span><span class="text-gray-400 font-semibold">Mz.</span> {{ datos.txtmzaurbano }}</span>
+        }
+        @if (datos.txtloteurbano) {
+        <span><span class="text-gray-400 font-semibold">Lote</span> {{ datos.txtloteurbano }}</span>
+        }
+        @if (datos.lotecodcatant) {
+        <span class="ml-auto text-[10px] text-gray-400 whitespace-nowrap">Cód. ant. {{ datos.lotecodcatant }}</span>
+        }
+      </div>
+      @if (datos.txtdirecprincipal) {
+      <p class="text-gray-800 leading-snug break-words">{{ datos.txtdirecprincipal }}</p>
+      }
+      <p class="text-[10px] text-gray-400 pt-1.5 border-t border-gray-100 flex items-center gap-1">
+        <i class="bi bi-hand-index-thumb"></i> Doble clic para ver la ficha completa
+      </p>
+    </div>
+    }
+  </div>
+</div>
+}
 <!-- Leyenda: ventana flotante FIJA sobre el mapa. Su visibilidad vive en la
      señal `leyendaVisible` del MapService (independiente de las herramientas
      del sidebar): cambiar de opción en el menú NO la cierra; solo la X de la

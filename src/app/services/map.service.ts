@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import type { Coordinate } from 'ol/coordinate';
-import { Observable, map, of, catchError, throwError } from 'rxjs';
+import { Observable, map, of, catchError, throwError, take } from 'rxjs';
 
 /** Registro de numeración de vía devuelto por el API del Geovisor. */
 export interface ViaNumero {
@@ -73,6 +73,19 @@ import {
 } from '@app/modules/openlayers.module';
 
 export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
+/**
+ * Datos resumidos de un lote devueltos por el API listar-datos-lote del
+ * Geovisor municipal. Se muestran en el popup al pasar el mouse sobre el lote.
+ */
+export interface LoteDatosHover {
+  codlote: string;
+  txtcuc: string;
+  txtmzaurbano: string;
+  txtloteurbano: string;
+  lotecodcatant: string;
+  codlotecatastral: string;
+  txtdirecprincipal: string;
+}
 /**
  * Ventana flotante con la información de un lote.
  * Varias pueden estar abiertas simultáneamente sin bloquear el mapa.
@@ -226,6 +239,22 @@ export class MapService {
   }
   /** Ventanas flotantes con la información de lotes (varias abiertas, sin bloquear el mapa) */
   loteInfoWindows = signal<LoteInfoWindow[]>([]);
+  /** Datos del lote bajo el cursor (popup hover); `null` cuando no hay lote cargado. */
+  loteHoverDatos = signal<LoteDatosHover | null>(null);
+  /** Indica si la consulta de datos del lote bajo el cursor está en curso. */
+  loteHoverCargando = signal(false);
+  /** Posición (px) del popup hover; `null` lo oculta. */
+  loteHoverPosicion = signal<{ x: number; y: number } | null>(null);
+  /** Cache de datos de lote ya consultados (evita repetir llamadas al API). */
+  private readonly loteDatosCache = new Map<string, LoteDatosHover>();
+  /** Código del lote actualmente bajo el cursor. */
+  private hoverCodActual: string | null = null;
+  /** Identificador de la última consulta hover; descarta respuestas obsoletas. */
+  private hoverRequestId = 0;
+  /** Último evento de movimiento pendiente de procesar (throttle). */
+  private hoverPendingEvt: { coordinate: Coordinate; pixel: number[] } | null = null;
+  /** Temporizador del throttle del pointermove. */
+  private hoverMoveTimer: ReturnType<typeof setTimeout> | null = null;
   /** Modo selección: el próximo clic sobre la capa "Lote Catastral" lo asigna al módulo de impresión */
   pickLoteActivo = signal(false);
   /** Código catastral (id_lote) seleccionado en el mapa para imprimir */
@@ -720,7 +749,144 @@ export class MapService {
   private setupMapClickHandler(olMap: OlMap): void {
     this.setupSingleClickHandler(olMap);
     this.setupDoubleClickHandler(olMap);
+    this.setupLoteHoverHandler(olMap);
   }
+
+  /**
+   * Consulta los datos resumidos del lote indicado en el API del Geovisor
+   * (`listar-datos-lote`). Estrategia de reintentos en orden:
+   *  1) Ruta relativa "/WSGEOVISOR/..." (proxy de desarrollo o same-origin)
+   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
+   *  3) Host de producción: https://www.munisanisidro.gob.pe
+   * @param codlote Código catastral del lote (id_lote / codlote).
+   * @returns Observable con los datos del lote o `null` si no se encontró.
+   */
+  listarDatosLote(codlote: string): Observable<LoteDatosHover | null> {
+    const codigo = (codlote ?? '').trim();
+    if (!codigo) return of(null);
+    const path = '/WSGEOVISOR/api/geovisor/listar-datos-lote';
+    // Misma estrategia de hosts que listarViaNumeros
+    const hosts = ['', 'https://test.munisanisidro.gob.pe', 'https://www.munisanisidro.gob.pe'];
+    const params = new HttpParams().set('pvcCODLOTE', codigo);
+    const request = (url: string): Observable<LoteDatosHover | null> =>
+      this.http.get<{ status?: number; data?: LoteDatosHover[] }>(url ? url + path : path, { params }).pipe(
+        map(response => {
+          // La respuesta viene envuelta: { status, data: [...] }
+          const registro = response?.data?.[0];
+          if (registro && (registro.codlote || registro.codlotecatastral)) {
+            return { ...registro, codlote: registro.codlote || registro.codlotecatastral || codigo };
+          }
+          return null;
+        })
+      );
+    return request(hosts[0]).pipe(
+      catchError(err => {
+        console.warn('listarDatosLote: falló ruta relativa, reintentando con test.munisanisidro.gob.pe', err);
+        return request(hosts[1]);
+      }),
+      catchError(err => {
+        console.warn('listarDatosLote: falló test, reintentando con www.munisanisidro.gob.pe', err);
+        return request(hosts[2]);
+      }),
+      catchError(err => {
+        console.error('listarDatosLote: fallaron todos los intentos de conexión', err);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Registra el evento `pointermove` del mapa: al pasar sobre la capa de lote
+   * consulta el API listar-datos-lote y muestra un popup flotante junto al
+   * cursor. Throttle ~120ms + caché de códigos ya consultados.
+   * @param olMap Instancia del mapa de OpenLayers.
+   */
+  private setupLoteHoverHandler(olMap: OlMap): void {
+    this.zone.runOutsideAngular(() => {
+      olMap.on('pointermove', (evt) => {
+        // Guardamos solo el último evento; el throttle procesa el más reciente.
+        this.hoverPendingEvt = { coordinate: [...evt.coordinate], pixel: evt.pixel ? [...evt.pixel] : [0, 0] };
+        if (this.hoverMoveTimer !== null) return;
+        this.hoverMoveTimer = setTimeout(() => {
+          this.hoverMoveTimer = null;
+          const pendiente = this.hoverPendingEvt;
+          this.hoverPendingEvt = null;
+          if (pendiente) this.procesarHover(pendiente.coordinate, pendiente.pixel);
+        }, 120);
+      });
+      // Ocultamos el popup al salir del lienzo del mapa
+      olMap.getViewport().addEventListener('mouseleave', () => {
+        if (this.hoverMoveTimer !== null) { clearTimeout(this.hoverMoveTimer); this.hoverMoveTimer = null; }
+        this.hoverPendingEvt = null;
+        this.zone.run(() => this.limpiarHover());
+      });
+    });
+  }
+
+  /**
+   * Procesa un movimiento pendiente: identifica el lote bajo el cursor
+   * (GetFeatureInfo sobre la capa 'lote') y actualiza el popup hover.
+   */
+  private procesarHover(coordinate: Coordinate, pixel: number[]): void {
+    const pixelX = pixel[0], pixelY = pixel[1];
+    if (this.drawMeasureService.isDrawing()) { this.zone.run(() => this.limpiarHover()); return; }
+    // Identificamos el lote bajo el cursor (mismo patrón del doble clic)
+    const layer = this.getLayerById('lote');
+    if (!layer?.getVisible()) { this.zone.run(() => this.limpiarHover()); return; }
+    const view = this._map()?.getView();
+    const source = layer.getSource();
+    if (!view || !source) { this.zone.run(() => this.limpiarHover()); return; }
+    const resolution = view.getResolution();
+    if (!resolution) { this.zone.run(() => this.limpiarHover()); return; }
+    const url = source.getFeatureInfoUrl(coordinate, resolution, view.getProjection(), MapService.FEATURE_INFO_PARAMS);
+    if (!url) { this.zone.run(() => this.limpiarHover()); return; }
+    const requestId = ++this.hoverRequestId;
+    this.http.get<WfsResponse>(url).pipe(take(1)).subscribe({
+      next: response => {
+        if (requestId !== this.hoverRequestId) return; // Respuesta obsoleta
+        const props = response?.features?.[0]?.properties ?? {};
+        const codigo = String(props['id_lote'] ?? props['codlote'] ?? props['codigo_lote'] ?? '').trim();
+        this.zone.run(() => {
+          if (!codigo || codigo === 'undefined') { this.limpiarHover(); return; }
+          // Confirmado que hay un lote bajo el cursor: posicionamos el popup
+          this.loteHoverPosicion.set({ x: pixelX, y: pixelY });
+          if (codigo === this.hoverCodActual) {
+            // Mismo lote: solo movemos el popup junto al cursor
+            this.loteHoverPosicion.set({ x: pixelX, y: pixelY });
+            return;
+          }
+          this.hoverCodActual = codigo;
+          const cacheado = this.loteDatosCache.get(codigo);
+          if (cacheado) {
+            this.loteHoverDatos.set(cacheado);
+            this.loteHoverCargando.set(false);
+          } else {
+            this.loteHoverDatos.set(null);
+            this.loteHoverCargando.set(true);
+            this.listarDatosLote(codigo).pipe(take(1)).subscribe(datos => {
+              if (requestId !== this.hoverRequestId) return; // Obsoleta
+              if (datos) this.loteDatosCache.set(codigo, datos);
+              if (this.hoverCodActual === codigo) {
+                this.loteHoverDatos.set(datos);
+                this.loteHoverCargando.set(false);
+              }
+            });
+          }
+        });
+      },
+      error: () => { /* silencioso: el hover no debe molestar con errores de red */ }
+    });
+  }
+
+  /** Oculta el popup hover y resetea el estado de la consulta en curso. */
+  private limpiarHover(): void {
+    this.hoverRequestId++;
+    this.hoverCodActual = null;
+    this.loteHoverDatos.set(null);
+    this.loteHoverCargando.set(false);
+    this.loteHoverPosicion.set(null);
+  }
+
 
   /**
    * Registra el evento de clic simple. Si se está usando una herramienta de

@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import type { Coordinate } from 'ol/coordinate';
+import type Geometry from 'ol/geom/Geometry';
 import { Observable, map, of, catchError, throwError, take } from 'rxjs';
 
 /** Coincidencia de titular catastral devuelta por el API del Geovisor. */
@@ -287,14 +288,33 @@ export class MapService {
   loteHoverPosicion = signal<{ x: number; y: number } | null>(null);
   /** Cache de datos de lote ya consultados (evita repetir llamadas al API). */
   private readonly loteDatosCache = new Map<string, LoteDatosHover>();
+  /**
+   * Cache de geometrías de lote (en la proyección de la vista) indexadas por
+   * código catastral. Permite hacer "hit test" local: mientras el cursor siga
+   * dentro de un lote ya consultado NO se vuelve a llamar al servicio
+   * GetFeatureInfo; el popup solo cambia al entrar en otro lote.
+   */
+  private readonly hoverGeometriasCache = new Map<string, Geometry>();
   /** Código del lote actualmente bajo el cursor. */
   private hoverCodActual: string | null = null;
   /** Identificador de la última consulta hover; descarta respuestas obsoletas. */
   private hoverRequestId = 0;
+  /** Consultas GetFeatureInfo del hover actualmente en curso (máx. 1). */
+  private hoverInfoEnCurso = 0;
+  /** Última posición pendiente de resolver al terminar la consulta en curso. */
+  private hoverInfoPendiente: { coordinate: Coordinate; pixel: number[] } | null = null;
+  /** Última coordenada consultada por red (para descartar micro-movimientos). */
+  private hoverUltimaConsulta: { coordinate: Coordinate; resolution: number } | null = null;
   /** Último evento de movimiento pendiente de procesar (throttle). */
   private hoverPendingEvt: { coordinate: Coordinate; pixel: number[] } | null = null;
   /** Temporizador del throttle del pointermove. */
   private hoverMoveTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Retardo del throttle del hover: agrupa el movimiento en una sola consulta. */
+  private static readonly HOVER_DEBOUNCE_MS = 110;
+  /** Desplazamiento mínimo (en píxeles de pantalla) para repetir una consulta. */
+  private static readonly HOVER_MIN_PIXELES = 6;
+  /** Máximo de geometrías de lote guardadas para el hit test local. */
+  private static readonly HOVER_MAX_GEOMETRIAS = 400;
   /** Modo selección: el próximo clic sobre la capa "Lote Catastral" lo asigna al módulo de impresión */
   pickLoteActivo = signal(false);
   /** Código catastral (id_lote) seleccionado en el mapa para imprimir */
@@ -953,22 +973,48 @@ export class MapService {
 
   /**
    * Registra el evento `pointermove` del mapa: al pasar sobre la capa de lote
-   * consulta el API listar-datos-lote y muestra un popup flotante junto al
-   * cursor. Throttle ~120ms + caché de códigos ya consultados.
+   * muestra un popup flotante junto al cursor.
+   *
+   * Optimización de llamadas: antes de consultar el servicio se hace un
+   * "hit test" local contra las geometrías de lotes ya conocidas
+   * (`hoverGeometriasCache`), de modo que:
+   *  - mientras el cursor permanece dentro del MISMO lote no se llama nada;
+   *  - al entrar en OTRO lote ya consultado el popup cambia al instante y
+   *    tampoco se llama al servicio;
+   *  - solo se llama (GetFeatureInfo, 1 vez por lote nuevo) cuando el cursor
+   *    entra en un lote desconocido, con throttle de 110 ms y un único
+   *    requerimiento simultáneo.
    * @param olMap Instancia del mapa de OpenLayers.
    */
   private setupLoteHoverHandler(olMap: OlMap): void {
     this.zone.runOutsideAngular(() => {
       olMap.on('pointermove', (evt) => {
-        // Guardamos solo el último evento; el throttle procesa el más reciente.
-        this.hoverPendingEvt = { coordinate: [...evt.coordinate], pixel: evt.pixel ? [...evt.pixel] : [0, 0] };
+        const coordinate: Coordinate = [...evt.coordinate];
+        const pixel: number[] = evt.pixel ? [...evt.pixel] : [0, 0];
+        // 1) ¿El cursor está sobre un lote ya conocido? Se resuelve en memoria.
+        const codigoCacheado = this.buscarLoteEnCacheHover(coordinate);
+        if (codigoCacheado) {
+          // Nada que resolver: descartamos la posición pendiente y las
+          // respuestas en vuelo (ya no son la posición actual del cursor).
+          this.hoverInfoPendiente = null;
+          this.hoverRequestId++;
+          this.zone.run(() => this.mostrarHoverDeLote(codigoCacheado, pixel[0], pixel[1]));
+          return;
+        }
+        // 2) Salió de un lote conocido: ocultamos el popup mientras se resuelve
+        //    el nuevo lote (evita mostrar datos del lote anterior).
+        if (this.hoverCodActual !== null) {
+          this.zone.run(() => this.ocultarHover());
+        }
+        // 3) Guardamos solo el último evento; el throttle procesa el más reciente.
+        this.hoverPendingEvt = { coordinate, pixel };
         if (this.hoverMoveTimer !== null) return;
         this.hoverMoveTimer = setTimeout(() => {
           this.hoverMoveTimer = null;
           const pendiente = this.hoverPendingEvt;
           this.hoverPendingEvt = null;
           if (pendiente) this.procesarHover(pendiente.coordinate, pendiente.pixel);
-        }, 120);
+        }, MapService.HOVER_DEBOUNCE_MS);
       });
       // Ocultamos el popup al salir del lienzo del mapa
       olMap.getViewport().addEventListener('mouseleave', () => {
@@ -980,8 +1026,16 @@ export class MapService {
   }
 
   /**
-   * Procesa un movimiento pendiente: identifica el lote bajo el cursor
-   * (GetFeatureInfo sobre la capa 'lote') y actualiza el popup hover.
+   * Procesa un movimiento pendiente: si el lote bajo el cursor todavía no se
+   * conoce, lo identifica con un GetFeatureInfo sobre la capa 'lote'.
+   *
+   * Reglas para no repetir llamadas:
+   *  - solo se permite un GetFeatureInfo simultáneo (el resto de posiciones
+   *    quedan en `hoverInfoPendiente` y se resuelven al recibir la respuesta);
+   *  - se descarta el requerimiento si el cursor no se desplazó al menos
+   *    `HOVER_MIN_PIXELES` desde la última consulta (ruido del puntero);
+   *  - la geometría devuelta se guarda en `hoverGeometriasCache`, así que en
+   *    adelante ese lote se resuelve localmente (sin llamar al servicio).
    */
   private procesarHover(coordinate: Coordinate, pixel: number[]): void {
     const pixelX = pixel[0], pixelY = pixel[1];
@@ -994,53 +1048,161 @@ export class MapService {
     if (!view || !source) { this.zone.run(() => this.limpiarHover()); return; }
     const resolution = view.getResolution();
     if (!resolution) { this.zone.run(() => this.limpiarHover()); return; }
+    // Una sola consulta simultánea: guardamos la última posición y salimos.
+    if (this.hoverInfoEnCurso > 0) {
+      this.hoverInfoPendiente = { coordinate: [...coordinate], pixel: [pixelX, pixelY] };
+      return;
+    }
+    // Micro-movimiento sobre una zona ya consultada: no repetimos la llamada.
+    if (this.esMovimientoInsignificante(coordinate, resolution)) return;
     const url = source.getFeatureInfoUrl(coordinate, resolution, view.getProjection(), MapService.FEATURE_INFO_PARAMS);
-    if (!url) { this.zone.run(() => this.limpiarHover()); return; }
+    if (!url) { this.zone.run(() => this.ocultarHover()); return; }
+    this.hoverUltimaConsulta = { coordinate: [...coordinate], resolution };
     const requestId = ++this.hoverRequestId;
+    this.hoverInfoEnCurso++;
     this.http.get<WfsResponse>(url).pipe(take(1)).subscribe({
       next: response => {
-        if (requestId !== this.hoverRequestId) return; // Respuesta obsoleta
-        const props = response?.features?.[0]?.properties ?? {};
+        this.hoverInfoEnCurso = Math.max(0, this.hoverInfoEnCurso - 1);
+        const feature = response?.features?.[0];
+        const props = feature?.properties ?? {};
         const codigo = String(props['id_lote'] ?? props['codlote'] ?? props['codigo_lote'] ?? '').trim();
+        // Guardamos la geometría incluso si la respuesta ya es obsoleta: sirve
+        // para resolver por hit test local las próximas posiciones.
+        if (codigo && codigo !== 'undefined') {
+          this.cachearGeometriaHover(codigo, feature, view.getProjection()?.getCode());
+        }
         this.zone.run(() => {
-          if (!codigo || codigo === 'undefined') { this.limpiarHover(); return; }
-          // Confirmado que hay un lote bajo el cursor: posicionamos el popup
-          this.loteHoverPosicion.set({ x: pixelX, y: pixelY });
-          if (codigo === this.hoverCodActual) {
-            // Mismo lote: solo movemos el popup junto al cursor
-            this.loteHoverPosicion.set({ x: pixelX, y: pixelY });
-            return;
+          if (requestId === this.hoverRequestId) {
+            if (codigo && codigo !== 'undefined') {
+              this.mostrarHoverDeLote(codigo, pixelX, pixelY);
+            } else {
+              this.ocultarHover(); // Sin lote bajo el cursor
+            }
           }
-          this.hoverCodActual = codigo;
-          const cacheado = this.loteDatosCache.get(codigo);
-          if (cacheado) {
-            this.loteHoverDatos.set(cacheado);
-            this.loteHoverCargando.set(false);
-          } else {
-            this.loteHoverDatos.set(null);
-            this.loteHoverCargando.set(true);
-            this.listarDatosLote(codigo).pipe(take(1)).subscribe(datos => {
-              if (requestId !== this.hoverRequestId) return; // Obsoleta
-              if (datos) this.loteDatosCache.set(codigo, datos);
-              if (this.hoverCodActual === codigo) {
-                this.loteHoverDatos.set(datos);
-                this.loteHoverCargando.set(false);
-              }
-            });
-          }
+          this.procesarHoverPendiente(); // Resolvemos la última posición conocida
         });
       },
-      error: () => { /* silencioso: el hover no debe molestar con errores de red */ }
+      error: () => {
+        this.hoverInfoEnCurso = Math.max(0, this.hoverInfoEnCurso - 1);
+        // silencioso: el hover no debe molestar con errores de red
+        this.zone.run(() => this.procesarHoverPendiente());
+      }
     });
   }
 
-  /** Oculta el popup hover y resetea el estado de la consulta en curso. */
-  private limpiarHover(): void {
-    this.hoverRequestId++;
+  /**
+   * Procesa la posición que quedó pendiente mientras había una consulta en
+   * curso. Si esa posición cae dentro de un lote ya cacheado no habrá llamada.
+   */
+  private procesarHoverPendiente(): void {
+    const pendiente = this.hoverInfoPendiente;
+    this.hoverInfoPendiente = null;
+    if (pendiente) this.procesarHover(pendiente.coordinate, pendiente.pixel);
+  }
+
+  /**
+   * Busca en `hoverGeometriasCache` el lote que contiene la coordenada dada
+   * (se comprueba primero el lote actual, que es el caso más frecuente).
+   * @param coordinate Coordenada en la proyección de la vista.
+   * @returns Código del lote encontrado o `null` si el cursor está fuera de
+   * todos los lotes ya consultados.
+   */
+  private buscarLoteEnCacheHover(coordinate: Coordinate): string | null {
+    const actual = this.hoverCodActual;
+    if (actual) {
+      const geometriaActual = this.hoverGeometriasCache.get(actual);
+      if (geometriaActual?.intersectsCoordinate(coordinate)) return actual;
+    }
+    for (const [codigo, geometria] of this.hoverGeometriasCache) {
+      if (codigo === actual) continue;
+      if (geometria.intersectsCoordinate(coordinate)) return codigo;
+    }
+    return null;
+  }
+
+  /**
+   * Guarda la geometría del lote (en la proyección de la vista) para el hit
+   * test local. La caché es FIFO y limitada (`HOVER_MAX_GEOMETRIAS`) para no
+   * crecer sin control al recorrer todo el distrito.
+   */
+  private cachearGeometriaHover(codigo: string, feature: GeoJSONFeature | undefined, srsVista?: string): void {
+    if (!feature?.geometry) return;
+    try {
+      const geometria = new GeoJSON().readGeometry(feature.geometry, {
+        dataProjection: srsVista,
+        featureProjection: srsVista
+      });
+      if (!geometria) return;
+      this.hoverGeometriasCache.set(codigo, geometria);
+      if (this.hoverGeometriasCache.size > MapService.HOVER_MAX_GEOMETRIAS) {
+        const masAntigua = this.hoverGeometriasCache.keys().next().value;
+        if (masAntigua !== undefined) this.hoverGeometriasCache.delete(masAntigua);
+      }
+    } catch {
+      // Geometría no interpretable: ese lote se seguirá resolviendo por red
+    }
+  }
+
+  /**
+   * Muestra (o actualiza) el popup del lote indicado: mueve la posición junto
+   * al cursor y consulta los datos del API solo la primera vez por lote
+   * (`loteDatosCache` evita repetir la llamada a listar-datos-lote).
+   */
+  private mostrarHoverDeLote(codigo: string, x: number, y: number): void {
+    // Evitamos re-renderizar cuando no cambió ni el lote ni la posición exacta
+    const posicionActual = this.loteHoverPosicion();
+    if (codigo === this.hoverCodActual && posicionActual?.x === x && posicionActual?.y === y) return;
+    this.loteHoverPosicion.set({ x, y });
+    if (codigo === this.hoverCodActual) return; // Mismo lote: solo movemos el popup
+    this.hoverCodActual = codigo;
+    const cacheado = this.loteDatosCache.get(codigo);
+    if (cacheado) {
+      this.loteHoverDatos.set(cacheado);
+      this.loteHoverCargando.set(false);
+      return;
+    }
+    this.loteHoverDatos.set(null);
+    this.loteHoverCargando.set(true);
+    this.listarDatosLote(codigo).pipe(take(1)).subscribe(datos => {
+      if (datos) this.loteDatosCache.set(codigo, datos);
+      // Si el cursor ya se movió a otro lote, descartamos la respuesta tardía
+      if (this.hoverCodActual === codigo) {
+        this.loteHoverDatos.set(datos);
+        this.loteHoverCargando.set(false);
+      }
+    });
+  }
+
+  /**
+   * Indica si la coordenada está tan cerca de la última consulta que no merece
+   * una nueva llamada al servicio (evita repetir la petición con el temblor
+   * natural del puntero). Se compara en unidades de mapa usando la resolución
+   * actual, es decir, en píxeles de pantalla.
+   */
+  private esMovimientoInsignificante(coordinate: Coordinate, resolution: number): boolean {
+    const ultima = this.hoverUltimaConsulta;
+    if (!ultima) return false;
+    if (ultima.resolution !== resolution) return false; // Cambió el zoom: consultamos
+    const dx = coordinate[0] - ultima.coordinate[0];
+    const dy = coordinate[1] - ultima.coordinate[1];
+    const minimo = resolution * MapService.HOVER_MIN_PIXELES;
+    return Math.sqrt(dx * dx + dy * dy) < minimo;
+  }
+
+  /** Oculta el popup hover sin invalidar las consultas en curso. */
+  private ocultarHover(): void {
     this.hoverCodActual = null;
     this.loteHoverDatos.set(null);
     this.loteHoverCargando.set(false);
     this.loteHoverPosicion.set(null);
+  }
+
+  /** Oculta el popup hover y resetea el estado de las consultas del hover. */
+  private limpiarHover(): void {
+    this.hoverRequestId++;
+    this.hoverInfoPendiente = null;
+    this.hoverUltimaConsulta = null;
+    this.ocultarHover();
   }
 
 

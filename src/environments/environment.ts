@@ -3,6 +3,13 @@ export const environment = {
   version: 'v. 1.0.0',
   ambiente: 'Desarrollo',
 
+  // --- API DEL GEOVISOR (WSGEOVISOR) ---
+  // Prefijo base de los endpoints del API del Geovisor (p. ej. "listar-datos-lote",
+  // "listar-via-numero"), cuya ruta real es /WSGEOVISOR/api/geovisor/<endpoint>.
+  // En desarrollo la resuelve el proxy (proxy.conf) y en QA/Prod el proxy inverso
+  // Nginx (same-origin).
+  geovisorApiUrl: '/WSGEOVISOR/api/geovisor',
+
   // --- ENCUESTA DE SALIDA ---
   // Se abre en una pestaña nueva cuando el usuario confirma el cierre de sesión
   // o sale del geovisor.

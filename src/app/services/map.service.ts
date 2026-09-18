@@ -767,7 +767,7 @@ export class MapService {
     // URL relativa centralizada en el environment (proxy inverso Nginx en QA/Prod)
     const path = `${environment.geovisorApiUrl}/listar-datos-lote`;
     // Misma estrategia de hosts que listarViaNumeros
-    const hosts = ['', 'https://test.munisanisidro.gob.pe', 'https://www.munisanisidro.gob.pe'];
+    const hosts = ['', 'https://test.munisanisidro.gob.pe'];
     const params = new HttpParams().set('pvcCODLOTE', codigo);
     const request = (url: string): Observable<LoteDatosHover | null> =>
       this.http.get<{ status?: number; data?: LoteDatosHover[] }>(url ? url + path : path, { params }).pipe(

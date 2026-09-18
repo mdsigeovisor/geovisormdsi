@@ -58,9 +58,11 @@ import {
   getDistance,
   ImageLayer,
   ImageWMS,
+  ImageTile,
   Layer,
   LineString,
   OlMap,
+  OlTile,
   Overlay,
   Point,
   ScaleLine,
@@ -68,6 +70,7 @@ import {
   Style,
   Text,
   TileLayer,
+  TileState,
   transform,
   transformExtent,
   VectorLayer,
@@ -549,6 +552,95 @@ export class MapService {
     });
   }
   /**
+   * Función de carga de tiles validada: descarga el tile con `fetch`, verifica
+   * que la respuesta sea realmente una imagen decodificable y solo entonces la
+   * asigna al `<img>` del tile. Si el servidor responde con un error HTTP, HTML
+   * o un cuerpo corrupto, el tile se marca en estado ERROR de forma controlada.
+   * Esto evita el rechazo no manejado "EncodingError: The source image cannot
+   * be decoded" que el navegador registraba al cargar el visor.
+   */
+  private readonly tileLoadFunction = (tile: OlTile, src: string): void => {
+    const imageTile = tile as ImageTile;
+    const img = imageTile.getImage() as HTMLImageElement;
+    fetch(src, { mode: 'cors' })
+      .then(async (respuesta) => {
+        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+        const blob = await respuesta.blob();
+        // Si el servidor declara un tipo que no es imagen, fallamos de una vez.
+        if (blob.type && !blob.type.startsWith('image/')) {
+          throw new Error(`Tipo de respuesta no soportado: ${blob.type}`);
+        }
+        // Validación definitiva: intentamos decodificar nosotros (capturando
+        // cualquier EncodingError dentro de nuestra promesa, no en la de OL).
+        await createImageBitmap(blob);
+        const url = URL.createObjectURL(blob);
+        img.onload = () => URL.revokeObjectURL(url);
+        img.src = url;
+      })
+      .catch(() => {
+        // Cancelamos cualquier decodificación pendiente y marcamos el tile
+        // como error: OL mostrará un hueco y lo reintentará si hace falta.
+        // IMPORTANTE: usamos removeAttribute y NO `src = ''`, porque asignar
+        // una cadena vacía dispara el evento `error` del <img> y OL lo registra
+        // como "Error: Image load error" en consola.
+        img.removeAttribute('src');
+        // ImageTile admite setState; el envoltorio de ImageWMS transiciona a
+        // ERROR por su cuenta al fallar la carga de la imagen.
+        if (typeof (imageTile as { setState?: (s: number) => void }).setState === 'function') {
+          imageTile.setState(TileState.ERROR);
+        }
+      });
+  };
+  /** Píxel PNG transparente de 1x1: sustituto seguro cuando el WMS no devuelve una imagen. */
+  private static readonly TRANSPARENT_PIXEL =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  /**
+   * Función de carga validada para capas ImageWMS: descarga la imagen GetMap
+   * con `fetch` y solo la asigna al `<img>` si es una imagen decodificable.
+   * Si el servidor responde con un error HTTP o con un XML de ServiceException
+   * (p. ej. capa inexistente), se asigna un píxel transparente en su lugar, de
+   * modo que el `decode()` interno de OpenLayers resuelve sin lanzar el
+   * `EncodingError: The source image cannot be decoded` que ensuciaba la
+   * consola al cargar el visor (Image.js hace `console.error` de ese rechazo).
+   * Si el `fetch` falla por CORS/red (TypeError), se delega a la vía normal
+   * (`img.src = src`), ya que el `<img>` sí puede mostrar la imagen aunque el
+   * `fetch` esté bloqueado.
+   */
+  private readonly wmsImageLoadFunction = (image: any, src: string): void => {
+    const img = (image?.getImage?.() ?? image) as HTMLImageElement;
+    if (!src) {
+      img.src = MapService.TRANSPARENT_PIXEL;
+      return;
+    }
+    fetch(src, { mode: 'cors' })
+      .then(async (respuesta) => {
+        if (!respuesta.ok) throw new Error(`WMS HTTP ${respuesta.status}`);
+        const blob = await respuesta.blob();
+        // GeoServer responde los errores (capa inexistente, BBOX inválido,
+        // etc.) como XML: si no es imagen, no intentamos decodificarlo.
+        if (blob.type && !blob.type.startsWith('image/')) {
+          throw new Error(`WMS no imagen: ${blob.type || 'sin tipo'}`);
+        }
+        if (typeof createImageBitmap === 'function') {
+          await createImageBitmap(blob);
+        }
+        const url = URL.createObjectURL(blob);
+        img.addEventListener('load', () => URL.revokeObjectURL(url), { once: true });
+        img.src = url;
+      })
+      .catch((error: unknown) => {
+        if (error instanceof TypeError) {
+          // Probable bloqueo CORS o fallo de red: el <img> puede cargar la
+          // imagen aunque el fetch no (la carga de imágenes no exige CORS).
+          img.src = src;
+        } else {
+          // El servidor respondió algo que no es imagen decodificable:
+          // píxel transparente para que decode() resuelva sin EncodingError.
+          img.src = MapService.TRANSPARENT_PIXEL;
+        }
+      });
+  };
+  /**
    * Configura las capas base de Google y OSM.
    */
   private setupBaseLayers(): void {
@@ -558,7 +650,8 @@ export class MapService {
       transition: 1000,
       interpolate: true, // Evita que se vean cuadrados pixelados al hacer zoom
       maxZoom: 19,
-      wrapX: true
+      wrapX: true,
+      tileLoadFunction: this.tileLoadFunction
     });
     const streetsSource = new XYZ({
       url: OSM_URL,
@@ -567,6 +660,7 @@ export class MapService {
       interpolate: true,
       maxZoom: 19,
       wrapX: true,
+      tileLoadFunction: this.tileLoadFunction,
       tileUrlFunction: (tileCoord) => {
         if (!tileCoord) {
           return undefined;
@@ -596,7 +690,7 @@ export class MapService {
     this.addWmsLayer({
       id: 'tg_departamentos',
       url: TRAMA_WMS_URL,
-      layerName: 'SIDES_GIS:tg_departamentos',
+      layerName: 'WEB_GIS:tg_departamentos',
       version: '1.1.0',
       zIndex: 5, // zIndex para posicionarse sobre el mapa base
       title: 'Departamento del Perú',
@@ -668,7 +762,8 @@ export class MapService {
           'TRANSPARENT': true
         },
         crossOrigin: 'anonymous',
-        serverType: 'geoserver'
+        serverType: 'geoserver',
+        imageLoadFunction: this.wmsImageLoadFunction
       }),
       className: options.className ?? options.id, // Aplicamos la clase CSS a la capa
       zIndex: options.zIndex,
@@ -693,7 +788,8 @@ export class MapService {
       url: options.url,
       crossOrigin: 'anonymous',
       maxZoom: options.maxZoom,
-      interpolate: true
+      interpolate: true,
+      tileLoadFunction: this.tileLoadFunction
     });
     const layer = new TileLayer({
       source: xyzSource,

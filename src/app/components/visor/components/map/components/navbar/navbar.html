@@ -1,5 +1,5 @@
 <nav class="fixed z-10 top-0 left-0 w-full h-16 bg-primary backdrop-blur-md text-white flex items-center justify-between px-6 border-b border-white/10">
-  <!-- Lado Izquierdo: Logo y Contador de Visitas -->
+  <!-- Lado Izquierdo: Logo -->
   <div class="flex-1 flex justify-start items-center gap-4">
     <div class="p-1.5 rounded-lg shadow-inner">
       <img #msiLogo
@@ -7,20 +7,6 @@
            alt="Municipalidad de San Isidro"
            class="h-7 sm:h-10 md:h-12 w-auto object-contain"
            (error)="msiLogo.src='https://v0.app/placeholder.svg'">
-    </div>
-    <!-- Contador de Visitas -->
-    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-white/90 rounded-md shadow-sm">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2d780e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>
-      </svg>
-      <div class="flex items-baseline gap-x-1">
-        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-600">Visitas:</span>
-        @if (cargandoVisitas()) {
-          <span class="text-sm font-bold animate-pulse" style="color: #2d780e;">...</span>
-        } @else {
-          <span class="text-base font-bold cash-register-font" [title]="visitCount() | number">{{ formatearVisitas(visitCount()) }}</span>
-        }
-      </div>
     </div>
   </div>
   <!-- Centro: Título -->

@@ -22,9 +22,11 @@
     </button>    
         <button id="btn-geolocalizacion"
             (click)="getCurrentLocation()"
-            class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer"
-            title="Mi Ubicación">
-      <i class="bi bi-geo-alt-fill text-xl"></i>
+            [disabled]="ubicacionCargando()"
+            [title]="ubicacionCargando() ? 'Obteniendo ubicación…' : 'Mi Ubicación'"
+            class="w-10 h-10 flex items-center justify-center bg-primary backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:scale-105 transition-all active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-wait disabled:hover:scale-100 disabled:hover:bg-primary">
+      <i class="bi text-xl" [class.bi-arrow-repeat]="ubicacionCargando()" [class.animate-spin]="ubicacionCargando()"
+         [class.bi-geo-alt-fill]="!ubicacionCargando()"></i>
     </button>
         <button id="btn-cambio-base"
             (click)="toggleBaseLayer()"
@@ -93,8 +95,10 @@
 <!-- Marcador de Usuario (Punto Azul GPS) -->
 <div #userMarker
      style="display: none;"
-     class="flex h-10 w-10 items-center justify-center pointer-events-none z-10">
-  <!-- Efecto de pulso exterior (Halo) -->
+     class="relative flex h-10 w-10 items-center justify-center pointer-events-none z-10">
+  <!-- Efecto de pulso exterior (Halo): `relative` en el contenedor hace que el
+       halo (position:absolute) se dimensione sobre estos 40px y no sobre el
+       contenedor de overlays de OpenLayers. -->
   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400/60"></span>
 
   <!-- Punto central sólido con borde blanco para contraste -->

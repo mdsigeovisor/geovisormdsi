@@ -1745,6 +1745,10 @@ export class MapService {
   /**
    * Desplaza un punto (lon, lat) en metros en coordenadas proyectadas (EPSG:3857)
    * dx: desplazamiento en metros hacia el este (+), dy: hacia el norte (+)
+   *
+   * OJO: devuelve [lon, lat] en grados (EPSG:4326). NO sirve para
+   * `Overlay.setPosition`, que exige la proyección de la vista; para eso usar
+   * `fromLonLat([lon, lat], map.getView().getProjection())`.
    */
   offsetLonLat(lon: number, lat: number, dx = 0, dy = 0): [number, number] {
     // Transformar a EPSG:3857, aplicar desplazamiento en metros y volver a EPSG:4326

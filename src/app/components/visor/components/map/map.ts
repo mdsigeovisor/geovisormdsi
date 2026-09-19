@@ -570,14 +570,14 @@ export class MapComponent {
   }
 
   /**
-   * Maneja el evento de apertura/cierre del sidebar para desplazar el mapa.
+   * Maneja el evento de apertura/cierre del sidebar.
+   * El panel es flotante (superpuesto), así que el mapa NO se desplaza:
+   * conserva su centro y su navegación. Solo se refleja el estado para que
+   * el CSS desplace la barra de escala fuera del área del panel.
    * @param isOpen El estado de apertura del sidebar.
    */
   handleSidebarToggle(isOpen: boolean): void {
-    // Reflejamos el estado para que el CSS desplace la barra de escala
     this.sidebarAbierto = isOpen;
-    // El ancho del sidebar es de 400px según su CSS.
-    this.mapService.panMapForSidebar(isOpen, 400);
   }
 }
 

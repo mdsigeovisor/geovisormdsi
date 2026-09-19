@@ -20,6 +20,37 @@
 }
 
 /*
+ * Panel flotante del sidebar: tarjeta superpuesta al mapa (no lo desplaza).
+ * Al cerrarse se desvanece y deja de interceptar eventos (`visibility` +
+ * `pointer-events`), por lo que el mapa conserva su centro y sigue siendo
+ * arrastrable y consultable en toda el área que el panel deja libre.
+ * `visibility` con retardo oculta el panel al terminar el fundido de salida
+ * (y lo muestra al inicio del de entrada), sacándolo también del orden de tab.
+ */
+.panel-flotante {
+  opacity: 0;
+  transform: translateX(-12px) scale(0.98);
+  transform-origin: top left;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out,
+    visibility 0s linear 0.3s;
+}
+
+.panel-flotante.abierto {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out,
+    visibility 0s;
+}
+
+/*
  * Animaciones para la tarjeta flotante de "Acerca de".
  * Se definen aquí (y no se reutilizan las de map.css) porque
  * los estilos de componentes están encapsulados en Angular.

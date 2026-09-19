@@ -6,14 +6,14 @@
       <button (click)="activeTab = 'catastral'"
         [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'catastral', 'text-gray-800 hover:bg-gray-50': activeTab !== 'catastral'}"
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
-        <div class="text-xl"
+        <div class="text-base"
           [ngClass]="{'text-white/80': activeTab === 'catastral', 'text-primary/80': activeTab !== 'catastral'}"><i
             class="bi bi-house-door-fill"></i></div>
         <div>
-          <h3 class="font-bold text-sm leading-tight"
+          <h3 class="font-bold text-[11px] leading-tight"
             [ngClass]="{'text-white': activeTab === 'catastral', 'text-gray-800': activeTab !== 'catastral'}">Por Código
             Catastral</h3>
-          <p class="text-xs mt-0.5"
+          <p class="text-[10px] mt-0.5"
             [ngClass]="{'text-white/80': activeTab === 'catastral', 'text-gray-500': activeTab !== 'catastral'}">
             Búsqueda precisa usando el código de Sector, Manzana y Lote.</p>
         </div>
@@ -23,12 +23,12 @@
       <button (click)="activeTab = 'cuc'"
         [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'cuc', 'text-gray-800 hover:bg-gray-50': activeTab !== 'cuc'}"
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
-        <div class="text-xl" [ngClass]="{'text-white/80': activeTab === 'cuc', 'text-primary/80': activeTab !== 'cuc'}">
+        <div class="text-base" [ngClass]="{'text-white/80': activeTab === 'cuc', 'text-primary/80': activeTab !== 'cuc'}">
           <i class="bi bi-upc-scan"></i></div>
         <div>
-          <h3 class="font-bold text-sm leading-tight"
+          <h3 class="font-bold text-[11px] leading-tight"
             [ngClass]="{'text-white': activeTab === 'cuc', 'text-gray-800': activeTab !== 'cuc'}">Por Código CUC</h3>
-          <p class="text-xs mt-0.5"
+          <p class="text-[10px] mt-0.5"
             [ngClass]="{'text-white/80': activeTab === 'cuc', 'text-gray-500': activeTab !== 'cuc'}">Búsqueda por Código
             Único Catastral.</p>
         </div>
@@ -38,14 +38,14 @@
       <button (click)="activeTab = 'predial'"
         [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'predial', 'text-gray-800 hover:bg-gray-50': activeTab !== 'predial'}"
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
-        <div class="text-xl"
+        <div class="text-base"
           [ngClass]="{'text-white/80': activeTab === 'predial', 'text-primary/80': activeTab !== 'predial'}"><i
             class="bi bi-file-earmark-text"></i></div>
         <div>
-          <h3 class="font-bold text-sm leading-tight"
+          <h3 class="font-bold text-[11px] leading-tight"
             [ngClass]="{'text-white': activeTab === 'predial', 'text-gray-800': activeTab !== 'predial'}">Por Código
             Predial</h3>
-          <p class="text-xs mt-0.5"
+          <p class="text-[10px] mt-0.5"
             [ngClass]="{'text-white/80': activeTab === 'predial', 'text-gray-500': activeTab !== 'predial'}">Búsqueda
             por el código de predio.</p>
         </div>
@@ -54,14 +54,14 @@
       <button (click)="activeTab = 'direccion'"
         [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'direccion', 'text-gray-800 hover:bg-gray-50': activeTab !== 'direccion'}"
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
-        <div class="text-xl"
+        <div class="text-base"
           [ngClass]="{'text-white/80': activeTab === 'direccion', 'text-primary/80': activeTab !== 'direccion'}"><i
             class="bi bi-geo-alt-fill"></i></div>
         <div>
-          <h3 class="font-bold text-sm leading-tight"
+          <h3 class="font-bold text-[11px] leading-tight"
             [ngClass]="{'text-white': activeTab === 'direccion', 'text-gray-800': activeTab !== 'direccion'}">Por
             Dirección</h3>
-          <p class="text-xs mt-0.5"
+          <p class="text-[10px] mt-0.5"
             [ngClass]="{'text-white/80': activeTab === 'direccion', 'text-gray-500': activeTab !== 'direccion'}">
             Encuentra un predio usando el nombre de la vía y número.</p>
         </div>
@@ -70,14 +70,14 @@
       <button (click)="activeTab = 'habilitacion'"
         [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'habilitacion', 'text-gray-800 hover:bg-gray-50': activeTab !== 'habilitacion'}"
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
-        <div class="text-xl"
+        <div class="text-base"
           [ngClass]="{'text-white/80': activeTab === 'habilitacion', 'text-primary/80': activeTab !== 'habilitacion'}">
           <i class="bi bi-map"></i></div>
         <div>
-          <h3 class="font-bold text-sm leading-tight"
+          <h3 class="font-bold text-[11px] leading-tight"
             [ngClass]="{'text-white': activeTab === 'habilitacion', 'text-gray-800': activeTab !== 'habilitacion'}">Por
             Habilitación Urbana</h3>
-          <p class="text-xs mt-0.5"
+          <p class="text-[10px] mt-0.5"
             [ngClass]="{'text-white/80': activeTab === 'habilitacion', 'text-gray-500': activeTab !== 'habilitacion'}">
             Busca por habilitación, manzana y lote.</p>
         </div>
@@ -86,14 +86,14 @@
       <button (click)="activeTab = 'parque'"
         [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'parque', 'text-gray-800 hover:bg-gray-50': activeTab !== 'parque'}"
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
-        <div class="text-xl"
+        <div class="text-base"
           [ngClass]="{'text-white/80': activeTab === 'parque', 'text-primary/80': activeTab !== 'parque'}"><i
             class="bi bi-tree"></i></div>
         <div>
-          <h3 class="font-bold text-sm leading-tight"
+          <h3 class="font-bold text-[11px] leading-tight"
             [ngClass]="{'text-white': activeTab === 'parque', 'text-gray-800': activeTab !== 'parque'}">Por Nombre de
             Parque</h3>
-          <p class="text-xs mt-0.5"
+          <p class="text-[10px] mt-0.5"
             [ngClass]="{'text-white/80': activeTab === 'parque', 'text-gray-500': activeTab !== 'parque'}">Busca un
             parque por su nombre.</p>
         </div>
@@ -103,13 +103,13 @@
       <button (click)="activeTab = 'titular'"
         [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'titular', 'text-gray-800 hover:bg-gray-50': activeTab !== 'titular'}"
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
-        <div class="text-xl" [ngClass]="{'text-white/80': activeTab === 'titular', 'text-primary/80': activeTab !== 'titular'}">
+        <div class="text-base" [ngClass]="{'text-white/80': activeTab === 'titular', 'text-primary/80': activeTab !== 'titular'}">
           <i class="bi bi-person-badge"></i></div>
         <div>
-          <h3 class="font-bold text-sm leading-tight"
+          <h3 class="font-bold text-[11px] leading-tight"
             [ngClass]="{'text-white': activeTab === 'titular', 'text-gray-800': activeTab !== 'titular'}">Por Titular
             Catastral</h3>
-          <p class="text-xs mt-0.5"
+          <p class="text-[10px] mt-0.5"
             [ngClass]="{'text-white/80': activeTab === 'titular', 'text-gray-500': activeTab !== 'titular'}">Busca por
             apellido o razón social del titular.</p>
         </div>
@@ -119,15 +119,14 @@
       <button
         class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"
         disabled title="Próximamente disponible">
-        <div class="text-primary/80 text-xl"><i class="bi bi-building-check"></i></div>
+        <div class="text-primary/80 text-base"><i class="bi bi-building-check"></i></div>
         <div>
-          <h3 class="font-bold text-sm text-gray-800 leading-tight">Por Denominación</h3>
-          <p class="text-xs text-gray-500 mt-0.5">Busca un predio por su nombre o denominación.</p>
+          <h3 class="font-bold text-[11px] text-gray-800 leading-tight">Por Denominación</h3>
+          <p class="text-[10px] text-gray-500 mt-0.5">Busca un predio por su nombre o denominación.</p>
         </div>
       </button>
     </div>
   </div>
-
   <!-- Fila Inferior: Contenido y Acciones -->
   <div class="flex-1 flex flex-col pt-4">
     <!-- Contenido de Tabs -->
@@ -141,10 +140,10 @@
             Catastral</label>
           <div class="relative w-fit mx-auto text-center">
             <span
-              class="absolute inset-y-0 left-0 flex items-center pl-4 pr-2 pointer-events-none text-xl font-mono text-primary/40 font-black tracking-widest">31-</span>
+              class="absolute inset-y-0 left-0 flex items-center pl-4 pr-2 pointer-events-none text-[13px] font-mono text-primary/40 font-bold tracking-widest">31-</span>
             <input id="codigoCatastralInput" type="text" [(ngModel)]="codigoCatastral"
               (ngModelChange)="handleCodigoCatastralChange($event)" placeholder="00-000-000" maxlength="10"
-              class="w-full bg-primary/5 border-2 border-primary/10 rounded-xl p-3 text-xl font-mono text-center tracking-widest focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-black transition-all">
+              class="w-full bg-primary/5 border-2 border-primary/10 rounded-xl px-3 py-2 text-[13px] font-mono text-center tracking-widest focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-bold transition-all">
           </div>
           @if (searchError()) {
           <div
@@ -167,7 +166,7 @@
             class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Código Único
             Catastral (CUC)</label>
           <input id="cucInput" type="text" [(ngModel)]="cuc" placeholder="00000000" maxlength="8" inputmode="numeric"
-            class="w-full bg-primary/5 border-2 border-primary/10 rounded-xl p-3 text-xl font-mono text-center tracking-[0.2em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-black transition-all">
+            class="w-full bg-primary/5 border-2 border-primary/10 rounded-xl px-3 py-2 text-[13px] font-mono text-center tracking-[0.15em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-bold transition-all">
 
           <p class="mt-3 text-[10px] text-gray-400 text-center italic">
             Ingrese los 08 dígitos del CUC para encontrar el predio.
@@ -241,7 +240,7 @@
             class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Código
             Predial</label>
           <input id="predialInput" type="text" [(ngModel)]="codigoPredial" placeholder="000000000" inputmode="numeric"
-            class="w-full bg-primary/5 border-2 border-primary/10 rounded-xl p-3 text-xl font-mono text-center tracking-[0.2em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-black transition-all">
+            class="w-full bg-primary/5 border-2 border-primary/10 rounded-xl px-3 py-2 text-[13px] font-mono text-center tracking-[0.15em] focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-bold transition-all">
 
           <p class="mt-3 text-[10px] text-gray-400 text-center italic">
             Ingrese el código del predio para encontrarlo.

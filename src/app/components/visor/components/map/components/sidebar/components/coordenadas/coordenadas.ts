@@ -1,11 +1,11 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, ViewChild, ElementRef, Output, EventEmitter, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Feature, Fill, fromLonLat, Overlay, Point, Stroke, Style, transform, VectorLayer, VectorSource } from '@app/modules/openlayers.module';
 import { Coordinate } from 'ol/coordinate';
 import CircleStyle from 'ol/style/Circle';
 import { MapService } from '@app/services/map.service';
-import { ANIMATION_DURATION, ZOOM_LEVEL_LOCATION } from '@app/interfaces/mapas.config';
+import { ANIMATION_DURATION, SAN_ISIDRO_EXTENT, ZOOM_LEVEL_LOCATION } from '@app/interfaces/mapas.config';
 
 
 
@@ -31,7 +31,8 @@ export class UbicacionCoordenadas implements OnInit, OnDestroy {
   public coordSystem: 'GEOGRAFICA' | 'UTM' = 'GEOGRAFICA';
   public este: number | null = null;
   public norte: number | null = null;
-  public zona: '17S' | '18S' | '19S' | null = '18S';
+  /** San Isidro estÃ¡ Ã­ntegramente en la zona UTM 18S: es fija, sin selector. */
+  private static readonly ZONA_UTM_SAN_ISIDRO = 'EPSG:32718';
   public latitud: number | null = null;
   public longitud: number | null = null;
   public errorMensaje: string | null = null;
@@ -61,43 +62,50 @@ export class UbicacionCoordenadas implements OnInit, OnDestroy {
   buscarPorCoordGeograficas(): void {
     if (this.latitud === null || this.longitud === null ||
       typeof this.latitud !== 'number' || typeof this.longitud !== 'number') {
-      this.errorMensaje = 'Por favor, ingrese valores numéricos para Latitud y Longitud.';
-      return;
-    }
-
-    if (this.latitud < -19 || this.latitud > 0) {
-      this.errorMensaje = 'La Latitud para Perú debe estar entre 0 y -19.';
-      return;
-    }
-
-    if (this.longitud < -82 || this.longitud > -68) {
-      this.errorMensaje = 'La Longitud para Perú debe estar entre -82 y -68.';
+      this.errorMensaje = 'Por favor, ingrese valores numÃ©ricos para Latitud y Longitud.';
       return;
     }
 
     const coordDestino = fromLonLat([this.longitud, this.latitud])
+    if (!this.estaEnElDistrito(coordDestino)) {
+      this.errorMensaje = 'La coordenada ingresada estÃ¡ fuera del distrito de San Isidro.';
+      return;
+    }
     this.irACoordenada(coordDestino);
   }
 
   buscarPorCoordUTM() {
-    if (this.este === null || this.norte === null || this.zona === null ||
+    if (this.este === null || this.norte === null ||
       typeof this.este !== 'number' || typeof this.norte !== 'number') {
-      this.errorMensaje = 'Por favor, ingrese valores numéricos para Este, Norte y seleccione una Zona.';
+      this.errorMensaje = 'Por favor, ingrese valores numÃ©ricos para Este y Norte.';
       return;
     }
 
-    if (this.este < 100000 || this.este > 1000000) {
-      this.errorMensaje = 'El valor "Este" parece estar fuera del rango típico para Perú (100,000 - 1,000,000).';
+    const coordDestino = transform([this.este, this.norte], UbicacionCoordenadas.ZONA_UTM_SAN_ISIDRO, 'EPSG:3857')
+    if (!this.estaEnElDistrito(coordDestino)) {
+      this.errorMensaje = 'La coordenada ingresada estÃ¡ fuera del distrito de San Isidro.';
       return;
     }
-
-    if (this.norte < 8000000 || this.norte > 10000000) {
-      this.errorMensaje = 'El valor "Norte" parece estar fuera del rango típico para Perú (8,000,000 - 10,000,000).';
-      return;
-    }
-
-    const coordDestino = transform([this.este, this.norte], this.obtenerSistemaCoordUtm(this.zona), 'EPSG:3857')
     this.irACoordenada(coordDestino);
+  }
+
+  /**
+   * Indica si una coordenada (en la proyecciÃ³n del mapa, EPSG:3857) cae dentro
+   * del distrito de San Isidro. Se usa `SAN_ISIDRO_EXTENT` (bounding box del
+   * distrito en EPSG:32718, la misma referencia del aviso de TÃ©rminos), con un
+   * pequeÃ±o margen para no rechazar puntos vÃ¡lidos del borde por el redondeo
+   * de la transformaciÃ³n de coordenadas.
+   */
+  private estaEnElDistrito(coordenada3857: Coordinate): boolean {
+    const vista = this.mapService.map()?.getView().getProjection() ?? 'EPSG:3857';
+    const utm = transform(coordenada3857, vista, 'EPSG:32718');
+    const margen = 50; // metros de tolerancia en el borde del distrito
+    return (
+      utm[0] >= SAN_ISIDRO_EXTENT[0] - margen &&
+      utm[0] <= SAN_ISIDRO_EXTENT[2] + margen &&
+      utm[1] >= SAN_ISIDRO_EXTENT[1] - margen &&
+      utm[1] <= SAN_ISIDRO_EXTENT[3] + margen
+    );
   }
 
   irACoordenada(coordenada: Coordinate) {
@@ -135,16 +143,6 @@ export class UbicacionCoordenadas implements OnInit, OnDestroy {
     }
   }
 
-  obtenerSistemaCoordUtm(zona: string): string {
-    switch (zona) {
-      case '17S':
-        return 'EPSG:32717';
-      case '19S':
-        return 'EPSG:32719';
-      default:
-        return 'EPSG:32718';
-    }
-  }
 
   limpiarUbicacion(): void {
     this.latitud = null;
@@ -152,7 +150,6 @@ export class UbicacionCoordenadas implements OnInit, OnDestroy {
 
     this.este = null;
     this.norte = null;
-    this.zona = '18S';
 
     this.errorMensaje = null;
     this.borrarPunto();

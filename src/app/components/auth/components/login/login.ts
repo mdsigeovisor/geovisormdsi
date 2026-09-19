@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription, take } from 'rxjs';
 import { AuthService } from '../../../../services/auth.service';
 
 const CLAVE_RECORDADA = 'gmsi_usuario_recordado';
@@ -41,15 +42,8 @@ export class Login implements AfterViewInit, OnDestroy {
   error = signal<string | null>(null);
   mostrarClave = signal(false);
 
-  /**
-   * Credenciales de DEMOSTRACIÓN mientras no exista backend real.
-   * Al conectar el servicio HTTP de autenticación, reemplazar la
-   * comparación de `enviar()` por la llamada al API.
-   */
-  private readonly DEMO_USUARIO = 'admin';
-  private readonly DEMO_CLAVE = '1234';
-
-  private timeoutId?: ReturnType<typeof setTimeout>;
+  /** Petición de login en curso (se cancela al destruir el modal). */
+  private peticionLogin?: Subscription;
 
   constructor() {
     // Restaura el usuario recordado de una sesión anterior (localStorage).
@@ -67,9 +61,8 @@ export class Login implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.timeoutId !== undefined) {
-      clearTimeout(this.timeoutId);
-    }
+    // Evita actualizar el estado de un componente ya destruido.
+    this.peticionLogin?.unsubscribe();
   }
 
   /** Escape cierra el modal (excepto mientras se está autenticando). */
@@ -87,7 +80,10 @@ export class Login implements AfterViewInit, OnDestroy {
     }
   }
 
-  /** Envío del formulario: valida y ejecuta la autenticación simulada. */
+  /**
+   * Envío del formulario: valida los campos y autentica contra el API de
+   * seguridad (`POST /WSGEOVISOR/api/seguridad/auth/iniciar-sesion`).
+   */
   enviar(): void {
     if (this.cargando()) return;
 
@@ -114,23 +110,26 @@ export class Login implements AfterViewInit, OnDestroy {
     this.error.set(null);
     this.cargando.set(true);
 
-    // Autenticación simulada (800 ms). Reemplazar por HTTP real.
-    this.timeoutId = setTimeout(() => {
-      this.cargando.set(false);
-
-      if (user.toLowerCase() === this.DEMO_USUARIO && pass === this.DEMO_CLAVE) {
+    // El servicio ya normaliza los errores: siempre llega `error.message` listo
+    // para mostrar (credenciales inválidas, usuario bloqueado, sin conexión…).
+    this.peticionLogin?.unsubscribe();
+    this.peticionLogin = this.authService.iniciarSesion(user, pass).pipe(take(1)).subscribe({
+      next: () => {
+        this.cargando.set(false);
+        // Solo se recuerda el nombre de usuario, nunca la contraseña.
         if (this.recordarme) {
           localStorage.setItem(CLAVE_RECORDADA, user);
         } else {
           localStorage.removeItem(CLAVE_RECORDADA);
         }
-        this.authService.login(user); // Cambia el estado de autenticación y guarda el nombre de usuario
-        this.close.emit();        // Cierra el modal
-      } else {
-        this.error.set('Usuario o contraseña incorrectos.');
+        this.close.emit(); // Cierra el modal: el navbar ya muestra al usuario
+      },
+      error: (error: Error) => {
+        this.cargando.set(false);
+        this.error.set(error?.message || 'No se pudo iniciar sesión. Intente nuevamente.');
         this.clave = '';
         this.claveInput?.nativeElement.focus();
       }
-    }, 800);
+    });
   }
 }

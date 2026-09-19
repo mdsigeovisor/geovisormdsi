@@ -10,6 +10,15 @@ export const environment = {
   // Nginx (same-origin).
   geovisorApiUrl: '/WSGEOVISOR/api/geovisor',
 
+  // --- API DE SEGURIDAD (WSGEOVISOR · módulo MSICAS) ---
+  // Prefijo base de los endpoints de seguridad (autenticación, usuarios, roles,
+  // permisos y auditoría), cuya ruta real es
+  // /WSGEOVISOR/api/seguridad/<endpoint> (p. ej. "auth/iniciar-sesion").
+  seguridadApiUrl: '/WSGEOVISOR/api/seguridad',
+  // Código del sistema con el que el API identifica al Geovisor en la tabla de
+  // sistemas del módulo de Seguridad. Se envía en cada inicio de sesión.
+  codigoSistema: 'GEOVISOR',
+
   // --- ENCUESTA DE SALIDA ---
   // Se abre en una pestaña nueva cuando el usuario confirma el cierre de sesión
   // o sale del geovisor.

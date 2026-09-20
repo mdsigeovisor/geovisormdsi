@@ -60,6 +60,13 @@
         @if (cargandoDatos()) {
           <p class="text-[11px] text-gray-500 animate-pulse">Cargando datos cualitativos y fotografía…</p>
         }
+        @if (!puedeImprimirFoto()) {
+          <p class="text-[11px] text-amber-700 flex items-start gap-1.5 leading-snug">
+            <i class="bi bi-lock-fill mt-0.5"></i>
+            <span>La <strong>fotografía del lote</strong> solo puede imprimirla un usuario autenticado.
+            Inicie sesión para incluirla en el plano.</span>
+          </p>
+        }
 
         <!-- Acción explícita para quitar el lote seleccionado -->
         <button type="button" (click)="mapService.limpiarLoteSeleccionado()"
@@ -209,5 +216,4 @@
     </div>
   </div>
 </div>
-
 

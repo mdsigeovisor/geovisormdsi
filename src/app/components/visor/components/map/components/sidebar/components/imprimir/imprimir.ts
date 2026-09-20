@@ -1,4 +1,4 @@
-import { Component, HostListener, signal, inject, effect, ViewEncapsulation } from '@angular/core';
+import { Component, HostListener, signal, computed, inject, effect, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Spinner } from '@app/animations/spinner/spinner';
@@ -6,6 +6,7 @@ import { jsPDF, GState } from 'jspdf';
 import { firstValueFrom } from 'rxjs';
 import { GeoJSON, getCenter, OlMap } from '@app/modules/openlayers.module';
 import { MapService } from '@services/map.service';
+import { AuthService } from '@services/auth.service';
 import { GeoJSONFeature } from '@app/interfaces/geoLayers';
 import { environment } from '@environments/environment';
 
@@ -34,7 +35,9 @@ const COLOR_VERDE: [number, number, number] = [70, 87, 15];         // #46570f
 })
 export class Imprimir {
   readonly mapService = inject(MapService);
-
+  readonly authService = inject(AuthService);
+  /** Solo usuarios autenticados pueden imprimir la fotografía del lote */
+  puedeImprimirFoto = computed(() => this.authService.isAuthenticated());
   /** Título editable que se estampará en el plano */
   titulo = signal('Plano de Recorte - Municipalidad de San Isidro');
   /** Orientación del papel */
@@ -236,6 +239,9 @@ export class Imprimir {
   constructor() {
     // Cuando cambia el lote seleccionado en el mapa, cargamos sus datos
     effect(() => {
+      // Dependemos también del estado de sesión: si el usuario inicia/cierra
+      // sesión con el panel abierto, se recarga o limpia la fotografía.
+      this.puedeImprimirFoto();
       const codigo = this.mapService.loteSeleccionadoCodigo();
       if (codigo) {
         void this.cargarDatosLote(codigo);
@@ -260,8 +266,9 @@ export class Imprimir {
       const feature = await firstValueFrom(this.mapService.searchLoteByCodigoCatastral(codigo));
       this.featureLote = feature ?? null;
       this.fichaUrl.set(`${environment.dataGis.informacionUrl}?codigo_i=${codigo}`);
-      // La fotografía es opcional: si falla (p. ej. CORS), se usa un enlace en el PDF
-      this.fotoLote.set(await this.obtenerFotoLote(codigo));
+      // La fotografía es un dato restringido: solo se descarga para usuarios
+      // autenticados; para el resto el PDF mostrará el aviso correspondiente.
+      this.fotoLote.set(this.puedeImprimirFoto() ? await this.obtenerFotoLote(codigo) : null);
       // La ficha pública es opcional: si falla, el marco mostrará un aviso
       this.infoPublicaFilas.set(await this.obtenerInfoPublica(codigo));
     } catch {
@@ -447,6 +454,26 @@ export class Imprimir {
 
       procesarPagina(htmlFicha, baseFicha);
 
+      // Algunas fichas sólo enlazan la galería de fotos ("Ver Fotos"): la
+      // descargamos y sumamos también sus imágenes a los candidatos.
+      const docFicha = new DOMParser().parseFromString(htmlFicha, 'text/html');
+      const enlacesGaleria = Array.from(docFicha.querySelectorAll('a')).filter(a => {
+        const texto = (a.textContent ?? '').trim();
+        const destino = a.getAttribute('href') ?? a.getAttribute('onclick') ?? '';
+        return /ver\s*fotos|galer[ií]a|fotograf/i.test(`${texto} ${destino}`);
+      });
+      for (const enlace of enlacesGaleria) {
+        const destino =
+          enlace.getAttribute('href') ||
+          /https?:\/\/[^\s'"]+/i.exec(enlace.getAttribute('onclick') ?? '')?.[0] ||
+          '';
+        if (!destino) continue;
+        for (const c of this.rutasCandidatasDeSrc(destino, baseFicha)) {
+          const htmlGaleria = await this.descargarUrlDataGIS(c.ruta);
+          if (htmlGaleria) procesarPagina(htmlGaleria, c.ruta.split('?')[0]);
+        }
+      }
+
       // Ordenamos por prioridad, sin duplicados y descartando iconos
       const vistas = new Set<string>();
       const unicas: Candidato[] = [];
@@ -530,7 +557,7 @@ export class Imprimir {
       const blob = await respuesta.blob();
       if (blob.size < 1200) return null; // descarta iconos/bullets
 
-      const dataUrl = await new Promise<string>((resolve, reject) => {
+      let dataUrl = await new Promise<string>((resolve, reject) => {
         const lector = new FileReader();
         lector.onload = () => resolve(lector.result as string);
         lector.onerror = () => reject(new Error('No se pudo leer la imagen.'));
@@ -539,6 +566,15 @@ export class Imprimir {
       const img = await this.cargarImagen(dataUrl);
       if (img.naturalWidth < 60 || img.naturalHeight < 60) return null;
       this.fotoProporcion = img.naturalWidth / Math.max(img.naturalHeight, 1);
+      // jsPDF sólo incrusta de forma fiable JPEG/PNG: convertimos GIF/WebP
+      // (o cualquier otro formato) a PNG mediante un canvas temporal.
+      if (!/^data:image\/(jpeg|jpg|png)/i.test(dataUrl)) {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d')?.drawImage(img, 0, 0);
+        dataUrl = canvas.toDataURL('image/png');
+      }
       return dataUrl;
     } catch {
       return null;
@@ -909,13 +945,23 @@ export class Imprimir {
         const fh = fw / this.fotoProporcion;
         const fx = x + (w - fw) / 2;
         const fy = fotoY + (fotoH - fh) / 2;
-        pdf.addImage(foto, 'JPEG', fx, fy, fw, fh);
+        // El formato se deduce del DataURL: forzar 'JPEG' hace que jsPDF
+        // lance una excepción con fotos PNG y el marco quede vacío.
+        const formato = /^data:image\/(png|gif|webp)/i.test(foto) ? 'PNG' : 'JPEG';
+        pdf.addImage(foto, formato, fx, fy, fw, fh);
         pdf.setDrawColor(...COLOR_INSTITUCIONAL);
         pdf.setLineWidth(0.25);
         pdf.rect(fx, fy, fw, fh);
       } catch {
         // Si falla la incrustación continuamos con el enlace
       }
+    } else if (!this.puedeImprimirFoto()) {
+      // Dato restringido: solo usuarios autenticados pueden imprimir la foto
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(6.8);
+      pdf.setTextColor(140, 90, 20);
+      pdf.text('Fotografía restringida a usuarios autenticados.', x, fotoY + 4);
+      pdf.text('Inicie sesión en el visor para incluirla en el plano.', x, fotoY + 8);
     } else {
       pdf.setFont('helvetica', 'italic');
       pdf.setFontSize(6.8);

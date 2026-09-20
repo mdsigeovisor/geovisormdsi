@@ -100,9 +100,8 @@ const PANEL_BASE: Section[] = [
       ]),
       /*Numeracion de campo*/
       subseccion('num_municipal', 'NÚMERACION DE CAMPO', [
-        capa('num_municipal_2024', 'Numeración de campo 2024', { visible: false, showInLegend: false }),
-        capa('num_municipal_2022', 'Numeración de campo 2022', { visible: false, showInLegend: false }),
-        //capa('', 'Numeración Municipal Oficial (Desarrollo)', { visible: false, showInLegend: false }),
+        capa('num_municipal_2024', 'Numeración de campo 2024', { visible: false, showInLegend: true }),
+        capa('num_municipal_2022', 'Numeración de campo 2022', { visible: false, showInLegend: true }),        
         capa('puertas2024', 'Puertas 2024', { visible: false, showInLegend: true }),
       ]),
       /*Arbolado Urbano*/
@@ -168,9 +167,9 @@ const PANEL_BASE: Section[] = [
         //capa('', 'Modulos Comercio en via pública - Puntos aprobados (Desarrollo)', { visible: false, showInLegend: false, requiresAuth: true }),
       ]),
       subseccion('sistema_vial', 'SISTEMA VIAL', [
-        capa('', 'SISTEMA VIAL METROPOLITANO (ORD. N 341-MML)', { visible: false, showInLegend: true }),
-        capa('', 'Seccion de vias Normativas Locales', { visible: false, showInLegend: true, requiresAuth: true }),
-        capa('', 'Sección de Vias Normativas Metropolitanas', { visible: false, showInLegend: true }),
+        capa('sist-vial-metro', 'SISTEMA VIAL METROPOLITANO (ORD. N 341-MML)', { visible: false, showInLegend: true }),
+        capa('secc-vial-norma', 'Seccion de vias Normativas Locales', { visible: false, showInLegend: true, requiresAuth: true }),
+        capa('secc-vial-metro', 'Sección de Vias Normativas Metropolitanas', { visible: false, showInLegend: true }),
       ]),
     ]
   },
@@ -194,8 +193,8 @@ const PANEL_BASE: Section[] = [
         capa('manzanas_cruces_accesibilidad_5', 'Sector Vecinal 05', { visible: false, showInLegend: true }),
       ]),
       subseccion('agua_alcantarillado', 'AGUA Y ALCANTARILLADO', [
-        capa('mu_hidrante_2016', 'Hidrante 2024', { visible: false, showInLegend: true }),
-        capa('mu_hidrante_2024', 'Hidrante 2016', { visible: false, showInLegend: true }),
+        //capa('mu_hidrante_2016', 'Hidrante 2016', { visible: false, showInLegend: true }),
+        capa('mu_hidrante_2024', 'Hidrante 2024', { visible: false, showInLegend: true }),
       ]),
       subseccion('vial', 'VIAL', [
         capa('red_semaforizada', 'Intersecciones Semaforizadas', { visible: false, showInLegend: true }),
@@ -233,7 +232,7 @@ const PANEL_BASE: Section[] = [
         // capa('', 'Año de Construcción', { visible: false, showInLegend: true }),
         // capa('', 'Obras privadas en Ejecución', { visible: false, showInLegend: true }),
         capa('tem_view_lote_rrpp', 'Inmuebles con Informacion Registral', { visible: false, showInLegend: true }),
-        capa('tem_view_lote_concarga', 'Cargas', { visible: false, showInLegend: true }),
+        capa('tem_view_lote_concargaRegistral', 'Carga Registral', { visible: false, showInLegend: true }),
         capa('tem_view_lote_ley27157a', 'Declatatoria de Fabrica - ley 27157 A', { visible: false, showInLegend: true }),
         capa('tem_view_lote_ley27157b', 'Declatatoria de Fabrica - ley 27157 B', { visible: false, showInLegend: true }),
       ]),

@@ -7,6 +7,7 @@ const wp = environment.geoserver.workspacePrefix;
  * Grupos de configuración de capas WMS organizados por temática.
  */
 const CATASTRALES_LAYERS: WmsLayerConfig[] = [
+  { id: 'num_cuadra', layerName: `${wp}vw_tg_cuadra`, zIndex: 1.5, title: 'Número de Cuadras' },
   { id: 'construcciones', layerName: `${wp}vw_tg_construcciones`, zIndex: 1.5, title: 'Construcciones' },
   { id: 'area-verde', layerName: `${wp}vw_tg_area_privada`, zIndex: 1, title: 'Área Recreativa' },
   { id: 'area-verde', layerName: `${wp}vw_tg_area_rec`, zIndex: 1, title: 'Área Recreativa' },
@@ -36,59 +37,66 @@ const NOMENCLATURA_SECCIONES: WmsLayerConfig[] = [
   { id: 'nombre-vias', layerName: `${wp}vw_tg_via`, zIndex: 2, title: 'Vías' },  
   { id: 'seccion-vial', layerName: `${wp}gc_etiqueta-seccion-via`, zIndex: 2, title: 'Sección de Vías' },  
 ];
-
-
-const INFRAESTRUCTURA_LAYERS: WmsLayerConfig[] = [
-  
-  
-  { id: 'num_cuadra', layerName: `${wp}vw_tg_cuadra`, zIndex: 0, title: 'Número de Cuadras' },
-  { id: 'red_semaforizada', layerName: `${wp}red_semaforica`, zIndex: 3, title: 'Intersecciones Semaforizadas' },
-  { id: 'senaletica_limite', layerName: `${wp}senaletica_limite`, zIndex: 3, title: 'Señaletica San Isidro 2026' },
-];
-
 const NUMERACION_LAYERS: WmsLayerConfig[] = [
   { id: 'num_municipal_2024', layerName: `${wp}vw_numeracion_campo_2024`, zIndex: 3, title: 'Numeración de campo 2024' },
-  { id: 'num_municipal_2022', layerName: `${wp}vw_numeracion_campo_2022`, zIndex: 3, title: 'Numeración de campo 2022' },
+  { id: 'num_municipal_2022', layerName: `${wp}mv_tg_numeracion_campo_2022`, zIndex: 3, title: 'Numeración de campo 2022' },
   { id: 'puertas2024', layerName: `${wp}vw_tg_puertas`, zIndex: 3, title: 'Puertas 2024' },
 ];
-
 const AMBIENTAL_LAYERS: WmsLayerConfig[] = [
-  { id: 'arbolado_urbano_2024', layerName: `${wp}vw_arboles_2024`, zIndex: 0, title: 'Árboles 2024' },
-  { id: 'arbolado_urbano_2015', layerName: `${wp}vw_arboles_2015`, zIndex: 0, title: 'Árboles 2015' },
-  { id: 'cactus_yucca_2015', layerName: `${wp}vw_arboles_2015_cactus`, zIndex: 0, title: 'Cactus - Yucca 2015' },
-  
-  { id: 'nom_area_verde', layerName: `${wp}areas_verdes_de_san_isidro`, zIndex: 0, title: 'Área verde de San Isidro' },
+  { id: 'arbolado_urbano_2024', layerName: `${wp}vw_arboles_2024`, zIndex: 3, title: 'Árboles 2024' },
+  { id: 'arbolado_urbano_2015', layerName: `${wp}vw_arboles_2015`, zIndex: 3, title: 'Árboles 2015' },
+  { id: 'cactus_yucca_2015', layerName: `${wp}vw_arboles_2015_cactus`, zIndex: 3, title: 'Cactus - Yucca 2015' },  
+  { id: 'nom_area_verde', layerName: `${wp}areas_verdes_de_san_isidro`, zIndex: 3, title: 'Área verde de San Isidro' },
 ];
-
-
-
-
-
+const MOVILIARIO_URBANO: WmsLayerConfig[] = [
+  { id: 'mu_sub_sectores_vecinales_2025', layerName: `${wp}subsectores_vecinales_1_3_y_2_1_2025`, zIndex: 3, title: 'Subsectores Vecinales 1-3 y 2-1 (2025)'},
+  { id: 'mu_bancas_2016', layerName: `${wp}bancas_2016`, zIndex: 3, title: 'Bancas 2016'},
+  { id: 'mu_juego_ninos_2016', layerName: `${wp}juegos_ninos_2016`, zIndex: 3, title: 'Juegos de niños 2016'},
+  { id: 'mu_mini_gimnasios', layerName: `${wp}mini_gimnasios_2016`, zIndex: 3, title: 'Minigimnasios 2016'},
+  { id: 'mu_monu_bustos_toten_2021', layerName: `${wp}monumentos_bustos_toten_2021`, zIndex: 3, title: 'Monumentos, Bustos y Toten 2021'},
+  { id: 'mu_monu_esculturas_2016', layerName: `${wp}monumentos_esculturas_2016`, zIndex: 3, title: 'Monumentos o esculturas 2016'},
+  { id: 'mu_paneles_publicitarios_2018', layerName: `${wp}paneles_publicitarios_2018`, zIndex: 3, title: 'Paneles publicitarios 2018'},
+  { id: 'mu_papelera_2016', layerName: `${wp}papeleras_2016`, zIndex: 3, title: 'Papelera 2016'},
+  { id: 'mu_postes_iluminacion', layerName: `${wp}postes_iluminaciones_ornamentales`, zIndex: 3, title: 'Postes de Iluminación Ornamentales'},
+  { id: 'mu_parklet', layerName: `${wp}parklet`, zIndex: 3, title: 'Parklet'},  
+  { id: 'mu_estac_bicis_2016', layerName: `${wp}estacionamientos_bicicletas_2016`, zIndex: 3, title: 'Estacionamiento de bicicletas 2016'},
+  { id: 'cuponeras_2026', layerName: `${wp}cuponeras_2026`, zIndex: 3, title: 'Emisión de Cuponeras 2026'},
+  { id: 'cuponeras_2025', layerName: `${wp}cuponeras_2025_set`, zIndex: 3, title: 'Emisión de Cuponeras 2025'},
+  { id: 'procesos_2025', layerName: `${wp}ZL_PROCESO_JUDICIAL_AL_2025`, zIndex: 3, title: 'Procesos Judiciales 2025'},
+  { id: 'predios_recuperados', layerName: `${wp}PREDIOS_RECUPERADOS_A_SAN_ISIDRO`, zIndex: 3, title: 'Predios recuperados'},
+];
 const VUELOS_LAYERS: WmsLayerConfig[] = [
   { id: 'fotos_sin_2018', layerName: `${wp}vw_tg_fotosSinProcesar_2018`, zIndex: 0, title: 'Fotos sin Procesar - 2018' },
   { id: 'fotos_sin_2024', layerName: `${wp}vw_tg_fotosSinProcesar_2024`, zIndex: 0, title: 'Fotos sin Procesar - 2024' },
 ];
-
 const NORMATIVA_LAYERS: WmsLayerConfig[] = [  
-  { id: 'zonificacion', layerName: `${wp}gcZonificacion`, zIndex: 2, title: 'Zonificación' },
-  { id: 'amUrbHomogeneo', layerName: `${wp}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 0, title: 'Ámbito Urbano Homogéneo' },
-  { id: 'norm_alt_edific', layerName: `${wp}nor_altura_edificacion`, zIndex: 2, title: 'Alturas maximas de edificacion normativa' },
-  { id: 'tusne', layerName: `${wp}vw_tg_tusne`, zIndex: 0, title: 'Levantamiento Topográfico' },
+  { id: 'zonificacion', layerName: `${wp}gcZonificacion`, zIndex: 3, title: 'Zonificación' },
+  { id: 'amUrbHomogeneo', layerName: `${wp}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 3, title: 'Ámbito Urbano Homogéneo' },
+  { id: 'norm_alt_edific', layerName: `${wp}nor_altura_edificacion`, zIndex: 3, title: 'Alturas maximas de edificacion normativa' },
+  { id: 'tusne', layerName: `${wp}vw_tg_tusne`, zIndex: 3, title: 'Levantamiento Topográfico' },
 ];
-
+const SISTEMA_VIAL: WmsLayerConfig[] = [  
+  { id: 'sist-vial-metro', layerName: `${wp}tg_nor_sistema_vial_normativo`, zIndex: 3, title: 'SISTEMA VIAL METROPOLITANO (ORD. N 341-MML)'},
+  { id: 'secc-vial-norma', layerName: `${wp}tg_secciones_normativas`, zIndex: 3, title: 'Seccion de vias Normativas Locales' },
+  { id: 'secc-vial-metro', layerName: `${wp}tg_seccion_vial_normativa_metropolitana`, zIndex: 3, title: 'Sección de Vias Normativas Metropolitanas' },
+  
+];
+const INFRAESTRUCTURA_LAYERS: WmsLayerConfig[] = [    
+  { id: 'red_semaforizada', layerName: `${wp}red_semaforica`, zIndex: 3, title: 'Intersecciones Semaforizadas' },
+  { id: 'senaletica_limite', layerName: `${wp}senaletica_limite`, zIndex: 3, title: 'Señaletica San Isidro 2026' },
+];
 const ACCESIBILIDAD: WmsLayerConfig[] = [
-  { id: 'cruces_accesibilidad_1', layerName: `${wp}vw_cruces_sector_vecinal_01`, zIndex: 0, title: 'Cruce Sector Vecinal 01' },
-  { id: 'cruces_accesibilidad_2', layerName: `${wp}vw_cruces_sector_vecinal_02`, zIndex: 0, title: 'Cruce Sector Vecinal 02' },
-  { id: 'cruces_accesibilidad_3', layerName: `${wp}vw_cruces_sector_vecinal_03`, zIndex: 0, title: 'Cruce Sector Vecinal 03' },
-  { id: 'cruces_accesibilidad_4', layerName: `${wp}vw_cruces_sector_vecinal_04`, zIndex: 0, title: 'Cruce Sector Vecinal 04' },
-  { id: 'cruces_accesibilidad_5', layerName: `${wp}vw_cruces_sector_vecinal_05`, zIndex: 0, title: 'Cruce Sector Vecinal 05' },
-  { id: 'manzanas_cruces_accesibilidad_1', layerName: `${wp}vw_manzanas_sector_vecinal_01`, zIndex: 0, title: 'Manzana Sector Vecinal 01' },
-  { id: 'manzanas_cruces_accesibilidad_2', layerName: `${wp}vw_manzanas_sector_vecinal_02`, zIndex: 0, title: 'Manzana Sector Vecinal 02' },
-  { id: 'manzanas_cruces_accesibilidad_3', layerName: `${wp}vw_manzanas_sector_vecinal_03`, zIndex: 0, title: 'Manzana Sector Vecinal 03' },
-  { id: 'manzanas_cruces_accesibilidad_4', layerName: `${wp}vw_manzanas_sector_vecinal_04`, zIndex: 0, title: 'Manzana Sector Vecinal 04' },
-  { id: 'manzanas_cruces_accesibilidad_5', layerName: `${wp}vw_manzanas_sector_vecinal_05`, zIndex: 0, title: 'Manzana Sector Vecinal 05' },
+  { id: 'cruces_accesibilidad_1', layerName: `${wp}vw_cruces_sector_vecinal_01`, zIndex: 3, title: 'Cruce Sector Vecinal 01' },
+  { id: 'cruces_accesibilidad_2', layerName: `${wp}vw_cruces_sector_vecinal_02`, zIndex: 3, title: 'Cruce Sector Vecinal 02' },
+  { id: 'cruces_accesibilidad_3', layerName: `${wp}vw_cruces_sector_vecinal_03`, zIndex: 3, title: 'Cruce Sector Vecinal 03' },
+  { id: 'cruces_accesibilidad_4', layerName: `${wp}vw_cruces_sector_vecinal_04`, zIndex: 3, title: 'Cruce Sector Vecinal 04' },
+  { id: 'cruces_accesibilidad_5', layerName: `${wp}vw_cruces_sector_vecinal_05`, zIndex: 3, title: 'Cruce Sector Vecinal 05' },
+  { id: 'manzanas_cruces_accesibilidad_1', layerName: `${wp}vw_manzanas_sector_vecinal_01`, zIndex: 3, title: 'Manzana Sector Vecinal 01' },
+  { id: 'manzanas_cruces_accesibilidad_2', layerName: `${wp}vw_manzanas_sector_vecinal_02`, zIndex: 3, title: 'Manzana Sector Vecinal 02' },
+  { id: 'manzanas_cruces_accesibilidad_3', layerName: `${wp}vw_manzanas_sector_vecinal_03`, zIndex: 3, title: 'Manzana Sector Vecinal 03' },
+  { id: 'manzanas_cruces_accesibilidad_4', layerName: `${wp}vw_manzanas_sector_vecinal_04`, zIndex: 3, title: 'Manzana Sector Vecinal 04' },
+  { id: 'manzanas_cruces_accesibilidad_5', layerName: `${wp}vw_manzanas_sector_vecinal_05`, zIndex: 3, title: 'Manzana Sector Vecinal 05' },
 ];
-
 const TEMATICA: WmsLayerConfig[] = [
   { id: 'tem_parametros', layerName: `${wp}view_parametros_urbanisticos`, zIndex: 3, title: 'Parámetros Urbanisticos y Edificatorios' },
   { id: 'tem_conforobra', layerName: `${wp}view_conformidadobra`, zIndex: 3, title: 'Conformidad de Obra' },
@@ -107,39 +115,14 @@ const TEMATICA: WmsLayerConfig[] = [
   // { id: 'tem_view_lote_ceno', layerName: `${wp}view_lote_certificado_ceno`, zIndex: 3, title: 'view_lote_certificado_ceno' },  
   { id: 'tem_view_lote_cnmu', layerName: `${wp}view_lote_certificado_cnmu`, zIndex: 3, title: 'view_lote_certificado_cnmu' },
   // { id: 'tem_view_lote_rnum', layerName: `${wp}view_lote_certificado_rnum`, zIndex: 3, title: 'view_lote_certificado_rnum' },
-  { id: 'tem_view_lote_concarga', layerName: `${wp}view_lote_concarga`, zIndex: 3, title: 'view_lote_concarga' },
+  { id: 'tem_view_lote_concargaRegistral', layerName: `${wp}view_lote_concarga`, zIndex: 3, title: 'view_lote_concarga' },
   { id: 'tem_view_lote_ley27157a', layerName: `${wp}view_lote_ley_27157_a`, zIndex: 3, title: 'view_lote_ley_27157_a' },
   { id: 'tem_view_lote_ley27157b', layerName: `${wp}view_lote_ley_27157_b`, zIndex: 3, title: 'view_lote_ley_27157_b' },
   { id: 'tem_view_lote_rrpp', layerName: `${wp}view_lote_rrpp`, zIndex: 3, title: 'view_lote_rrpp' },
-
 ];
-
-const AGUA_Y_ALCANTARILLADO: WmsLayerConfig[] = [
-  { id: 'mu_hidrante_2016', layerName: `${wp}hidrantes_2016`, zIndex: 0, title: 'Hidrante 2016' },
-  { id: 'mu_hidrante_2024', layerName: `${wp}hidrantes_2024`, zIndex: 0, title: 'Hidrnate 2016' },
+const AGUA_Y_ALCANTARILLADO: WmsLayerConfig[] = [  
+  { id: 'mu_hidrante_2024', layerName: `${wp}hidrantes_2024`, zIndex: 3, title: 'Hidrnate 2016'},  
 ];
-
-const MOVILIARIO_URBANO: WmsLayerConfig[] = [
-  { id: 'mu_bancas_2016', layerName: `${wp}bancas_2016`, zIndex: 0, title: 'Bancas 2016' },
-  { id: 'mu_juego_ninos_2016', layerName: `${wp}juegos_ninos_2016`, zIndex: 0, title: 'Juegos de niños 2016' },
-  { id: 'mu_mini_gimnasios', layerName: `${wp}mini_gimnasios_2016`, zIndex: 0, title: 'Minigimnasios 2016' },
-  { id: 'mu_monu_bustos_toten_2021', layerName: `${wp}monumentos_bustos_toten_2021`, zIndex: 0, title: 'Monumentos, Bustos y Toten 2021' },
-  { id: 'mu_monu_esculturas_2016', layerName: `${wp}monumentos_esculturas_2016`, zIndex: 0, title: 'Monumentos o esculturas 2016' },
-  { id: 'mu_paneles_publicitarios_2018', layerName: `${wp}paneles_publicitarios_2018`, zIndex: 0, title: 'Paneles publicitarios 2018' },
-  { id: 'mu_papelera_2016', layerName: `${wp}papeleras_2016`, zIndex: 0, title: 'Papelera 2016' },
-  { id: 'mu_postes_iluminacion', layerName: `${wp}postes_iluminaciones_ornamentales`, zIndex: 0, title: 'Postes de Iluminación Ornamentales' },
-  { id: 'mu_parklet', layerName: `${wp}parklet`, zIndex: 0, title: 'Parklet' },
-  { id: 'mu_sub_sectores_vecinales_2025', layerName: `${wp}subsectores_vecinales_1_3_y_2_1_2025`, zIndex: 0, title: 'Subsectores Vecinales 1-3 y 2-1 (2025)' },
-  { id: 'mu_estac_bicis_2016', layerName: `${wp}estacionamientos_bicicletas_2016`, zIndex: 0, title: 'Estacionamiento de bicicletas 2016' },
-
-  { id: 'cuponeras_2026', layerName: `${wp}cuponeras_2026`, zIndex: 0, title: 'Emisión de Cuponeras 2026' },
-  { id: 'cuponeras_2025', layerName: `${wp}cuponeras_2025_set`, zIndex: 0, title: 'Emisión de Cuponeras 2025' },
-  { id: 'procesos_2025', layerName: `${wp}ZL_PROCESO_JUDICIAL_AL_2025`, zIndex: 0, title: 'Procesos Judiciales 2025' },
-  { id: 'predios_recuperados', layerName: `${wp}PREDIOS_RECUPERADOS_A_SAN_ISIDRO`, zIndex: 0, title: 'Predios recuperados' },
-
-
-
-]
 /**
  * Configuración centralizada para las capas WMS que se cargarán inicialmente en el mapa.
  * Mover esta configuración a un archivo dedicado facilita el mantenimiento y la adición
@@ -156,6 +139,7 @@ export const INITIAL_WMS_LAYERS: WmsLayerConfig[] = [
   ...SECTORES_LAYERS,
   ...VUELOS_LAYERS,
   ...NORMATIVA_LAYERS,
+  ...SISTEMA_VIAL,
   ...ACCESIBILIDAD,
   ...TEMATICA,
   ...MOVILIARIO_URBANO,

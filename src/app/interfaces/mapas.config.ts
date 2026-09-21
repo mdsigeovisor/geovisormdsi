@@ -1,4 +1,6 @@
 /** Coordenadas iniciales del centro del mapa (longitud, latitud) */
+import { environment } from '../../environments/environment';
+
 export const INITIAL_CENTER = [-75.0152, -9.19];
 /** Nivel de zoom inicial del mapa */
 export const INITIAL_ZOOM = 6;
@@ -6,8 +8,8 @@ export const INITIAL_ZOOM = 6;
 export const GOOGLE_SATELLITE_URL = 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}';
 /** URL del servicio de mapas de calles (OpenStreetMap) */
 export const OSM_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
-/** URL del servidor WMS de INEI para departamentos */
-export const TRAMA_WMS_URL = 'http://192.168.40.58:8080/geoserver/WEB_GIS/wms';
+/** URL del servidor WMS de INEI para departamentos (sigue el GeoServer del ambiente activo) */
+export const TRAMA_WMS_URL = environment.geoserver.wmsUrl;
 /** Duración de las animaciones del mapa en milisegundos */
 export const ANIMATION_DURATION = 1000;
 /** Nivel de zoom al que se acerca el mapa al obtener la ubicación del usuario */

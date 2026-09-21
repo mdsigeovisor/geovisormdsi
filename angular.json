@@ -33,6 +33,33 @@
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "qa": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.qa.ts"
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",
@@ -65,6 +92,9 @@
             "production": {
               "buildTarget": "visor-mdsi:build:production"
             },
+            "qa": {
+              "buildTarget": "visor-mdsi:build:qa"
+            },
             "development": {
               "buildTarget": "visor-mdsi:build:development"
             }
@@ -83,3 +113,4 @@
       }
     }
   }
+}

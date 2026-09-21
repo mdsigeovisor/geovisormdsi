@@ -231,7 +231,6 @@ export class Consultas {
         this.activeTab = 'catastral';
       }
     });
-
     this.nombreViaSubject.pipe(
       debounceTime(300), // Espera 300ms después de la última pulsación
       distinctUntilChanged(), // Solo emite si el valor ha cambiado

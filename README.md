@@ -37,7 +37,52 @@ Los entornos se configuran en:
 src/environments/
 ```
 
+### Ambientes disponibles
+
+| Archivo | Ambiente | Portal / API base |
+|---|---|---|
+| `environment.ts` | **Desarrollo** | `https://test.munisanisidro.gob.pe` |
+| `environment.qa.ts` | **QA** | `https://test.munisanisidro.gob.pe` |
+| `environment.prod.ts` | **Producción** | `https://munisanisidro.gob.pe` |
+
+Los tres archivos se generan con la fábrica `crearEnvironment()` de
+`src/environments/environment.model.ts`, que centraliza toda la configuración
+(GeoServer, DataGIS, TUSNE, APIs WSGEOVISOR, Observatorio Urbano, etc.).
+Si algún servidor interno cambia por ambiente, se pasa como override:
+
+```ts
+export const environment = crearEnvironment({
+  production: true,
+  ambiente: 'Producción',
+  portalUrl: 'https://munisanisidro.gob.pe',
+  // overrides opcionales de servidores internos:
+  // geoserverUrl, ortofotoServerUrl, dataGisServerUrl, tusneServerUrl
+});
+```
+
+### Comandos por ambiente
+
+```bash
+# Desarrollo (proxy local, test.munisanisidro.gob.pe)
+npm start
+
+# Servir QA localmente
+npm run start:qa
+
+# Compilar para QA  (equivale a: ng build -c qa)
+npm run build:qa
+
+# Compilar para Producción (equivale a: ng build -c production)
+npm run build:prod
+```
+
+La selección del ambiente se hace mediante `fileReplacements` en
+`angular.json`: la configuración `qa` sustituye `environment.ts` por
+`environment.qa.ts` y la configuración `production` por `environment.prod.ts`,
+de modo que el bundle final solo contiene las URLs del ambiente elegido.
+
 ---
+
 
 ## 📏 Estándares y buenas prácticas
 

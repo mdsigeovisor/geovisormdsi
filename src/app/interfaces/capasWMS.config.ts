@@ -46,7 +46,7 @@ const AMBIENTAL_LAYERS: WmsLayerConfig[] = [
   { id: 'arbolado_urbano_2024', layerName: `${wp}vw_arboles_2024`, zIndex: 3, title: 'Árboles 2024' },
   { id: 'arbolado_urbano_2015', layerName: `${wp}vw_arboles_2015`, zIndex: 3, title: 'Árboles 2015' },
   { id: 'cactus_yucca_2015', layerName: `${wp}vw_arboles_2015_cactus`, zIndex: 3, title: 'Cactus - Yucca 2015' },  
-  { id: 'nom_area_verde', layerName: `${wp}areas_verdes_de_san_isidro`, zIndex: 3, title: 'Área verde de San Isidro' },
+  { id: 'nom_area_verde', layerName: `${wp}vw_tg_area_rec_nombres`, zIndex: 3, title: 'Área verde de San Isidro' },
 ];
 const MOVILIARIO_URBANO: WmsLayerConfig[] = [
   { id: 'mu_sub_sectores_vecinales_2025', layerName: `${wp}subsectores_vecinales_1_3_y_2_1_2025`, zIndex: 3, title: 'Subsectores Vecinales 1-3 y 2-1 (2025)'},

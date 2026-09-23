@@ -1,0 +1,43 @@
+/*
+ * Ventana flotante de la leyenda: misma mecánica que el panel flotante del
+ * sidebar (ver sidebar.css). La ventana vive siempre en el DOM; la clase
+ * .abierto la muestra/oculta con fundido + desplazamiento + escala sin
+ * desplazar el mapa. Al ocultarse deja de interceptar eventos (`visibility`
+ * + `pointer-events`), y `visibility` con retardo se oculta al terminar el
+ * fundido de salida (y se muestra al inicio del de entrada).
+ */
+.panel-flotante {
+  opacity: 0;
+  transform: translateX(-12px) scale(0.98);
+  transform-origin: top left;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out,
+    visibility 0s linear 0.3s;
+}
+
+.panel-flotante.abierto {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out,
+    visibility 0s;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(27, 42, 78, 0.25);
+  border-radius: 10px;
+}

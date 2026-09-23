@@ -109,9 +109,13 @@
      señal `leyendaVisible` del MapService (independiente de las herramientas
      del sidebar): cambiar de opción en el menú NO la cierra; solo la X de la
      propia ventana (closeLeyenda) o pulsar de nuevo "Leyenda" la eliminan. -->
-@if (mapService.leyendaVisible()) {
-<app-leyenda (onClose)="closeLeyenda()"></app-leyenda>
-}
+<!-- Leyenda: ventana flotante SIEMPRE montada en el DOM (como el panel
+     flotante del sidebar). Su visibilidad vive en la señal `leyendaVisible`
+     del MapService y se aplica como clase `.abierto` para que aparezca y
+     desaparezca con la misma transición (fundido + desplazamiento + escala).
+     Cambiar de opción en el menú NO la cierra; solo la X de la propia ventana
+     (closeLeyenda) o pulsar de nuevo "Leyenda" la ocultan. -->
+<app-leyenda></app-leyenda>
 <!-- Modal para foto de dron -->
 @if (mapService.fotoDroneUrl2018(); as url) {
 <div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in"

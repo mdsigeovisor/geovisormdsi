@@ -1,7 +1,15 @@
-import { Component, inject, computed, signal, output } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MapService } from '@app/services/map.service';
 
+/**
+ * Ventana flotante de la Leyenda sobre el mapa.
+ * A diferencia de antes, el componente SIEMPRE está montado en el DOM: su
+ * visibilidad vive en la señal `leyendaVisible` del MapService y se aplica
+ * como clase `.abierto` sobre `.panel-flotante` (ver leyenda.css), con la
+ * misma transición (fundido + desplazamiento + escala) del panel flotante
+ * del sidebar. Así aparece y desaparece con animación en ambos sentidos.
+ */
 @Component({
   selector: 'app-leyenda',
   standalone: true,
@@ -10,9 +18,7 @@ import { MapService } from '@app/services/map.service';
   styleUrl: './leyenda.css',
 })
 export class Leyenda {
-  onClose = output<void>();
-
-  private mapService = inject(MapService);
+  public readonly mapService = inject(MapService);
   /** Posición de la ventana flotante (px desde la esquina superior izquierda) */
   x = signal(16);
   y = signal(76);
@@ -25,8 +31,9 @@ export class Leyenda {
     this.y.set(76);
   }
 
-  closePanel() {
-    this.onClose.emit();
+  /** Cierra la ventana (botón X): apaga `leyendaVisible` y el CSS anima la salida */
+  closePanel(): void {
+    this.mapService.closeLeyenda();
   }
 
   /** Inicia el arrastre de la ventana desde su barra de título. */
@@ -79,3 +86,4 @@ export class Leyenda {
     return Array.from(uniqueLegends.values());
   });
 }
+

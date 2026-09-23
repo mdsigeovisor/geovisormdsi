@@ -168,10 +168,10 @@ const PANEL_BASE: Section[] = [
       ]),
       subseccion('sistema_vial', 'SISTEMA VIAL', [
         capa('sist-vial-metro', 'SISTEMA VIAL METROPOLITANO (ORD. N 341-MML)', { visible: false, showInLegend: true }),
-        capa('secc-vial-norma', 'Seccion de vias Normativas Locales', { visible: false, showInLegend: true, requiresAuth: true }),
-        capa('secc-vial-metro', 'Sección de Vias Normativas Metropolitanas', { visible: false, showInLegend: true }),
+        capa('secc-vial-norma', 'Seccion de vias Normativas Locales', { visible: false, showInLegend: true, requiresAuth: false }),
+        capa('secc-vial-metro', 'Sección de Vias Normativas Metropolitanas', { visible: false, showInLegend: false }),
       ]),
-    ]
+    ]    
   },
   {
     id: 'infraestructuraUrbana',
@@ -257,7 +257,7 @@ const PANEL_BASE: Section[] = [
         capa('tem_li_funcion', 'Licencia de funcionamiento', { visible: false, showInLegend: true }),
         capa('tem_li_anuncio', 'Licencia de Anuncio', { visible: false, showInLegend: true }),
         capa('tem_view_lote_cnmu', 'Certificados de Numeración municipal', { visible: false, showInLegend: true }),
-        capa('tem_view_lote8', 'Visación de Plano', { visible: false, showInLegend: true }),
+        capa('tem_view_lote8', 'Visación de Planos', { visible: false, showInLegend: true }),
         capa('tem_view_lote6', 'Planos Catastrales', { visible: false, showInLegend: true }),
         // capa('', 'Verificación Catastral a Solicitud', { visible: false, showInLegend: true }),
         // capa('', 'Cargas registrales', { visible: false, showInLegend: true }),

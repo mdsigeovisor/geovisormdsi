@@ -5,7 +5,7 @@ import { MapService } from '@app/services/map.service';
 import { AuthService } from '@app/services/auth.service';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '@app/interfaces/geoLayers';
-import { ViaNumero, ViaSugerencia, TitularCatastral, CucResultado, CodPredialResultado } from '@app/services/map.service';
+import { ViaNumero, ViaSugerencia, TitularCatastral, CucResultado, CodPredialResultado, DenominacionLoteResultado } from '@app/services/map.service';
 
 @Component({
   selector: 'app-consultas',
@@ -215,6 +215,12 @@ export class Consultas {
   titularesConsultados = false;
   /** Campos para búsqueda por Denominación del Predio */
   denominacionPredio = '';
+  /** Coincidencias devueltas por el API busqueda-denominacion-lote. */
+  denominacionResultados: DenominacionLoteResultado[] = [];
+  /** Indica si ya se ejecutó una búsqueda por denominación (para mostrar modal/vacío). */
+  denominacionConsultado = false;
+  /** Controla la visibilidad del modal de coincidencias por Denominación del Predio */
+  modalDenominacionAbierto = signal(false);
   /** Campos para búsqueda por Nombre de Parque */
   nombreParque = '';
   /** Campos para búsqueda Catastral */
@@ -222,6 +228,8 @@ export class Consultas {
   /** Estados de la búsqueda */
   loading = signal(false);
   searchError = signal<string | null>(null);
+  /** Controla la visibilidad del modal de coincidencias de titulares catastrales */
+  modalTitularesAbierto = signal(false);
 
   constructor() {
     // Si el usuario cierra sesión con una pestaña restringida (CUC/Titular) abierta,
@@ -333,11 +341,16 @@ export class Consultas {
         this.titulares = [];
         this.titularesConsultados = false;
       },
-      denominacion: () => this.denominacionPredio = '',
+      denominacion: () => {
+        this.denominacionPredio = '';
+        this.denominacionResultados = [];
+        this.denominacionConsultado = false;
+        this.modalDenominacionAbierto.set(false);
+      },
       parque: () => this.nombreParque = '',
       catastral: () => this.codigoCatastral = '',      
     };
-
+    
     if (clearActions[this.activeTab]) {
       clearActions[this.activeTab]();
     }
@@ -626,6 +639,94 @@ export class Consultas {
   }
 
   /**
+   * Búsqueda por Denominación del Predio: consulta el API del Geovisor
+   * (`busqueda-denominacion-lote`) con el texto ingresado y abre el modal con
+   * las coincidencias. La navegación al lote ocurre al seleccionar un
+   * resultado (ver irAlLoteDeDenominacion).
+   */
+  private handleBuscarByDenominacion() {
+    if (this.isSearchDisabled() || this.loading()) {
+      return;
+    }
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.denominacionResultados = [];
+    this.denominacionConsultado = false;
+    // El API consulta en mayúsculas: normalizamos el texto antes de consultarlo.
+    this.mapService.buscarDenominacionLote(this.denominacionPredio.toUpperCase()).pipe(take(1)).subscribe({
+      next: (registros) => {
+        this.loading.set(false);
+        this.denominacionConsultado = true;
+        this.denominacionResultados = registros;
+        if (registros.length === 0) {
+          this.searchError.set('No se encontraron predios con la denominación ingresada.');
+        } else {
+          // Con coincidencias se abre el modal con la lista de predios.
+          this.modalDenominacionAbierto.set(true);
+        }
+      },
+      error: (err) => {
+        console.error('Error en la búsqueda por denominación del predio:', err);
+        this.loading.set(false);
+        this.denominacionConsultado = true;
+        this.searchError.set('Error de conexión con el servicio de denominaciones.');
+      }
+    });
+  }
+
+  /**
+   * Cierra el modal de coincidencias por denominación sin descartar los
+   * resultados (se pueden volver a abrir con la tarjeta de resumen).
+   */
+  cerrarModalDenominacion() {
+    this.modalDenominacionAbierto.set(false);
+  }
+
+  /**
+   * Navega al lote asociado al predio seleccionado por denominación usando su
+   * `codlote` (id_lote). Replica la lógica de la búsqueda catastral: ajuste del
+   * mapa al polígono, marcador y panel de resultado.
+   */
+  irAlLoteDeDenominacion(registro: DenominacionLoteResultado) {
+    // Al elegir un resultado se cierra el modal y se navega al lote.
+    this.modalDenominacionAbierto.set(false);
+    if (!registro?.codlote) {
+      this.searchError.set('No se encontró el lote para la denominación seleccionada.');
+      return;
+    }
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.mapService.searchLoteByCodigoCatastral(registro.codlote).pipe(take(1)).subscribe({
+      next: (feature) => {
+        this.loading.set(false);
+        if (feature) {
+          const props = feature.properties as any;
+          const result: SearchResult = {
+            codigoCatastral: String(props['id_lote'] || registro.codlote).trim(),
+            direccion: registro.txtdirecprincipal?.trim() || props['direccion'] || props['ubicacion'] || 'Ubicación no disponible',
+            propietario: registro.txtdenominacion?.trim() || props['propietario'] || 'Información reservada',
+            area: props['area_lote'] ? `${props['area_lote']} m²` : 'No disponible',
+            zonificacion: props['zonificacion'] ?? 'No disponible',
+            fotoFrontis: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80',
+            numeroPisos: props['pisos'] ?? 1,
+            geometry: feature.geometry
+          };
+          this.mapService.fitToGeometry(feature.geometry, 'EPSG:32718', undefined, true);
+          this.mapService.drawSearchMarker(feature.geometry, `Denominación: ${registro.txtdenominacion?.trim()}`);
+          this.emitResult(result);
+        } else {
+          this.searchError.set('Número de lote catastral no ubicado en el mapa (id_lote).');
+        }
+      },
+      error: (err) => {
+        console.error('Error al navegar al lote de la denominación:', err);
+        this.loading.set(false);
+        this.searchError.set('Error de conexión con el servicio catastral.');
+      }
+    });
+  }
+
+  /**
    * Búsqueda por Titular Catastral: consulta el API del Geovisor con el
    * apellido / razón social ingresado y muestra las coincidencias (solo el
    * nombre del titular). La navegación al lote ocurre al seleccionar un
@@ -647,6 +748,9 @@ export class Consultas {
         this.titulares = registros;
         if (registros.length === 0) {
           this.searchError.set('No se encontraron titulares con el criterio ingresado.');
+        } else {
+          // Con coincidencias se abre el modal con la lista de titulares.
+          this.modalTitularesAbierto.set(true);
         }
       },
       error: (err) => {
@@ -659,11 +763,38 @@ export class Consultas {
   }
 
   /**
+   * Cierra el modal de coincidencias de titulares sin descartar los resultados
+   * (se pueden volver a abrir con el botón "Ver coincidencias").
+   */
+  cerrarModalTitulares() {
+    this.modalTitularesAbierto.set(false);
+  }
+
+  /**
+   * Construye la dirección legible de un titular a partir de los datos de la
+   * vía devueltos por el API (p. ej. "AVENIDA PETIT THOUARS N° 2866").
+   * Devuelve cadena vacía si el registro no trae información de vía.
+   */
+  direccionDeTitular(registro: TitularCatastral): string {
+    const direccion = [
+      registro.tipvia,
+      registro.nomvia,
+      registro.numero ? `N° ${registro.numero}` : ''
+    ]
+      .filter(p => (p ?? '').toString().trim() !== '')
+      .join(' ')
+      .trim();
+    return direccion;
+  }
+
+  /**
    * Navega al lote asociado al titular seleccionado usando su `codlote`
    * (id_lote). Replica la lógica de la búsqueda catastral: ajuste del mapa al
    * polígono, marcador y panel de resultado, sin alterar dicha búsqueda.
    */
   irAlLoteDeTitular(registro: TitularCatastral) {
+    // Al elegir un resultado se cierra el modal y se navega al lote.
+    this.modalTitularesAbierto.set(false);
     if (!registro?.codlote) {
       this.searchError.set('No se encontró el lote para el titular seleccionado.');
       return;
@@ -884,6 +1015,12 @@ export class Consultas {
     // consulta el API y muestra la lista de coincidencias.
     if (this.activeTab === 'titular') {
       this.handleBuscarByTitular();
+      return;
+    }
+    // La búsqueda por Denominación del Predio consulta el API
+    // busqueda-denominacion-lote y muestra las coincidencias en un modal.
+    if (this.activeTab === 'denominacion') {
+      this.handleBuscarByDenominacion();
       return;
     }
     // La búsqueda por dirección ahora tiene su propio manejador

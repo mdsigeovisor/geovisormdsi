@@ -116,13 +116,19 @@
       </button>
       }
       <!-- Opción Denominación del Predio -->
-      <button
-        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full opacity-50 cursor-not-allowed grayscale"
-        disabled title="Próximamente disponible">
-        <div class="text-primary/80 text-base"><i class="bi bi-building-check"></i></div>
+      <button (click)="activeTab = 'denominacion'"
+        [ngClass]="{'bg-secondary text-white shadow-lg shadow-secondary/20 hover:bg-secondary/90': activeTab === 'denominacion', 'text-gray-800 hover:bg-gray-50': activeTab !== 'denominacion'}"
+        class="flex items-start gap-4 p-3 text-left rounded-xl border border-transparent transition-all w-full group">
+        <div class="text-base"
+          [ngClass]="{'text-white/80': activeTab === 'denominacion', 'text-primary/80': activeTab !== 'denominacion'}"><i
+            class="bi bi-building-check"></i></div>
         <div>
-          <h3 class="font-bold text-[11px] text-gray-800 leading-tight">Por Denominación</h3>
-          <p class="text-[10px] text-gray-500 mt-0.5">Busca un predio por su nombre o denominación.</p>
+          <h3 class="font-bold text-[11px] leading-tight"
+            [ngClass]="{'text-white': activeTab === 'denominacion', 'text-gray-800': activeTab !== 'denominacion'}">Por
+            Denominación</h3>
+          <p class="text-[10px] mt-0.5"
+            [ngClass]="{'text-white/80': activeTab === 'denominacion', 'text-gray-500': activeTab !== 'denominacion'}">Busca
+            un predio por su nombre o denominación.</p>
         </div>
       </button>
     </div>
@@ -434,7 +440,7 @@
               (keyup.enter)="handleSearch()"
               class="uppercase w-full bg-primary/5 border-2 border-primary/10 rounded-xl py-3 pl-10 pr-9 text-sm text-center focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-bold transition-all placeholder:lowercase placeholder:text-gray-300 placeholder:font-normal">
             @if (codigoTitular.trim()) {
-            <button (click)="codigoTitular = ''; titulares = []; titularesConsultados = false; searchError.set(null)"
+            <button (click)="codigoTitular = ''; titulares = []; titularesConsultados = false; modalTitularesAbierto.set(false); searchError.set(null)"
               title="Limpiar"
               class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-300 hover:text-gray-500 transition-colors">
               <i class="bi bi-x-circle-fill text-sm"></i>
@@ -469,34 +475,23 @@
         </div>
         }
 
-        <!-- Lista de coincidencias: solo se muestra el nombre del titular; el codlote
-             queda oculto y se usa para navegar al lote al hacer clic. -->
+        <!-- Resumen de resultados: abre el modal con la lista de coincidencias -->
         @if (!loading() && titulares.length > 0) {
-        <div>
-          <p
-            class="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
-            <i class="bi bi-collection"></i>
-            {{ titulares.length }} {{ titulares.length === 1 ? 'coincidencia' : 'coincidencias' }}
-            <span class="normal-case font-normal text-gray-300">— clic para ir al lote</span>
-          </p>
-          <div
-            class="bg-white border border-gray-200 rounded-xl shadow-sm max-h-40 overflow-y-auto custom-scrollbar relative z-10 animate-in fade-in duration-200">
-            @for (registro of titulares; track $index) {
-            <button (click)="irAlLoteDeTitular(registro)" [disabled]="loading()"
-              class="group w-full text-left px-3 py-2.5 text-xs text-gray-700 hover:bg-primary/5 transition-colors border-b border-gray-50 last:border-0 flex items-center gap-2.5">
-              <span
-                class="shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                <i class="bi bi-person-fill text-[10px]"></i>
-              </span>
-              <span class="break-words leading-snug">{{ registro.txttitular }}</span>
-              <span class="ml-auto flex items-center gap-1.5 shrink-0">
-                <span class="text-[9px] text-gray-800 font-mono tracking-wide">{{ registro.codlote }}</span>
-                <i class="bi bi-chevron-right text-gray-300 group-hover:text-primary transition-colors"></i>
-              </span>
-            </button>
-            }
-          </div>
-        </div>
+        <button (click)="modalTitularesAbierto.set(true)"
+          class="group w-full bg-white border border-gray-200 rounded-xl shadow-sm p-3.5 flex items-center gap-3 hover:border-primary/30 hover:shadow-md transition-all animate-in fade-in duration-200 text-left">
+          <span
+            class="shrink-0 w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+            <i class="bi bi-collection text-lg"></i>
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-bold text-gray-700">{{ titulares.length }} {{
+              titulares.length === 1 ? 'coincidencia' : 'coincidencias' }} encontrada{{ titulares.length === 1 ? '' :
+              's' }}</span>
+            <span class="block text-[10px] text-gray-400 mt-0.5 truncate">Para "{{ codigoTitular }}" — clic para ver el
+              detalle</span>
+          </span>
+          <i class="bi bi-chevron-right text-gray-300 group-hover:text-primary transition-colors shrink-0"></i>
+        </button>
         }
 
         <!-- Estado vacío: se buscó pero no hubo coincidencias -->
@@ -507,23 +502,236 @@
           <p class="text-[10px] text-gray-300 mt-0.5">Intente con otro apellido o razón social.</p>
         </div>
         }
+
+        <!-- Modal de coincidencias de titulares: lista navegable; clic en un
+             resultado navega al lote correspondiente en el mapa. -->
+        @if (modalTitularesAbierto()) {
+        <div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+          (click)="cerrarModalTitulares()">
+          <div
+            class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-scale-in"
+            (click)="$event.stopPropagation()">
+            <!-- Encabezado -->
+            <div class="flex items-center gap-3 bg-primary px-5 py-4">
+              <span class="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center shrink-0">
+                <i class="bi bi-collection"></i>
+              </span>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-bold text-white truncate">Titulares catastrales</h3>
+                <p class="text-[10px] text-white/70 truncate">Criterio: "{{ codigoTitular }}"</p>
+              </div>
+              <button (click)="cerrarModalTitulares()" title="Cerrar"
+                class="w-8 h-8 rounded-lg bg-white/10 text-white/80 flex items-center justify-center transition-all duration-150 hover:bg-white hover:text-primary hover:rotate-90 shrink-0">
+                <i class="bi bi-x-lg text-xs"></i>
+              </button>
+            </div>
+
+            <!-- Contador -->
+            <div
+              class="flex items-center gap-1.5 px-5 pt-3 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              <i class="bi bi-person-check"></i>
+              {{ titulares.length }} {{ titulares.length === 1 ? 'coincidencia' : 'coincidencias' }}
+              <span class="normal-case font-normal text-gray-300">— clic para ir al lote</span>
+            </div>
+
+            <!-- Lista de coincidencias: solo se muestra el nombre del titular; el codlote
+                 queda oculto y se usa para navegar al lote al hacer clic. -->
+            <div class="max-h-72 overflow-y-auto custom-scrollbar border-t border-gray-100">
+              @for (registro of titulares; track $index) {
+              <button (click)="irAlLoteDeTitular(registro)" [disabled]="loading()"
+                class="group relative w-full text-left px-5 py-3 text-xs text-gray-700 transition-all duration-150 border-b border-gray-50 last:border-0 flex items-center gap-3 hover:bg-primary/10 hover:text-primary hover:font-semibold hover:pl-6 active:bg-primary/15 disabled:opacity-50 disabled:pointer-events-none">
+                <span
+                  class="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center transition-all duration-150 group-hover:bg-primary group-hover:text-white group-hover:scale-110">
+                  <i class="bi bi-person-fill text-xs"></i>
+                </span>
+                <span class="min-w-0 flex-1 break-words leading-snug">
+                  <span class="block">{{ registro.txttitular }}</span>
+                  @if (direccionDeTitular(registro)) {
+                  <span class="block text-[10px] text-gray-400 mt-0.5">
+                    <i class="bi bi-geo-alt text-[9px]"></i> {{ direccionDeTitular(registro) }}
+                  </span>
+                  }
+                </span>
+                <span class="ml-auto flex items-center gap-1.5 shrink-0">
+                  <span class="text-[11px] text-gray-500 font-mono tracking-wide font-semibold">{{ registro.codlote }}</span>
+                  <i class="bi bi-chevron-right text-gray-300 group-hover:text-primary transition-colors"></i>
+                </span>
+              </button>
+              }
+            </div>
+
+            <!-- Pie del modal -->
+            <div class="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
+              <button (click)="modalTitularesAbierto.set(false); handleSearch()" [disabled]="loading()"
+                class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-primary/20 text-[10px] font-bold text-primary uppercase tracking-wide transition-all duration-150 hover:bg-primary hover:border-primary hover:text-white hover:shadow-md active:scale-95 disabled:opacity-50 disabled:pointer-events-none">
+                <i class="bi bi-arrow-clockwise text-xs"></i> Volver a buscar
+              </button>
+              <button (click)="cerrarModalTitulares()"
+                class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-wide transition-all duration-150 hover:bg-gray-100 hover:border-gray-300 hover:text-gray-700 active:scale-95">
+                <i class="bi bi-x-lg text-xs"></i> Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+        }
       </div>
       }
       <!-- Formulario Denominación del Predio -->
     @if (activeTab === 'denominacion') {
-    <div class="space-y-6 animate-in slide-in-from-right-2 duration-300" id="denominacion-form">
+    <div class="space-y-4 animate-in slide-in-from-right-2 duration-300" id="denominacion-form">
       <div>
         <label for="denominacionInput"
-          class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Denominación del
+          class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Denominación del
           Predio</label>
-        <input id="denominacionInput" type="text" [(ngModel)]="denominacionPredio"
-          placeholder="Ej: Centro Comercial Camino Real"
-          class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
+        <!-- Campo de búsqueda: Enter ejecuta la búsqueda; la X limpia el campo y los resultados -->
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-primary/40">
+            <i class="bi bi-buildings"></i>
+          </span>
+          <input id="denominacionInput" type="text" [(ngModel)]="denominacionPredio"
+            placeholder="Ej: EMBAJADA" (keyup.enter)="handleSearch()"
+            class="uppercase w-full bg-primary/5 border-2 border-primary/10 rounded-xl py-3 pl-10 pr-9 text-sm text-center focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none text-primary font-bold transition-all placeholder:lowercase placeholder:text-gray-300 placeholder:font-normal">
+          @if (denominacionPredio.trim()) {
+          <button (click)="denominacionPredio = ''; denominacionResultados = []; denominacionConsultado = false; modalDenominacionAbierto.set(false); searchError.set(null)"
+            title="Limpiar"
+            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-300 hover:text-gray-500 transition-colors">
+            <i class="bi bi-x-circle-fill text-sm"></i>
+          </button>
+          }
+        </div>
 
+        @if (searchError()) {
+        <div
+          class="mt-3 p-2 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-red-600 animate-in fade-in zoom-in duration-200">
+          <i class="bi bi-exclamation-circle-fill"></i>
+          <span class="text-[10px] font-bold uppercase tracking-tight">{{ searchError() }}</span>
+        </div>
+        }
+
+        @if (!denominacionConsultado && !loading() && !searchError()) {
         <p class="mt-3 text-[10px] text-gray-400 text-center italic">
-          Ingrese el nombre o denominación del predio.
+          Ingrese el nombre o denominación del predio y presione Buscar; luego seleccione un predio para ir a su lote.
         </p>
+        }
       </div>
+
+      <!-- Estado de carga: skeleton mientras consulta el API -->
+      @if (loading()) {
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-2.5 animate-in fade-in duration-200">
+        @for (i of [1, 2, 3]; track i) {
+        <div class="flex items-center gap-2.5">
+          <div class="w-6 h-6 rounded-full bg-gray-100 animate-pulse shrink-0"></div>
+          <div class="h-2.5 rounded-full bg-gray-100 animate-pulse" [style.width.%]="70 - i * 10"></div>
+        </div>
+        }
+      </div>
+      }
+
+      <!-- Resumen de resultados: abre el modal con la lista de coincidencias -->
+      @if (!loading() && denominacionResultados.length > 0) {
+      <button (click)="modalDenominacionAbierto.set(true)"
+        class="group w-full bg-white border border-gray-200 rounded-xl shadow-sm p-3.5 flex items-center gap-3 hover:border-primary/30 hover:shadow-md transition-all animate-in fade-in duration-200 text-left">
+        <span
+          class="shrink-0 w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+          <i class="bi bi-buildings text-lg"></i>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block text-sm font-bold text-gray-700">{{ denominacionResultados.length }} {{
+            denominacionResultados.length === 1 ? 'predio encontrado' : 'predios encontrados' }}</span>
+          <span class="block text-[10px] text-gray-400 mt-0.5 truncate">Para "{{ denominacionPredio }}" — clic para ver
+            el detalle</span>
+        </span>
+        <i class="bi bi-chevron-right text-gray-300 group-hover:text-primary transition-colors shrink-0"></i>
+      </button>
+      }
+
+      <!-- Estado vacío: se buscó pero no hubo coincidencias -->
+      @if (!loading() && denominacionConsultado && denominacionResultados.length === 0 && !searchError()) {
+      <div class="text-center py-6 animate-in fade-in duration-200">
+        <i class="bi bi-buildings-slash text-3xl text-gray-200"></i>
+        <p class="mt-2 text-xs text-gray-400 font-medium">Sin coincidencias</p>
+        <p class="text-[10px] text-gray-300 mt-0.5">Intente con otra denominación.</p>
+      </div>
+      }
+
+      <!-- Modal de coincidencias por Denominación del Predio: lista navegable;
+           clic en un resultado navega al lote correspondiente en el mapa. -->
+      @if (modalDenominacionAbierto()) {
+      <div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+        (click)="cerrarModalDenominacion()">
+        <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-scale-in"
+          (click)="$event.stopPropagation()">
+          <!-- Encabezado -->
+          <div class="flex items-center gap-3 bg-primary px-5 py-4">
+            <span class="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center shrink-0">
+              <i class="bi bi-buildings"></i>
+            </span>
+            <div class="min-w-0 flex-1">
+              <h3 class="text-sm font-bold text-white truncate">Denominación del Predio</h3>
+              <p class="text-[10px] text-white/70 truncate">Criterio: "{{ denominacionPredio }}"</p>
+            </div>
+            <button (click)="cerrarModalDenominacion()" title="Cerrar"
+              class="w-8 h-8 rounded-lg bg-white/10 text-white/80 flex items-center justify-center transition-all duration-150 hover:bg-white hover:text-primary hover:rotate-90 shrink-0">
+              <i class="bi bi-x-lg text-xs"></i>
+            </button>
+          </div>
+
+          <!-- Contador -->
+          <div
+            class="flex items-center gap-1.5 px-5 pt-3 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            <i class="bi bi-buildings"></i>
+            {{ denominacionResultados.length }} {{ denominacionResultados.length === 1 ? 'predio' : 'predios' }}
+            <span class="normal-case font-normal text-gray-300">— clic para ir al lote</span>
+          </div>
+
+          <!-- Lista de coincidencias -->
+          <div class="max-h-72 overflow-y-auto custom-scrollbar border-t border-gray-100">
+            @for (registro of denominacionResultados; track $index) {
+            <button (click)="irAlLoteDeDenominacion(registro)" [disabled]="loading()"
+              class="group relative w-full text-left px-5 py-3 text-xs text-gray-700 transition-all duration-150 border-b border-gray-50 last:border-0 flex items-start gap-3 hover:bg-primary/10 hover:text-primary hover:pl-6 active:bg-primary/15 disabled:opacity-50 disabled:pointer-events-none">
+              <span
+                class="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center transition-all duration-150 group-hover:bg-primary group-hover:text-white group-hover:scale-110">
+                <i class="bi bi-geo-alt-fill text-xs"></i>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block font-bold leading-snug">{{ registro.txtdenominacion }}</span>
+                @if (registro.txtdirecprincipal) {
+                <span class="block text-[10px] text-gray-400 mt-0.5">
+                  <i class="bi bi-geo-alt text-[9px]"></i> {{ registro.txtdirecprincipal }}
+                </span>
+                }
+                <span class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
+                  @if (registro.txtcuc) {
+                  <span class="text-[9px] text-gray-400 font-mono">CUC: {{ registro.txtcuc }}</span>
+                  }
+                  @if (registro.txtmzaurbano || registro.txtloteurbano) {
+                  <span class="text-[9px] text-gray-400 font-mono">Mz. {{ registro.txtmzaurbano }} · Lte.
+                    {{ registro.txtloteurbano }}</span>
+                  }
+                </span>
+              </span>
+              <span class="ml-auto flex items-center gap-1.5 shrink-0">
+                <span class="text-[11px] text-gray-500 font-mono tracking-wide font-semibold">{{ registro.codlote }}</span>
+                <i class="bi bi-chevron-right text-gray-300 group-hover:text-primary transition-colors"></i>
+              </span>
+            </button>
+            }
+          </div>
+
+          <!-- Pie del modal -->
+          <div class="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
+            <button (click)="modalDenominacionAbierto.set(false); handleSearch()" [disabled]="loading()"
+              class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-primary/20 text-[10px] font-bold text-primary uppercase tracking-wide transition-all duration-150 hover:bg-primary hover:border-primary hover:text-white hover:shadow-md active:scale-95 disabled:opacity-50 disabled:pointer-events-none">
+              <i class="bi bi-arrow-clockwise text-xs"></i> Volver a buscar
+            </button>
+            <button (click)="cerrarModalDenominacion()"
+              class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-wide transition-all duration-150 hover:bg-gray-100 hover:border-gray-300 hover:text-gray-700 active:scale-95">
+              <i class="bi bi-x-lg text-xs"></i> Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+      }
     </div>
     }
     <!-- Formulario Nombre de Parque -->
@@ -582,3 +790,4 @@
       fill="#FF3D00" />
   </svg>
 </div>
+

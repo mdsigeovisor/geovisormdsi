@@ -87,6 +87,7 @@ import { INITIAL_WMS_LAYERS } from '../interfaces/capasWMS.config';
 import {
   INITIAL_CENTER,
   INITIAL_ZOOM,
+  MAP_MAX_ZOOM,
   GOOGLE_SATELLITE_URL,
   OSM_URL,
   TRAMA_WMS_URL,
@@ -564,7 +565,7 @@ export class MapService {
         center: fromLonLat(INITIAL_CENTER),
         zoom: INITIAL_ZOOM,
         minZoom: 4,
-        maxZoom: 22,
+        maxZoom: MAP_MAX_ZOOM,
       })
     });
     this._map.set(olMap);
@@ -929,41 +930,7 @@ export class MapService {
    *  3) Host de producción: https://www.munisanisidro.gob.pe
    * @param codlote Código catastral del lote (id_lote / codlote).
    * @returns Observable con los datos del lote o `null` si no se encontró.
-   */
-  // listarDatosLote(codlote: string): Observable<LoteDatosHover | null> {
-  //   const codigo = (codlote ?? '').trim();
-  //   if (!codigo) return of(null);
-  //   // URL relativa centralizada en el environment (proxy inverso Nginx en QA/Prod)
-  //   const path = `${environment.geovisorApiUrl}/listar-datos-lote`;
-  //   // Misma estrategia de hosts que listarViaNumeros
-  //   const hosts = ['', 'https://test.munisanisidro.gob.pe'];
-  //   const params = new HttpParams().set('pvcCODLOTE', codigo);
-  //   const request = (url: string): Observable<LoteDatosHover | null> =>
-  //     this.http.get<{ status?: number; data?: LoteDatosHover[] }>(url ? url + path : path, { params }).pipe(
-  //       map(response => {
-  //         // La respuesta viene envuelta: { status, data: [...] }
-  //         const registro = response?.data?.[0];
-  //         if (registro && (registro.codlote || registro.codlotecatastral)) {
-  //           return { ...registro, codlote: registro.codlote || registro.codlotecatastral || codigo };
-  //         }
-  //         return null;
-  //       })
-  //     );
-  //   return request(hosts[0]).pipe(
-  //     catchError(err => {
-  //       console.warn('listarDatosLote: falló ruta relativa, reintentando con test.munisanisidro.gob.pe', err);
-  //       return request(hosts[1]);
-  //     }),
-  //     catchError(err => {
-  //       console.warn('listarDatosLote: falló test, reintentando con www.munisanisidro.gob.pe', err);
-  //       return request(hosts[2]);
-  //     }),
-  //     catchError(err => {
-  //       console.error('listarDatosLote: fallaron todos los intentos de conexión', err);
-  //       return of(null);
-  //     })
-  //   );
-  // }
+   */  
   listarDatosLote(codlote: string): Observable<LoteDatosHover | null> {
   const codigo = (codlote ?? '').trim();
   if (!codigo) return of(null);

@@ -4,6 +4,13 @@ import { environment } from '../../environments/environment';
 export const INITIAL_CENTER = [-75.0152, -9.19];
 /** Nivel de zoom inicial del mapa */
 export const INITIAL_ZOOM = 6;
+/**
+ * Nivel de zoom máximo permitido al hacer scroll o zoom-in.
+ * Por encima del `maxZoom` nativo de cada fuente de teselas (ortofotos: 22,
+ * mapas base: 19) OpenLayers amplía ("overzoom") la tesela disponible con
+ * interpolación, por lo que subir este valor no genera peticiones 404.
+ */
+export const MAP_MAX_ZOOM = 30;
 /** URL del servicio de mapas satelitales de Google */
 export const GOOGLE_SATELLITE_URL = 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}';
 /** URL del servicio de mapas de calles (OpenStreetMap) */

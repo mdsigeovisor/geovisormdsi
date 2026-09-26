@@ -78,6 +78,10 @@ export interface Section {
   items: (LayerItem | SubSection)[];
 }
 
+/* ------------------------------------------------------------------------- */
+/*  Resultados de las consultas/APIs del Geovisor                             */
+/* ------------------------------------------------------------------------- */
+
 /** Interfaz para los resultados de búsqueda de predios */
 export interface SearchResult {
   codigoCatastral: string;
@@ -90,4 +94,124 @@ export interface SearchResult {
   materialPredominante?: string;
   estadoConservacion?: string;
   geometry?: GeoJSONGeometry;
+}
+
+/** Coincidencia de titular catastral devuelta por el API del Geovisor. */
+export interface TitularCatastral {
+  txttitular: string;
+  codlote: string;
+  /** Datos de la vía asociada al lote (según respuesta del API) */
+  tipvia?: string;
+  nomvia?: string;
+  numero?: string;
+}
+
+/** Registro de búsqueda por denominación de predio devuelto por el API del Geovisor (`busqueda-denominacion-lote`). */
+export interface DenominacionLoteResultado {
+  codlote: string;
+  txtcuc: string;
+  txtdenominacion: string;
+  txtmzaurbano: string;
+  txtloteurbano: string;
+  lotecodcatant: string;
+  codlotecatastral: string;
+  txtdirecprincipal: string;
+}
+
+/** Registro de numeración de vía devuelto por el API del Geovisor. */
+export interface ViaNumero {
+  numero: string;
+  codlote: string;
+  codlotenumero: string;
+}
+
+/** Registro de búsqueda por CUC devuelto por el API del Geovisor (`busqueda-cuc`). */
+export interface CucResultado {
+  txtcuc: string;
+  txtpropietario: string;
+  codlote: string;
+  codvia: string;
+  tipvia: string;
+  nomvia: string;
+  via: string;
+  numero: string;
+  txttipint: string;
+  codtipint: string;
+  numeroint: string;
+}
+
+/** Registro de búsqueda por Código Predial devuelto por el API del Geovisor (`busqueda-codpredial`). */
+export interface CodPredialResultado {
+  txtcodipredrent: string;
+  txtcuc: string;
+  txttitular: string;
+  codlote: string;
+  codvia: string;
+  tipvia: string;
+  nomvia: string;
+  via: string;
+  numero: string;
+  txttipint: string;
+  codtipint: string;
+  numeroint: string;
+}
+
+/** Sugerencia de vía con su código, para el flujo de numeraciones. */
+export interface ViaSugerencia {
+  etiqueta: string;
+  codVia: string;
+}
+
+/* ------------------------------------------------------------------------- */
+/*  Estado del visor                                                          */
+/* ------------------------------------------------------------------------- */
+
+/** Tipos de mapa base disponibles en el visor. */
+export type TipoMapaBase = 'satellite' | 'streets' | 'topo' | 'blanco';
+
+/**
+ * Datos resumidos de un lote devueltos por el API listar-datos-lote del
+ * Geovisor municipal. Se muestran en el popup al pasar el mouse sobre el lote.
+ */
+export interface LoteDatosHover {
+  codlote: string;
+  txtcuc: string;
+  txtmzaurbano: string;
+  txtloteurbano: string;
+  lotecodcatant: string;
+  codlotecatastral: string;
+  txtdirecprincipal: string;
+}
+
+/**
+ * Ventana flotante con la información de un lote.
+ * Varias pueden estar abiertas simultáneamente sin bloquear el mapa.
+ */
+export interface LoteInfoWindow {
+  /** Código catastral del lote (identificador único de la ventana) */
+  id: string;
+  /** URL de la ficha del lote */
+  url: string;
+  /** Posición horizontal (px) respecto al viewport */
+  x: number;
+  /** Posición vertical (px) respecto al viewport */
+  y: number;
+  /** Título de la ventana. Si no se define, usa "Información del Lote". */
+  title?: string;
+  /** Ancho de la ventana en px. Por defecto 700. */
+  width?: number;
+  /** Alto de la ventana en px. Por defecto 520. */
+  heightPx?: number;
+  /** Prioridad (z-index) de la ventana. Por defecto 1040. */
+  zIndex?: number;
+}
+
+/** Configuración de una capa consultable al hacer clic sobre el mapa. */
+export interface ClickableLayerConfig {
+  /** Identificador de la capa en el panel de capas. */
+  layerId: string;
+  /** Obtiene la capa de OpenLayers asociada. */
+  getLayer: () => ImageLayer<ImageWMS> | undefined;
+  /** Lógica a ejecutar cuando el clic acierta sobre un feature de esta capa. */
+  handler: (feature: GeoJSONFeature) => void;
 }

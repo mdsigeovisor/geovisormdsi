@@ -1,6 +1,7 @@
 import { Component, ElementRef, NgZone, ViewChild, afterNextRender, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MapService, TipoMapaBase } from '../../../../../../services/map.service';
+import { MapService } from '../../../../../../services/map.service';
+import { TipoMapaBase } from '../../../../../../interfaces/geoLayers';
 import { DrawMeasureService } from '../../../../../../services/draw.service';
 import { fromLonLat, Overlay } from '../../../../../../modules/openlayers.module';
 import { OverviewMapComponent } from '../overViewMap/overview-map';

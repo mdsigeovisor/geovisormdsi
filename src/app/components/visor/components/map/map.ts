@@ -2,7 +2,8 @@ import { Component, ElementRef, ViewChild, afterNextRender, inject, ChangeDetect
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 // Servicios y módulos
-import { LoteInfoWindow, MapService } from '../../../../services/map.service';
+import { LoteInfoWindow } from '../../../../interfaces/geoLayers';
+import { MapService } from '../../../../services/map.service';
 import { DriverService } from '../../../../services/driver.service';
 import { DrawMeasureService } from '../../../../services/draw.service';
 // Componentes relacionados

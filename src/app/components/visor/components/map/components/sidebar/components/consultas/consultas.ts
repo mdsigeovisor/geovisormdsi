@@ -4,8 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { MapService } from '@app/services/map.service';
 import { AuthService } from '@app/services/auth.service';
 import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
-import { GeoJSONFeature, GeoJSONGeometry, SearchResult } from '@app/interfaces/geoLayers';
-import { ViaNumero, ViaSugerencia, TitularCatastral, CucResultado, CodPredialResultado, DenominacionLoteResultado } from '@app/services/map.service';
+import {
+  GeoJSONFeature,
+  GeoJSONGeometry,
+  SearchResult,
+  ViaNumero,
+  ViaSugerencia,
+  TitularCatastral,
+  CucResultado,
+  CodPredialResultado,
+  DenominacionLoteResultado
+} from '@app/interfaces/geoLayers';
 
 @Component({
   selector: 'app-consultas',

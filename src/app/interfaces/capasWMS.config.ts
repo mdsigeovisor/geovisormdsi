@@ -34,7 +34,7 @@ const PUNTO_GEODESICOS: WmsLayerConfig[] = [
   { id: 'puntos_geodesicos', layerName: `${wp}vw_cu_punto_geodesico`, zIndex: 2, title: 'Puntos Geodésicos' },
 ];
 const NOMENCLATURA_SECCIONES: WmsLayerConfig[] = [
-  { id: 'nombre-vias', layerName: `${wp}vw_tg_via`, zIndex: 2, title: 'Vías' },  
+  { id: 'nombre-vias', layerName: `${wp}vw_tg_via`, zIndex: 15, title: 'Vías' },  
   { id: 'seccion-vial', layerName: `${wp}gc_etiqueta-seccion-via`, zIndex: 2, title: 'Sección de Vías' },  
 ];
 const NUMERACION_LAYERS: WmsLayerConfig[] = [

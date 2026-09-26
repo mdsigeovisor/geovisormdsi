@@ -142,16 +142,18 @@ const PANEL_BASE: Section[] = [
     id: 'imaAereas',
     title: 'IMÁGENES AEREAS',
     expanded: false,
-    items: [
-      // Capas generadas dinámicamente a partir de la configuración de años.
-      // La regla "solo una ortofoto visible" vive en MapService.toggleLayerVisibility.
+    items: [      
       subseccion('ortofotos_historicas', 'Ortofotos Históricas', [
+        // Superposición de lotes catastrales (WMS, zIndex 15) pensada para verse
+      // sobre la ortofoto activa; no interviene en la regla de radio de ortofotos.
+      capa('lote-ortofoto', 'Lote Catastral', { visible: false, showInLegend: true }),
         ...ORTOFOTO_YEARS.map(year => capa(`ortofoto_${year}`, `${year}`)),
       ], false, { requiresAuth: false }),
       subseccion('fotos_sin_procesar', 'Fotos sin Procesar', [
         capa('fotos_sin_2018', 'Fotos sin Procesar - 2018', { visible: false, showInLegend: false }),
         capa('fotos_sin_2024', 'Fotos sin Procesar - 2024', { visible: false, showInLegend: false }),
       ], false, { requiresAuth: true }),
+      
     ],
   },
   {
@@ -162,9 +164,7 @@ const PANEL_BASE: Section[] = [
       subseccion('normaUrbana', 'NORMATIVA URBANA', [
         capa('zonificacion', 'Zonificación usos del suelo', { visible: false, showInLegend: true }),
         capa('amUrbHomogeneo', 'Ambitos Urbanos Homogéneos', { visible: false, showInLegend: false, requiresAuth: true }),
-        capa('norm_alt_edific', 'Alturas Maximas de Edificacion', { visible: false, showInLegend: true }),
-        //capa('', 'Ambitos para promover la sostenibilidad de las zonas residenciales (Desarrollo)', { visible: false, showInLegend: false, requiresAuth: true }),
-        //capa('', 'Modulos Comercio en via pública - Puntos aprobados (Desarrollo)', { visible: false, showInLegend: false, requiresAuth: true }),
+        capa('norm_alt_edific', 'Alturas Maximas de Edificacion', { visible: false, showInLegend: true }),        
       ]),
       subseccion('sistema_vial', 'SISTEMA VIAL', [
         capa('sist-vial-metro', 'SISTEMA VIAL METROPOLITANO (ORD. N 341-MML)', { visible: false, showInLegend: true }),
@@ -192,9 +192,8 @@ const PANEL_BASE: Section[] = [
         capa('manzanas_cruces_accesibilidad_4', 'Sector Vecinal 04', { visible: false, showInLegend: true }),
         capa('manzanas_cruces_accesibilidad_5', 'Sector Vecinal 05', { visible: false, showInLegend: true }),
       ]),
-      subseccion('agua_alcantarillado', 'AGUA Y ALCANTARILLADO', [
-        //capa('mu_hidrante_2016', 'Hidrante 2016', { visible: false, showInLegend: true }),
-        capa('mu_hidrante_2024', 'Hidrante 2024', { visible: false, showInLegend: true }),
+      subseccion('agua_alcantarillado', 'AGUA Y ALCANTARILLADO', [        
+        capa('mu_hidrante_2024', 'Hidrante', { visible: false, showInLegend: true }),
       ]),
       subseccion('vial', 'VIAL', [
         capa('red_semaforizada', 'Intersecciones Semaforizadas', { visible: false, showInLegend: true }),
@@ -206,50 +205,13 @@ const PANEL_BASE: Section[] = [
     id: 'info_tematica',
     title: 'INFORMACIÓN TEMÁTICA',
     expanded: false,
-    items: [
-      // subseccion('zonaLimites', 'ZONA DE LIMITES', [
-      //   capa('', 'Emisión de Cuponeras 2026', { visible: false, showInLegend: true }),
-      //   capa('', 'Emisión de Cuponeras 2025', { visible: false, showInLegend: true }),
-      //   capa('', 'Procesos Judiciales 2025', { visible: false, showInLegend: true }),
-      //   capa('', 'Predios Recuperados', { visible: false, showInLegend: true }),
-      //   capa('', 'Informe Técnico Favorable (ITF) 2026', { visible: false, showInLegend: true }),
-      // ]),
-      // subseccion('vivVis', 'VIVIENDA DE INTERES SOCIAL (VIS)', [
-      //   capa('', 'VIS 2026 Proyectos-Anteproyectos', { visible: false, showInLegend: true }),
-      //   capa('', 'VIS 2025 con Proceso Judicial', { visible: false, showInLegend: true }),
-      // ]),
-      // subseccion('salud', 'SALUD', [
-      //   capa('', 'Centros de Salud 2024 (RENIPRESS)', { visible: false, showInLegend: true }),
-      // ]),
-      // subseccion('educacion', 'EDUCACION', [
-      //   capa('', 'Educación superior 2024 (ESCALE-MINEDU)', { visible: false, showInLegend: true }),
-      //   capa('', 'Instituciones Educativas (ESCALE-MINEDU)', { visible: false, showInLegend: true }),
-      // ]),
-      subseccion('edifiExistentes', 'EDIFICACIONES EXISTENTES', [
-        // capa('', 'Usos predominantes (Año 2021)', { visible: false, showInLegend: true }),
-        // capa('', 'Usos Predominantes (Histórico)', { visible: false, showInLegend: true }),
-        // capa('', 'Alturas de edificación existente (Histórico)', { visible: false, showInLegend: true }),
-        // capa('', 'Año de Construcción', { visible: false, showInLegend: true }),
-        // capa('', 'Obras privadas en Ejecución', { visible: false, showInLegend: true }),
+    items: [      
+      subseccion('edifiExistentes', 'EDIFICACIONES EXISTENTES', [        
         capa('tem_view_lote_rrpp', 'Inmuebles con Informacion Registral', { visible: false, showInLegend: true }),
         capa('tem_view_lote_concargaRegistral', 'Carga Registral', { visible: false, showInLegend: true }),
         capa('tem_view_lote_ley27157a', 'Declatatoria de Fabrica - ley 27157 A', { visible: false, showInLegend: true }),
         capa('tem_view_lote_ley27157b', 'Declatatoria de Fabrica - ley 27157 B', { visible: false, showInLegend: true }),
-      ]),
-      // subseccion('comInternacional', 'COMUNIDAD INTERNACIONAL', [
-      //   capa('', 'Embajadas', { visible: false, showInLegend: true }),
-      // ]),
-      // subseccion('localesMunicipales', 'LOCALES MUNICIPALES', [
-      //   capa('', 'Sedes administrativas', { visible: false, showInLegend: true }),
-      //   capa('', 'Centros de Encuentro Vecinal', { visible: false, showInLegend: true }),
-      // ]),
-      // subseccion('segCiudadana', 'SEGURIDAD CIUDADANA', [
-      //   capa('', 'Seguridad 2023', { visible: false, showInLegend: true }),
-      //   capa('', 'Centros de Seguridad', { visible: false, showInLegend: true }),
-      // ]),
-      // subseccion('grd', 'GESTION DE RIESGOS DE DESASTRE (GRD)', [
-      //   capa('', 'Almacenes', { visible: false, showInLegend: true }),
-      // ]),
+      ]),      
       subseccion('tramites_atendidos', 'TRAMITES ATENDIDOS', [
         capa('tem_parametros', 'Parametros urbanisticos y Edificatorios', { visible: false, showInLegend: true }),
         capa('tem_li_edifica', 'Licencia de edificación', { visible: false, showInLegend: true }),
@@ -258,9 +220,7 @@ const PANEL_BASE: Section[] = [
         capa('tem_li_anuncio', 'Licencia de Anuncio', { visible: false, showInLegend: true }),
         capa('tem_view_lote_cnmu', 'Certificados de Numeración municipal', { visible: false, showInLegend: true }),
         capa('tem_view_lote8', 'Visación de Planos', { visible: false, showInLegend: true }),
-        capa('tem_view_lote6', 'Planos Catastrales', { visible: false, showInLegend: true }),
-        // capa('', 'Verificación Catastral a Solicitud', { visible: false, showInLegend: true }),
-        // capa('', 'Cargas registrales', { visible: false, showInLegend: true }),
+        capa('tem_view_lote6', 'Planos Catastrales', { visible: false, showInLegend: true }),        
         capa('tem_view_lote_rrpp', 'Informacion registral', { visible: false, showInLegend: true }),
       ]),
       subseccion('limites','LIMITES',[

@@ -145,6 +145,31 @@
 .ol-zoom, .ol-attribution {
   display: none !important;
 }
+
+/* ============================================
+   ETIQUETAS DE LAS GEOMETRÍAS (HERRAMIENTAS DE DIBUJO / MEDICIÓN)
+   El tooltip de medición se crea con `document.createElement('div')` en
+   `services/draw.service.ts` (clase `ol-measure-tooltip`), por lo que NO hereda
+   los estilos encapsulados de ningún componente: se declara aquí, de forma global.
+   Negrita + sombra para que la medida se lea sobre las ortofotos y capas WMS.
+   ============================================ */
+.ol-measure-tooltip {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 700;                 /* negrita */
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  /* Azul oscuro, en armonía con el trazo del dibujo (#2b78e4) */
+  color: #0b2c5e;
+  white-space: nowrap;
+  /* No intercepta los clics ni la interacción de dibujo sobre el mapa */
+  pointer-events: none;
+  /* Halo claro (contraste sobre imagen aérea) + sombra de caída */
+  text-shadow:
+    0 0 3px rgba(255, 255, 255, 0.95),
+    0 0 6px rgba(255, 255, 255, 0.85),
+    0 1px 3px rgba(0, 0, 0, 0.45);
+}
 .material-icons {
   translate: no !important;
 }

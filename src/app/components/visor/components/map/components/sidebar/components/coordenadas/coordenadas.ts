@@ -5,7 +5,7 @@ import { Feature, Fill, fromLonLat, Overlay, Point, Stroke, Style, transform, Ve
 import { Coordinate } from 'ol/coordinate';
 import CircleStyle from 'ol/style/Circle';
 import { MapService } from '@app/services/map.service';
-import { ANIMATION_DURATION, SAN_ISIDRO_EXTENT, ZOOM_LEVEL_LOCATION } from '@app/interfaces/mapas.config';
+import { ANIMATION_DURATION, SAN_ISIDRO_EXTENT, ZOOM_LEVEL_LOCATION, ZINDEX_GEOMETRIAS_USUARIO } from '@app/interfaces/mapas.config';
 
 
 
@@ -45,6 +45,9 @@ export class UbicacionCoordenadas implements OnInit, OnDestroy {
     this.sourceTemporal = new VectorSource();
     this.capaTemporal = new VectorLayer({
       source: this.sourceTemporal,
+      // Por encima de ortofotos (5) y capas WMS (0–15): el marcador del punto
+      // buscado no debe quedar oculto cuando hay una imagen aérea activa.
+      zIndex: ZINDEX_GEOMETRIAS_USUARIO,
       style: this.estiloPunto()
     });
     this.mapService.map()?.addLayer(this.capaTemporal);

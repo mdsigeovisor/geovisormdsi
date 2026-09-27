@@ -32,3 +32,15 @@ export const SAN_ISIDRO_ZOOM = 17;
 export const SAN_ISIDRO_EXTENT = [275224.08, 8660213.79, 281557.72, 8663299.55];
 /** Zoom mínimo para considerar que el usuario está viendo el distrito (dispara el aviso de Términos y Condiciones) */
 export const TERMS_ZOOM_DISTRICTO = 14;
+/**
+ * Convención de apilado (zIndex) de las capas del visor, de menor a mayor:
+ * - `0 – 15`: capas WMS temáticas y ortofotos (las imágenes aéreas usan 5).
+ * - `998`: cuadrícula UTM-18S de la captura de planos.
+ * - `1000`: resaltado de geometrías de búsqueda.
+ * - `1001`: lote seleccionado para impresión (borde rojo).
+ * - `1002`: geometrías creadas por el usuario (herramientas de dibujo y
+ *   marcador del buscador de coordenadas). Deben quedar SIEMPRE por encima de
+ *   las imágenes aéreas y de las capas WMS, para que no queden ocultas al
+ *   activar una ortofoto.
+ */
+export const ZINDEX_GEOMETRIAS_USUARIO = 1002;

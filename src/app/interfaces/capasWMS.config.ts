@@ -35,7 +35,7 @@ const PUNTO_GEODESICOS: WmsLayerConfig[] = [
 ];
 const NOMENCLATURA_SECCIONES: WmsLayerConfig[] = [
   { id: 'nombre-vias', layerName: `${wp}vw_tg_via`, zIndex: 15, title: 'Vías' },  
-  { id: 'seccion-vial', layerName: `${wp}gc_etiqueta-seccion-via`, zIndex: 2, title: 'Sección de Vías' },  
+  { id: 'seccion-vial', layerName: `${wp}seccion-vial`, zIndex: 5, title: 'Sección de Vías' },  
 ];
 const NUMERACION_LAYERS: WmsLayerConfig[] = [
   { id: 'num_municipal_2024', layerName: `${wp}vw_numeracion_campo_2024`, zIndex: 3, title: 'Numeración de campo 2024' },
@@ -71,7 +71,7 @@ const VUELOS_LAYERS: WmsLayerConfig[] = [
   { id: 'fotos_sin_2024', layerName: `${wp}vw_tg_fotosSinProcesar_2024`, zIndex: 0, title: 'Fotos sin Procesar - 2024' },
 ];
 const NORMATIVA_LAYERS: WmsLayerConfig[] = [  
-  { id: 'zonificacion', layerName: `${wp}gcZonificacion`, zIndex: 3, title: 'Zonificación' },  
+  { id: 'zonificacion', layerName: `${wp}zonificacion`, zIndex: 3, title: 'Zonificación' },  
   { id: 'amUrbHomogeneo', layerName: `${wp}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 3, title: 'Ámbito Urbano Homogéneo' },
   { id: 'norm_alt_edific', layerName: `${wp}nor_altura_edificacion`, zIndex: 3, title: 'Alturas maximas de edificacion normativa' },
   { id: 'tusne', layerName: `${wp}vw_tg_tusne`, zIndex: 3, title: 'Levantamiento Topográfico' },

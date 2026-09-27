@@ -29,6 +29,8 @@ export class Funciones {
   public readonly baseLayerType = this.mapService.baseLayerType;
   public readonly isMapBasePanelOpen = signal(false);
   public readonly herramientasActivas = signal(false);
+  /** Hay una herramienta de dibujo activa (habilita el botón "Finalizar trazo"). */
+  public readonly dibujando = this.drawMeasureService.isDrawing;
 
   private userMarkerOverlay?: Overlay;
   private locationPopupOverlay?: Overlay;
@@ -248,6 +250,14 @@ export class Funciones {
   dibujarPunto(): void { this.drawMeasureService.dibujarPunto(); }
   dibujarLinea(): void { this.drawMeasureService.dibujarLinea(); }
   dibujarPoligono(): void { this.drawMeasureService.dibujarPoligono(); }
+
+  /**
+   * Finaliza el trazo en curso (polígono, línea o medición) sin necesidad de
+   * hacer doble clic: equivale a pulsar la tecla Enter.
+   */
+  finalizarDibujo(): void {
+    this.drawMeasureService.finalizarMedicion();
+  }
 
   limpiarDibujo(): void {
     this.drawMeasureService.limpiar();

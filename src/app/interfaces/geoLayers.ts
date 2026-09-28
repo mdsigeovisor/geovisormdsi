@@ -206,6 +206,22 @@ export interface LoteInfoWindow {
   zIndex?: number;
 }
 
+/**
+ * Lámina PDF asociada a una vía de la capa "Sección de Vías Normativas
+ * Metropolitanas" (ORD. N° 2343-MML), que se muestra en un modal al hacer clic
+ * sobre su eje.
+ */
+export interface LaminaSeccionVialMetro {
+  /** Valor del campo llave `refname` del eje consultado (p. ej. `E16`). */
+  refname: string;
+  /** Tipo de vía informado por la capa (p. ej. `CORTES EXPRESAS`). */
+  tipo: string;
+  /** Nombre del PDF en el servidor (p. ej. `E-16.pdf`). */
+  archivo: string;
+  /** URL de la lámina para el visor; `null` cuando la lámina no está publicada. */
+  url: string | null;
+}
+
 /** Configuración de una capa consultable al hacer clic sobre el mapa. */
 export interface ClickableLayerConfig {
   /** Identificador de la capa en el panel de capas. */

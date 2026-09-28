@@ -16,6 +16,12 @@ export interface ParametrosEnvironment {
   ambiente: 'Desarrollo' | 'QA' | 'Producción';
   /** URL pública del portal municipal donde vive el geovisor y sus APIs */
   portalUrl: string;
+  /**
+   * Código del sistema con el que el API de Seguridad identifica al Geovisor
+   * (por defecto `'010004'`). Solo hace falta informarlo si un ambiente se
+   * registra con otro código.
+   */
+  codigoSistema?: string;
   /** Servidores internos (por defecto, los de la red municipal) */
   geoserverUrl?: string;
   ortofotoServerUrl?: string;
@@ -48,8 +54,13 @@ export function crearEnvironment(cfg: ParametrosEnvironment) {
     // --- API DE SEGURIDAD (WSGEOVISOR · módulo MSICAS) ---
     seguridadApiUrl: '/WSGEOVISOR/api/seguridad',
     // Código del sistema con el que el API identifica al Geovisor en la tabla de
-    // sistemas del módulo de Seguridad. Se envía en cada inicio de sesión.
-    codigoSistema: 'GEOVISOR',
+    // sistemas del módulo de Seguridad. Se envía en CADA inicio de sesión y debe
+    // estar registrado en el API: con un código inexistente el servicio responde
+    // `codigoRespuesta: "99"` sin token, sin usuario y sin permisos, de modo que
+    // el visor entraba en modo público y la sesión se cerraba sola minutos
+    // después. Verificado contra el API de integración: `010004` (el del
+    // Geovisor) devuelve el JWT de 60 minutos con sus páginas y controles.
+    codigoSistema: cfg.codigoSistema ?? '010004',
 
     // --- ENCUESTA DE SALIDA ---
     // Se abre en una pestaña nueva cuando el usuario confirma el cierre de sesión
@@ -148,6 +159,13 @@ export function crearEnvironment(cfg: ParametrosEnvironment) {
       // --- Fichas PDF de Áreas Verdes de San Isidro ---
       get areasVerdesUrlBase(): string {
         return `${this.tusneServerUrl}/DataGIS_WGS84/19_AREAS%20VERDES%20DE%20SAN%20ISIDRO`;
+      },
+      // --- Láminas PDF de Sección Vial Normativa Metropolitana (ORD. N° 2343) ---
+      // Una lámina por vía normativa; el archivo se resuelve desde el campo
+      // `refname` de la capa `tg_seccion_vial_normativa_metropolitana` (ver
+      // `laminasSeccionVialMetro.config.ts`).
+      get seccionVialMetroLaminasUrlBase(): string {
+        return `${this.tusneServerUrl}/DataGIS_WGS84/23_LAMINAS_SECCION_VIAL_MET_ORD_2343`;
       }
     }
   };

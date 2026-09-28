@@ -132,17 +132,16 @@ const PANEL_BASE: Section[] = [
     title: 'IMÁGENES AEREAS',
     expanded: false,
     items: [      
-      subseccion('ortofotos_historicas', 'Ortofotos Históricas', [
-        // Superposición de lotes catastrales (WMS, zIndex 15) pensada para verse
+      // Superposición de lotes catastrales (WMS, zIndex 15) pensada para verse
       // sobre la ortofoto activa; no interviene en la regla de radio de ortofotos.
       capa('lote-ortofoto', 'Lote Catastral', { visible: false, showInLegend: true }),
+      subseccion('ortofotos_historicas', 'Ortofotos Históricas', [      
         ...ORTOFOTO_YEARS.map(year => capa(`ortofoto_${year}`, `${year}`)),
       ], false, { requiresAuth: false }),
       subseccion('fotos_sin_procesar', 'Fotos sin Procesar', [
         capa('fotos_sin_2018', 'Fotos sin Procesar - 2018', { visible: false, showInLegend: false }),
         capa('fotos_sin_2024', 'Fotos sin Procesar - 2024', { visible: false, showInLegend: false }),
-      ], false, { requiresAuth: true }),
-      
+      ], false, { requiresAuth: true }),      
     ],
   },
   {

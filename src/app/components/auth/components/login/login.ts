@@ -8,6 +8,7 @@ import {
   OnDestroy,
   HostListener,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -26,6 +27,12 @@ const CLAVE_RECORDADA = 'gmsi_usuario_recordado';
 })
 export class Login implements AfterViewInit, OnDestroy {
   @Output() close = new EventEmitter<void>();
+
+  /**
+   * Mensaje informativo opcional que se muestra sobre el formulario, por
+   * ejemplo cuando el modal se abre porque la sesión anterior caducó.
+   */
+  mensaje = input('');
   private readonly authService = inject(AuthService);
 
   /** Referencias a los campos para gestión de foco. */

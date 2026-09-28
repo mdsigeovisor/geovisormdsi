@@ -1,0 +1,4 @@
+chunk-3GSFMJS4.js contiene verde(70,87,15)
+chunk-ISNJTERQ.js contiene verde(70,87,15)
+chunk-MHJ67ZSQ.js contiene verde(70,87,15)
+styles.css contiene verde(70,87,15)

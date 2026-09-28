@@ -626,9 +626,105 @@
   </div>
 </div>
 }
+<!-- Modal para Lámina de Sección Vial Normativa Metropolitana (ORD. N° 2343-MML) -->
+@if (mapService.laminaSeccionVialMetro(); as lamina) {
+<div class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 animate-fade-in"
+  (click)="closeLaminaSeccionVialMetroModal()" tabindex="-1">
+  <div class="flex flex-col bg-white rounded-lg shadow-lg w-full max-w-[860px] h-[88%] animate-scale-in"
+    (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between gap-2 p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+      <h3 class="m-0 text-sm font-semibold leading-tight text-gray-800">
+        Sección Vial Normativa Metropolitana (ORD. N° 2343-MML)
+        <span class="block text-xs font-normal text-gray-500">
+          Vía <strong>{{ lamina.refname }}</strong>@if (lamina.tipo) { · {{ lamina.tipo }} }
+        </span>
+      </h3>
+      <div class="flex items-center gap-1">
+        <!-- Abre la lámina en una pestaña nueva (imprimir/descargar el PDF) -->
+        @if (lamina.url) {
+        <a [href]="lamina.url" target="_blank" rel="noopener"
+          class="flex h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-bold text-primary transition-colors hover:bg-primary/10"
+          title="Abrir la lámina en una pestaña nueva">
+          <i class="bi bi-box-arrow-up-right"></i> Abrir
+        </a>
+        }
+        <button
+          class="w-9 h-9 rounded-full flex items-center justify-center bg-transparent border-none text-2xl cursor-pointer transition-colors hover:bg-gray-200"
+          (click)="closeLaminaSeccionVialMetroModal()" title="Cerrar">&times;</button>
+      </div>
+    </div>
+    @if (lamina.url) {
+    <div class="flex-grow p-0 overflow-hidden relative bg-gray-100">
+      <!-- Indicador de carga del PDF (queda detrás mientras el visor lo dibuja) -->
+      <div class="absolute inset-0 flex items-center justify-center bg-white/50">
+        <app-spinner size="h-40 w-40" color="text-gray-800" imageUrl="/assets/images/msibn.png"></app-spinner>
+      </div>
+      <iframe class="relative w-full h-full border-0 rounded-b-lg" [src]="getSafeUrl(lamina.url)"
+        title="Lámina de sección vial normativa metropolitana" frameborder="0"></iframe>
+    </div>
+    } @else {
+    <!-- Lámina aún no publicada en el servidor de láminas -->
+    <div class="flex-grow flex flex-col items-center justify-center gap-2 p-6 text-center text-gray-600">
+      <i class="bi bi-file-earmark-x text-4xl text-amber-500"></i>
+      <p class="m-0 font-semibold">La lámina PDF de esta vía aún no está publicada.</p>
+      <p class="m-0 max-w-[430px] text-xs">
+        Vía <strong>{{ lamina.refname }}</strong>@if (lamina.tipo) { ({{ lamina.tipo }}) }.
+        El archivo esperado en el servidor de láminas es <strong>{{ lamina.archivo }}</strong>.
+      </p>
+    </div>
+    }
+  </div>
+</div>
+}
 <!-- Modal para Login -->
 @if (showLoginModal()) {
-<app-login (close)="closeLoginModal()"></app-login>
+<app-login
+  [mensaje]="authService.sesionExpirada() ? 'Su sesión anterior finalizó por tiempo de espera. Ingrese sus credenciales para volver a consultar los datos restringidos.' : ''"
+  (close)="closeLoginModal()"></app-login>
+}
+<!-- Notificación de sesión: aviso previo a la caducidad y aviso de sesión finalizada.
+     Con `SESION_CADUCA = false` (auth.service.ts) la sesión ya no vence, así que este
+     bloque no llega a mostrarse; se conserva para poder reactivar la caducidad con un
+     único cambio en el servicio. -->
+@if (authService.sesionPorExpirar() || authService.sesionExpirada()) {
+<div id="session-notice" role="status" aria-live="polite"
+  class="fixed top-20 left-1/2 -translate-x-1/2 z-[1040] w-[min(92vw,27rem)] animate-fade-in">
+  <div class="flex items-start gap-3 rounded-xl border px-4 py-3 shadow-2xl backdrop-blur-md"
+    [class]="authService.sesionExpirada() ? 'border-red-200 bg-red-50/95 text-red-700' : 'border-amber-200 bg-amber-50/95 text-amber-800'">
+    <i class="bi mt-0.5 text-lg"
+      [class]="authService.sesionExpirada() ? 'bi-shield-exclamation' : 'bi-hourglass-split'"></i>
+    <div class="flex-1 text-xs leading-relaxed">
+      @if (authService.sesionExpirada()) {
+      <p class="m-0 font-bold">Su sesión ha finalizado</p>
+      <p class="m-0 mt-0.5">Venció el tiempo de la sesión: las capas, fichas y consultas restringidas
+        volvieron al modo público.</p>
+      <button type="button" (click)="openLoginModal()"
+        class="mt-2 flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-secondary cursor-pointer">
+        <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+      </button>
+      } @else {
+      <p class="m-0 font-bold">Su sesión está por expirar</p>
+      <p class="m-0 mt-0.5">Tiempo restante: <span class="font-bold tabular-nums">{{ authService.cuentaAtras() }}</span>.
+        @if (authService.puedeExtenderSesion()) {
+        Pulse "Extender sesión" para continuar sin volver a ingresar sus credenciales.
+        } @else {
+        Al finalizar deberá ingresar sus credenciales nuevamente.
+        }
+      </p>
+      @if (authService.puedeExtenderSesion()) {
+      <button type="button" (click)="authService.extenderSesion()"
+        class="mt-2 flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-secondary cursor-pointer">
+        <i class="bi bi-arrow-clockwise"></i> Extender sesión
+      </button>
+      }
+      }
+    </div>
+    <button type="button" (click)="authService.descartarAvisoSesion()" aria-label="Cerrar aviso"
+      class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-current transition-colors hover:bg-black/10">
+      <i class="bi bi-x-lg text-xs"></i>
+    </button>
+  </div>
+</div>
 }
 <!-- Dashboard de Conformidad de Obra -->
 @if (dashboardVisible()) {

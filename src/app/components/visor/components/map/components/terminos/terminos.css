@@ -63,11 +63,14 @@
   animation: termsScaleOut 0.3s ease-in forwards;
 }
 
-/* ===== Panel del modal (borde y halo institucionales, antes inline en el HTML) ===== */
+/* ===== Panel del modal (borde y halo verdes institucionales, antes inline en el HTML).
+   El halo usa el verde del proyecto (#46570f / rgb(70, 87, 15)), el mismo del botón
+   "Acepto e ingresar" y del popover del tour (styles.css), en lugar del azul anterior
+   con el que el modal parecía de otro aplicativo. ===== */
 .terms-panel {
-  border-color: rgb(27, 42, 78);
-  box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.9), 0 0 12px 3px rgba(120, 170, 255, 0.8),
-    0 0 28px 8px rgba(27, 42, 78, 0.9), 0 0 60px 16px rgba(27, 42, 78, 0.5);
+  border-color: rgb(70, 87, 15);
+  box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.9), 0 0 12px 3px rgba(70, 87, 15, 0.85),
+    0 0 28px 8px rgba(70, 87, 15, 0.55), 0 0 60px 16px rgba(33, 42, 11, 0.5);
 }
 
 /* ===== Botón "Acepto e ingresar" (degradado institucional, antes inline en el HTML) ===== */

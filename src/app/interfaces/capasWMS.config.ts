@@ -8,8 +8,10 @@ const wp = environment.geoserver.workspacePrefix;
  */
 const CATASTRALES_LAYERS: WmsLayerConfig[] = [
   { id: 'num_cuadra', layerName: `${wp}vw_tg_cuadra`, zIndex: 1.5, title: 'Número de Cuadras' },
+  { id: 'edificaciones', layerName: `${wp}tg_edificaciones`, zIndex: 2, title: 'Edificaciones' },
   { id: 'construcciones', layerName: `${wp}vw_tg_construcciones`, zIndex: 1.5, title: 'Construcciones' },
   { id: 'area-verde', layerName: `${wp}vw_tg_area_privada`, zIndex: 1, title: 'Área Recreativa' },
+  { id: 'nombre-parque', layerName: `${wp}nombres_parque`, zIndex: 3, title: 'Nombre Parque' },
   { id: 'area-verde', layerName: `${wp}vw_tg_area_rec`, zIndex: 1, title: 'Área Recreativa' },
   { id: 'lim-distrital', layerName: `${wp}tg_limiteDistrital`, zIndex: 1, title: 'Manzana Catastral' },
   { id: 'lote', layerName: `${wp}vw_tg_lote`, zIndex: 0.5, title: 'Lote Catastral' },
@@ -20,10 +22,10 @@ const CATASTRALES_LAYERS: WmsLayerConfig[] = [
   { id: 'nom-distrito-vecinos', layerName: `${wp}tg_distrito_colin_nombres`, zIndex: 0, title: 'Manzana Catastral'},  
 ];
 const SECTORES_LAYERS: WmsLayerConfig[] = [
-  { id: 'sector-catastral', layerName: `${wp}vw_tg_sec_catastro`, zIndex: 2, title: 'Sectores Catastrales' },
-  { id: 'sector-vecinal', layerName: `${wp}vw_tg_secvecinales`, zIndex: 2, title: 'Subsectores Vecinales' },
-  { id: 'urbanizaciones', layerName: `${wp}vw_tg_habilitacion`, zIndex: 2, title: 'Habilitación Urbana' },  
-  { id: 'sub-sector-vecinal', layerName: `${wp}vw_tg_subsecvecinales`, zIndex: 2, title: 'Sectores Vecinales' },  
+  { id: 'sector-catastral', layerName: `${wp}vw_tg_sec_catastro`, zIndex: 20, title: 'Sectores Catastrales' },
+  { id: 'sector-vecinal', layerName: `${wp}vw_tg_secvecinales`, zIndex: 20, title: 'Subsectores Vecinales' },
+  { id: 'urbanizaciones', layerName: `${wp}vw_tg_habilitacion`, zIndex: 20, title: 'Habilitación Urbana' },  
+  { id: 'sub-sector-vecinal', layerName: `${wp}vw_tg_subsecvecinales`, zIndex: 15, title: 'Sectores Vecinales' },  
 ];
 const ETIQUETAS_LAYERS: WmsLayerConfig[] = [
   { id: 'manzana-lote-urbano', layerName: `${wp}vw_tg_lote_urbano`, zIndex: 2, title: 'Lote Urbano' },
@@ -67,8 +69,8 @@ const MOVILIARIO_URBANO: WmsLayerConfig[] = [
 ];
 const VUELOS_LAYERS: WmsLayerConfig[] = [
   { id: 'lote-ortofoto', layerName: `${wp}vw_tg_lote_ortofoto`, zIndex: 15, title: 'Lote Catastral' },
-  { id: 'fotos_sin_2018', layerName: `${wp}vw_tg_fotosSinProcesar_2018`, zIndex: 0, title: 'Fotos sin Procesar - 2018' },
-  { id: 'fotos_sin_2024', layerName: `${wp}vw_tg_fotosSinProcesar_2024`, zIndex: 0, title: 'Fotos sin Procesar - 2024' },
+  { id: 'fotos_sin_2018', layerName: `${wp}vw_tg_fotosSinProcesar_2018`, zIndex: 10, title: 'Fotos sin Procesar - 2018' },
+  { id: 'fotos_sin_2024', layerName: `${wp}vw_tg_fotosSinProcesar_2024`, zIndex: 10, title: 'Fotos sin Procesar - 2024' },
 ];
 const NORMATIVA_LAYERS: WmsLayerConfig[] = [  
   { id: 'zonificacion', layerName: `${wp}zonificacion`, zIndex: 3, title: 'Zonificación' },  

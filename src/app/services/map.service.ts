@@ -26,9 +26,14 @@ import {
   TipoMapaBase,
   LoteDatosHover,
   LoteInfoWindow,
-  ClickableLayerConfig
+  ClickableLayerConfig,
+  LaminaSeccionVialMetro
 } from '../interfaces/geoLayers';
 import { INITIAL_WMS_LAYERS } from '../interfaces/capasWMS.config';
+import {
+  laminaSeccionVialMetroPublicada,
+  nombreLaminaSeccionVialMetro,
+} from '../interfaces/laminasSeccionVialMetro.config';
 import {
   INITIAL_CENTER,
   INITIAL_ZOOM,
@@ -291,6 +296,13 @@ export class MapService {
   subsectorVecinalUrl = signal<string | null>(null);
   /** URL con la fotografía de un componente de señaletica (2026) para mostrar en un modal. */
   senaleticaUrl = signal<string | null>(null);
+  /**
+   * Lámina PDF de la capa "Sección de Vías Normativas Metropolitanas"
+   * (ORD. N° 2343-MML) que se está mostrando en el modal; `null` cuando el modal
+   * está cerrado. Incluye los datos de la vía consultada (`refname` y `tipo`) y
+   * `url: null` cuando la lámina todavía no está publicada en el servidor.
+   */
+  laminaSeccionVialMetro = signal<LaminaSeccionVialMetro | null>(null);
   /** Parámetros comunes para las consultas GetFeatureInfo. */
   private static readonly FEATURE_INFO_PARAMS = {
     'INFO_FORMAT': 'application/json',
@@ -355,6 +367,13 @@ export class MapService {
       const ruta = nombre.includes('/') ? nombre : `DCIM/${nombre}`;
       return `${environment.dataGis.senaleticaFotosUrl}/${ruta}`;
     }, this.senaleticaUrl),
+    // Sección de Vías Normativas Metropolitanas (ORD. N° 2343-MML) — lámina PDF
+    // por vía: el archivo se resuelve con el campo llave `refname` de la capa.
+    {
+      layerId: 'secc-vial-metro',
+      getLayer: () => this.getLayerById('secc-vial-metro'),
+      handler: (feature) => this.abrirLaminaSeccionVialMetro(feature.properties),
+    },
   ];
   /**
    * Construye la configuración de una capa que, al recibir un clic sobre uno
@@ -380,6 +399,28 @@ export class MapService {
         }
       }
     };
+  }
+  /**
+   * Abre la lámina PDF de una vía de la capa "Sección de Vías Normativas
+   * Metropolitanas" (ORD. N° 2343-MML) a partir del feature consultado.
+   *
+   * El archivo se resuelve con el campo llave `refname` (ver
+   * `nombreLaminaSeccionVialMetro`). Si la lámina aún no está publicada, el
+   * modal lo indica en lugar de intentar cargar un PDF inexistente.
+   *
+   * @param properties Propiedades del feature devuelto por GeoServer.
+   */
+  private abrirLaminaSeccionVialMetro(properties: Record<string, any>): void {
+    const refname = String(properties['refname'] ?? properties['REFNAME'] ?? '').trim().toUpperCase();
+    if (!refname) return;
+    const archivo = nombreLaminaSeccionVialMetro(refname);
+    const publicada = laminaSeccionVialMetroPublicada(refname);
+    this.laminaSeccionVialMetro.set({
+      refname,
+      tipo: String(properties['tipo'] ?? properties['TIPO'] ?? '').trim(),
+      archivo,
+      url: publicada && archivo ? `${environment.dataGis.seccionVialMetroLaminasUrlBase}/${archivo}` : null,
+    });
   }
   /** Controla la visibilidad del modal global de Términos y Condiciones */
   showTermsModal = signal(false);
@@ -1502,6 +1543,13 @@ export class MapService {
     this.senaleticaUrl.set(null);
     this.senaleticaImgLoaded.set(false);
     this.senaleticaImgError.set(false);
+  }
+  /**
+   * Cierra el modal de la lámina de sección vial normativa metropolitana
+   * (ORD. N° 2343-MML).
+   */
+  clearLaminaSeccionVialMetro(): void {
+    this.laminaSeccionVialMetro.set(null);
   }
   /** Señal que indica si la fotografía de la señaletica (2026) se cargó correctamente. */
   senaleticaImgLoaded = signal<boolean>(false);

@@ -6,6 +6,7 @@ import { LoteInfoWindow } from '../../../../interfaces/geoLayers';
 import { MapService } from '../../../../services/map.service';
 import { DriverService } from '../../../../services/driver.service';
 import { DrawMeasureService } from '../../../../services/draw.service';
+import { AuthService } from '../../../../services/auth.service';
 // Componentes relacionados
 import { Navbar } from './components/navbar/navbar';
 import { Sidebar } from './components/sidebar/sidebar';
@@ -63,6 +64,11 @@ export class MapComponent {
   private readonly loteWindowsLoaded = signal<Set<string>>(new Set());
 
     public readonly mapService = inject(MapService);
+  /**
+   * Estado de la sesión, expuesto a la plantilla para la notificación de
+   * caducidad (aviso previo y aviso de sesión finalizada).
+   */
+  public readonly authService = inject(AuthService);
   private readonly driverService = inject(DriverService);
   /** Estado del tour activo (proyectado al navbar para el resaltado del botón). */
   isTourActive = this.driverService.tourActivo;
@@ -180,6 +186,9 @@ export class MapComponent {
     }
     if (this.mapService.senaleticaUrl()) {
       this.closeSenaleticaModal();
+    }
+    if (this.mapService.laminaSeccionVialMetro()) {
+      this.closeLaminaSeccionVialMetroModal();
     }
     if (this.mapService.showTermsModal()) {
       this.mapService.closeTermsModal();
@@ -398,6 +407,14 @@ export class MapComponent {
    */
   closeSenaleticaModal(): void {
     this.mapService.clearSenaleticaUrl();
+  }
+
+  /**
+   * Cierra el modal de la lámina de sección vial normativa metropolitana
+   * (ORD. N° 2343-MML).
+   */
+  closeLaminaSeccionVialMetroModal(): void {
+    this.mapService.clearLaminaSeccionVialMetro();
   }
 
   /**

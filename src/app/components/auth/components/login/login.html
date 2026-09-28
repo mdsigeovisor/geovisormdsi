@@ -35,6 +35,15 @@
       <!-- Formulario (ngSubmit permite enviar con Enter) -->
       <form (ngSubmit)="enviar()" class="flex-1 space-y-4 px-6 py-5">
 
+        <!-- Aviso informativo (p. ej. sesión anterior caducada) -->
+        @if (mensaje()) {
+          <div role="status"
+            class="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 animate-fade-in">
+            <i class="bi bi-info-circle-fill mt-0.5 text-amber-500"></i>
+            <span class="text-xs font-semibold text-amber-700">{{ mensaje() }}</span>
+          </div>
+        }
+
         <!-- Mensaje de error -->
         @if (error()) {
           <div role="alert"

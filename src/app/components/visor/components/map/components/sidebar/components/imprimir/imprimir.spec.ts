@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { LineString } from '@app/modules/openlayers.module';
 import { MapService } from '@app/services/map.service';
@@ -18,6 +20,9 @@ describe('Imprimir', () => {
     await TestBed.configureTestingModule({
       imports: [Imprimir],
       providers: [
+        // `Imprimir` inyecta AuthService (restricción de foto) → HttpClient.
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: MapService,
           useValue: {

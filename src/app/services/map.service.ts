@@ -784,10 +784,18 @@ export class MapService {
       properties: { id: options.id, title: options.title }
     });
     map.addLayer(layer);
-    // Generamos la URL de la leyenda para servicios WMS (estándar GetLegendGraphic)
-    const legendUrl = `${url}${url.includes('?') ? '&' : '?'}` +
-      `SERVICE=WMS&VERSION=${version}&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${options.layerName}&TRANSPARENT=true`;
-    this.updateLayerProperties(options.id, { olLayer: layer, legendUrl });
+    // Generamos la URL de la leyenda para servicios WMS (estándar GetLegendGraphic).
+    // En capas compuestas `layerName` agrupa varias capas: se pide UNA leyenda por
+    // cada capa indicada en `legendLayerName` (o en `layerName` si no se informa),
+    // de modo que no se depende del soporte de leyendas multi-capa del GeoServer.
+    const capasLeyenda = (options.legendLayerName ?? options.layerName)
+      .split(',')
+      .map(nombre => nombre.trim())
+      .filter(nombre => nombre.length > 0);
+    const legendUrls = capasLeyenda.map(capaLeyenda =>
+      `${url}${separator}` +
+      `SERVICE=WMS&VERSION=${version}&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${capaLeyenda}&TRANSPARENT=true`);
+    this.updateLayerProperties(options.id, { olLayer: layer, legendUrl: legendUrls[0], legendUrls });
   }
   /**
    * Método para agregar capas XYZ al mapa.

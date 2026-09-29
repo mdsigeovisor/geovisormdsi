@@ -42,7 +42,7 @@
           <p class="text-[10px] text-gray-400 mt-2 italic">Active capas con leyenda en el panel de Capas para verlas aquí.</p>
         </div>
       } @else {
-        @for (item of activeLegends(); track item.label) {
+        @for (item of activeLegends(); track item.url) {
           <div class="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition-all">
             <div class="bg-gray-50/50 px-4 py-2.5 border-b border-gray-50">
               <span class="font-bold text-gray-700 text-[11px] uppercase tracking-wider leading-tight block">{{ item.label }}</span>

@@ -72,10 +72,20 @@ const VUELOS_LAYERS: WmsLayerConfig[] = [
   { id: 'fotos_sin_2024', layerName: `${wp}vw_tg_fotosSinProcesar_2024`, zIndex: 10, title: 'Fotos sin Procesar - 2024' },
 ];
 const NORMATIVA_LAYERS: WmsLayerConfig[] = [  
-  { id: 'zonificacion', layerName: `${wp}zonificacion`, zIndex: 3, title: 'Zonificación' },  
-  { id: 'amUrbHomogeneo', layerName: `${wp}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 3, title: 'Ámbito Urbano Homogéneo' },
-  { id: 'norm_alt_edific', layerName: `${wp}nor_altura_edificacion`, zIndex: 3, title: 'Alturas maximas de edificacion normativa' },
-  { id: 'tusne', layerName: `${wp}vw_tg_tusne`, zIndex: 3, title: 'Levantamiento Topográfico' },
+  // Zonificación: capa COMPUESTA (un solo interruptor en el panel). Se dibuja con
+  // una única petición GetMap cuyos LAYERS son los polígonos de usos del suelo
+  // (capa de abajo) y sus límites normativos (capa de arriba). La leyenda muestra
+  // AMBAS simbologías: se pide una imagen por capa (usos del suelo + límites).
+  {
+    id: 'zonificacion',
+    layerName: `${wp}vw_nor_zonificacion_poligono,${wp}vw_nor_zonificacion_limites`,
+    legendLayerName: `${wp}vw_nor_zonificacion_poligono,${wp}vw_nor_zonificacion_limites`,
+    zIndex: 3,
+    title: 'Zonificación'
+  },
+  { id: 'amUrbHomogeneo', layerName: `${wp}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 3, title: 'Ámbito Urbano Homogéneo'},
+  { id: 'norm_alt_edific', layerName: `${wp}nor_altura_edificacion`, zIndex: 3, title: 'Alturas maximas de edificacion normativa'},
+  { id: 'tusne', layerName: `${wp}vw_tg_tusne`, zIndex: 3, title: 'Levantamiento Topográfico'},
 ];
 const SISTEMA_VIAL: WmsLayerConfig[] = [  
   { id: 'sist-vial-metro', layerName: `${wp}tg_nor_sistema_vial_normativo`, zIndex: 3, title: 'SISTEMA VIAL METROPOLITANO (ORD. N 341-MML)'},

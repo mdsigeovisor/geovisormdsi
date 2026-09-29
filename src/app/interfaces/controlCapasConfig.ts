@@ -150,6 +150,9 @@ const PANEL_BASE: Section[] = [
     expanded: false,
     items: [
       subseccion('normaUrbana', 'NORMATIVA URBANA', [
+        // Una sola entrada agrupa el polígono de usos del suelo y sus límites
+        // normativos (capa compuesta declarada en capasWMS.config.ts): un único
+        // interruptor, un único control de opacidad y una única leyenda.
         capa('zonificacion', 'Zonificación usos del suelo', { visible: false, showInLegend: true }),
         capa('amUrbHomogeneo', 'Ambitos Urbanos Homogéneos', { visible: false, showInLegend: false, requiresAuth: true }),
         capa('norm_alt_edific', 'Alturas Maximas de Edificacion', { visible: false, showInLegend: true }),        

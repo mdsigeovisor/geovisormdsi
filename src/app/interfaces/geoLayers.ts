@@ -45,10 +45,33 @@ export interface LayerItem {
   opacity: number;
   olLayer?: TileLayer | ImageLayer<ImageWMS>;
   legendUrl?: string; // Añadimos la propiedad legendUrl
+  /**
+   * Leyendas de la capa: una imagen por cada capa WMS que compone el servicio
+   * (ver `WmsLayerConfig.legendLayerName`). Se generan al cargar la capa en el
+   * mapa y el panel de leyenda muestra todas; `legendUrl` conserva la primera
+   * por compatibilidad.
+   */
+  legendUrls?: string[];
 }
 export interface WmsLayerConfig {
   id: string;
+  /**
+   * Capa del servicio WMS que se va a publicar.
+   *
+   * Admite varias capas separadas por comas (`WEB_GIS:capa_a,WEB_GIS:capa_b`)
+   * para declarar una capa COMPUESTA: se dibuja con una sola petición GetMap
+   * (en el orden indicado, la primera queda debajo) y el panel de capas la
+   * controla con un único interruptor, opacidad y leyenda.
+   */
   layerName: string;
+  /**
+   * Capa (o capas separadas por comas) de las que se genera la leyenda
+   * (`GetLegendGraphic`). Si se indican varias, se pide UNA imagen de leyenda por
+   * capa —así no se depende del soporte de leyendas multi-capa del GeoServer— y el
+   * panel de leyenda las muestra todas bajo el mismo título. Solo hace falta
+   * cuando `layerName` es una capa compuesta; por defecto se usa `layerName`.
+   */
+  legendLayerName?: string;
   zIndex: number;
   title: string;
   url?: string;

@@ -72,12 +72,16 @@ export class Leyenda {
         const layers = 'layers' in item ? item.layers : (item.type === 'layer' ? [item] : []);
 
         for (const layer of layers) {
-          // La capa debe ser visible, tener URL de leyenda y la propiedad showInLegend no debe ser 'false'
-          if (layer.visible && layer.legendUrl && layer.showInLegend !== false) {
+          // La capa debe ser visible y la propiedad showInLegend no debe ser 'false'
+          if (!layer.visible || layer.showInLegend === false) continue;
+          // Una capa puede aportar varias leyendas (capas compuestas: p. ej. los
+          // polígonos de zonificación y sus límites); `legendUrl` es la primera.
+          const urls = layer.legendUrls?.length ? layer.legendUrls : layer.legendUrl ? [layer.legendUrl] : [];
+          for (const url of urls) {
             // Usamos la URL como clave para asegurar que cada leyenda sea única.
             // Esto evita duplicados si varias capas comparten la misma URL de leyenda.
-            if (!uniqueLegends.has(layer.legendUrl)) {
-              uniqueLegends.set(layer.legendUrl, { label: layer.label, url: layer.legendUrl });
+            if (!uniqueLegends.has(url)) {
+              uniqueLegends.set(url, { label: layer.label, url });
             }
           }
         }

@@ -202,6 +202,8 @@ const PANEL_BASE: Section[] = [
         capa('tem_view_lote_concargaRegistral', 'Carga Registral', { visible: false, showInLegend: true }),
         capa('tem_view_lote_ley27157a', 'Declatatoria de Fabrica - ley 27157 A', { visible: false, showInLegend: true }),
         capa('tem_view_lote_ley27157b', 'Declatatoria de Fabrica - ley 27157 B', { visible: false, showInLegend: true }),
+        capa('uso_predo_2021', 'Uso predominante 2021', { visible: false, showInLegend: true }),
+        
       ]),      
       subseccion('tramites_atendidos', 'TRAMITES ATENDIDOS', [
         capa('tem_parametros', 'Parametros urbanisticos y Edificatorios', { visible: false, showInLegend: true }),

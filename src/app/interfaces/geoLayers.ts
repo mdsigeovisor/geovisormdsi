@@ -102,6 +102,67 @@ export interface Section {
 }
 
 /* ------------------------------------------------------------------------- */
+/*  Utilidades de simbología (panel de leyenda)                               */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Capas (`LayerItem`) que contiene una sección, incluidas las que viven dentro
+ * de sus subsecciones. Útil para recorrer el panel sin duplicar el doble
+ * tratamiento `SubSection` / `LayerItem` en cada consumo.
+ */
+export function capasDeSeccion(seccion: Section): LayerItem[] {
+  return seccion.items.flatMap(item =>
+    'layers' in item ? item.layers : item.type === 'layer' ? [item] : []
+  );
+}
+
+/**
+ * Indica si una capa debe aportar su simbología al panel de leyenda: está
+ * encendida, no se excluyó de la leyenda (`showInLegend: false`) y tiene al
+ * menos una imagen generada (`legendUrls` en las capas compuestas, `legendUrl`
+ * en el resto).
+ */
+export function capaAportaSimbologia(capa: LayerItem): boolean {
+  if (!capa.visible || capa.showInLegend === false) return false;
+  return (capa.legendUrls?.length ?? 0) > 0 || Boolean(capa.legendUrl);
+}
+
+/**
+ * Capas cuya simbología debe mostrarse en la leyenda, en el orden en que
+ * aparecen en el panel. Fuente única de verdad para el contenido de la ventana
+ * flotante y para decidir si debe abrirse u ocultarse automáticamente.
+ */
+export function capasConSimbologiaVisible(secciones: Section[]): LayerItem[] {
+  return secciones.flatMap(capasDeSeccion).filter(capaAportaSimbologia);
+}
+
+/** Qué debe hacer el visor con la ventana flotante de la leyenda tras un cambio de visibilidad. */
+export type SincroniaLeyenda = 'abrir' | 'cerrar' | 'ninguna';
+
+/**
+ * Regla que mantiene la ventana de la leyenda alineada con el panel de capas:
+ *  - `abrir`: se encendió simbología nueva; si el usuario activa una capa con
+ *    leyenda, la ventana no debería seguir escondida tras el menú.
+ *  - `cerrar`: ya no queda ninguna simbología visible y la ventana se había
+ *    abierto sola, para no dejar un panel vacío sobre el mapa.
+ *  - `ninguna`: en cualquier otro caso. Si la ventana se abrió a mano desde el
+ *    menú se respeta la decisión del usuario, aunque apague todas las capas.
+ * @param simbologiaAntes Capas con simbología visible antes del cambio.
+ * @param simbologiaAhora Capas con simbología visible después del cambio.
+ * @param abiertaAutomaticamente `true` si la ventana está abierta porque el
+ *                              visor la abrió, no porque la pidiera el usuario.
+ */
+export function sincroniaLeyenda(
+  simbologiaAntes: number,
+  simbologiaAhora: number,
+  abiertaAutomaticamente: boolean
+): SincroniaLeyenda {
+  if (simbologiaAhora > simbologiaAntes) return 'abrir';
+  if (simbologiaAhora === 0 && abiertaAutomaticamente) return 'cerrar';
+  return 'ninguna';
+}
+
+/* ------------------------------------------------------------------------- */
 /*  Resultados de las consultas/APIs del Geovisor                             */
 /* ------------------------------------------------------------------------- */
 

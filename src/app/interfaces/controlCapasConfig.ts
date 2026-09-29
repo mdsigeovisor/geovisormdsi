@@ -159,7 +159,7 @@ const PANEL_BASE: Section[] = [
       ]),
       subseccion('sistema_vial', 'SISTEMA VIAL', [
         capa('sist-vial-metro', 'SISTEMA VIAL METROPOLITANO (ORD. N 341-MML)', { visible: false, showInLegend: true }),
-        capa('secc-vial-norma', 'Seccion de vias Normativas Locales', { visible: false, showInLegend: true, requiresAuth: false }),
+        capa('secc-vial-norma', 'Seccion de vias Normativas Locales', { visible: false, showInLegend: false, requiresAuth: false }),
         capa('secc-vial-metro', 'Sección de Vias Normativas Metropolitanas', { visible: false, showInLegend: false }),
       ]),
     ]    

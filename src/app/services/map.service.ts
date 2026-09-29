@@ -27,7 +27,9 @@ import {
   LoteDatosHover,
   LoteInfoWindow,
   ClickableLayerConfig,
-  LaminaSeccionVialMetro
+  LaminaSeccionVialMetro,
+  capasConSimbologiaVisible,
+  sincroniaLeyenda,
 } from '../interfaces/geoLayers';
 import { INITIAL_WMS_LAYERS } from '../interfaces/capasWMS.config';
 import {
@@ -193,15 +195,48 @@ export class MapService {
    * `activeSidebarTools`: la navegación del sidebar gestiona una herramienta
    * de panel a la vez y nunca debe cerrar ni borrar la leyenda. Solo su
    * propio botón de cierre (X) o pulsar de nuevo "Leyenda" la ocultan.
+   * Arranca apagada para no cubrir el mapa al cargar, pero el visor la abre
+   * automáticamente en cuanto se enciende una capa con simbología y la vuelve
+   * a ocultar cuando se apaga la última: ver `sincronizarLeyendaConCapas`.
    */
   leyendaVisible = signal(false);
+  /**
+   * `true` mientras la leyenda está abierta porque el visor la abrió solo.
+   * Permite volver a cerrarla automáticamente cuando se apaga la última capa
+   * con simbología, sin quitarle la ventana a quien la abrió a mano desde el
+   * menú (en ese caso se respeta su decisión).
+   */
+  private leyendaAbiertaAutomaticamente = false;
   /** Alterna la ventana flotante de la leyenda (botón "Leyenda" del sidebar). */
   toggleLeyenda(): void {
+    // Es una acción manual: la ventana deja de considerarse "abierta sola".
+    this.leyendaAbiertaAutomaticamente = false;
     this.leyendaVisible.update(v => !v);
   }
   /** Cierra la ventana flotante de la leyenda (botón X de la propia ventana). */
   closeLeyenda(): void {
+    this.leyendaAbiertaAutomaticamente = false;
     this.leyendaVisible.set(false);
+  }
+  /**
+   * Sincroniza la ventana flotante de la leyenda con el panel de capas: aparece
+   * sola cuando el usuario enciende una capa con simbología (para que no tenga
+   * que buscar el botón "Leyenda" del menú) y se oculta cuando se apaga la
+   * última, para no dejar un panel vacío sobre el mapa. Debe invocarse justo
+   * después de aplicar el cambio de visibilidad sobre `sections`.
+   * @param simbologiaAntes Capas con simbología visible antes del cambio.
+   */
+  private sincronizarLeyendaConCapas(simbologiaAntes: number): void {
+    const simbologiaAhora = capasConSimbologiaVisible(this.panelSections()).length;
+    switch (sincroniaLeyenda(simbologiaAntes, simbologiaAhora, this.leyendaAbiertaAutomaticamente)) {
+      case 'abrir':
+        this.leyendaVisible.set(true);
+        this.leyendaAbiertaAutomaticamente = true;
+        break;
+      case 'cerrar':
+        this.closeLeyenda();
+        break;
+    }
   }
   /** Ventanas flotantes con la información de lotes (varias abiertas, sin bloquear el mapa) */
   loteInfoWindows = signal<LoteInfoWindow[]>([]);
@@ -1793,6 +1828,9 @@ export class MapService {
    * @param layerId ID de la capa a cambiar (ej: 'ortofoto_2024').
    */
   toggleLayerVisibility(sectionId: string, layerId: string) {
+    // Se guarda cuántas simbologías había activas para saber si esta acción
+    // acaba de encender leyenda y mostrar la ventana automáticamente.
+    const simbologiaAntes = capasConSimbologiaVisible(this.panelSections()).length;
     // Lógica especial para ortofotos: solo una puede estar activa a la vez.
     if (layerId.startsWith('ortofoto_')) {
       this.sections.update(currentSections => {
@@ -1825,9 +1863,14 @@ export class MapService {
       // Lógica original para el resto de las capas.
       this.updateLayerProperties(layerId, (layer) => ({ visible: !layer.visible }));
     }
+    // La leyenda aparece sola al encender una capa con simbología (y se oculta
+    // al apagar la última): ver `sincronizarLeyendaConCapas`.
+    this.sincronizarLeyendaConCapas(simbologiaAntes);
   }
   setLayerVisibility(sectionId: string, layerId: string, visible: boolean) {
+    const simbologiaAntes = capasConSimbologiaVisible(this.panelSections()).length;
     this.updateLayerProperties(layerId, { visible });
+    this.sincronizarLeyendaConCapas(simbologiaAntes);
   }
   setLayerOpacity(sectionId: string, layerId: string, opacity: number) {
     this.updateLayerProperties(layerId, { opacity });
@@ -1882,6 +1925,7 @@ export class MapService {
    * `requiresAuth`: en modo público esas capas permanecen apagadas.
    */
   toggleAllLayersInSection(sectionId: string, visible: boolean) {
+    const simbologiaAntes = capasConSimbologiaVisible(this.panelSections()).length;
     const isAuthed = this.authService.isAuthenticated();
     this.sections.update(s => s.map(sec => {
       if (sec.id !== sectionId) return sec;
@@ -1904,6 +1948,7 @@ export class MapService {
         }),
       };
     }));
+    this.sincronizarLeyendaConCapas(simbologiaAntes);
   }
 
   /**

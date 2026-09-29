@@ -1,25 +1,24 @@
 import { WmsLayerConfig } from './geoLayers';
 import { environment } from '../../environments/environment';
-import WMTSTileGrid from 'ol/tilegrid/WMTS';
-
 const wp = environment.geoserver.workspacePrefix;
 /**
  * Grupos de configuración de capas WMS organizados por temática.
  */
 const CATASTRALES_LAYERS: WmsLayerConfig[] = [
-  { id: 'num_cuadra', layerName: `${wp}vw_tg_cuadra`, zIndex: 1.5, title: 'Número de Cuadras' },
-  { id: 'edificaciones', layerName: `${wp}tg_edificaciones`, zIndex: 2, title: 'Edificaciones' },
-  { id: 'construcciones', layerName: `${wp}vw_tg_construcciones`, zIndex: 1.5, title: 'Construcciones' },
-  { id: 'area-verde', layerName: `${wp}vw_tg_area_privada`, zIndex: 1, title: 'Área Recreativa' },
-  { id: 'nombre-parque', layerName: `${wp}nombres_parque`, zIndex: 3, title: 'Nombre Parque' },
-  { id: 'area-verde', layerName: `${wp}vw_tg_area_rec`, zIndex: 1, title: 'Área Recreativa' },
-  { id: 'lim-distrital', layerName: `${wp}tg_limiteDistrital`, zIndex: 1, title: 'Manzana Catastral' },
-  { id: 'lote', layerName: `${wp}vw_tg_lote`, zIndex: 0.5, title: 'Lote Catastral' },
+  // zIndex 0 -> 3: menor valor se dibuja al fondo, mayor valor encima
   { id: 'manzana', layerName: `${wp}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
   { id: 'com-vial', layerName: `${wp}vw_tg_comp_via`, zIndex: 0, title: 'Manzana Catastral' },
   { id: 'lim-oceano', layerName: `${wp}tg_oceano`, zIndex: 0, title: 'Manzana Catastral' },
-  { id: 'manz-vecinas', layerName: `${wp}tg_manzana_colindante`, zIndex: 0, title: 'Manzana Catastral'},
-  { id: 'nom-distrito-vecinos', layerName: `${wp}tg_distrito_colin_nombres`, zIndex: 0, title: 'Manzana Catastral'},  
+  { id: 'manz-vecinas', layerName: `${wp}tg_manzana_colindante`, zIndex: 0, title: 'Manzana Catastral' },
+  { id: 'nom-distrito-vecinos', layerName: `${wp}tg_distrito_colin_nombres`, zIndex: 0, title: 'Manzana Catastral' },  
+  { id: 'area-verde', layerName: `${wp}vw_tg_area_privada`, zIndex: 1, title: 'Área Recreativa' },
+  { id: 'lote', layerName: `${wp}vw_tg_lote`, zIndex: 0.5, title: 'Lote Catastral' },
+  { id: 'area-verde', layerName: `${wp}vw_tg_area_rec`, zIndex: 1, title: 'Área Recreativa' },
+  { id: 'lim-distrital', layerName: `${wp}tg_limiteDistrital`, zIndex: 1, title: 'Manzana Catastral' },
+  { id: 'num_cuadra', layerName: `${wp}vw_tg_cuadra`, zIndex: 1.5, title: 'Número de Cuadras' },
+  { id: 'construcciones', layerName: `${wp}vw_tg_construcciones`, zIndex: 1.5, title: 'Construcciones' },
+  { id: 'edificaciones', layerName: `${wp}tg_edificaciones`, zIndex: 2, title: 'Edificaciones' },
+  { id: 'nombre-parque', layerName: `${wp}nombres_parque`, zIndex: 3, title: 'Nombre Parque' },
 ];
 const SECTORES_LAYERS: WmsLayerConfig[] = [
   { id: 'sector-catastral', layerName: `${wp}vw_tg_sec_catastro`, zIndex: 20, title: 'Sectores Catastrales' },

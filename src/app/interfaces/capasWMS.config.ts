@@ -84,7 +84,7 @@ const NORMATIVA_LAYERS: WmsLayerConfig[] = [
     title: 'Zonificación'
   },
   { id: 'amUrbHomogeneo', layerName: `${wp}vw_nor_ambitos_urbanos_homogeneos`, zIndex: 3, title: 'Ámbito Urbano Homogéneo'},
-  { id: 'norm_alt_edific', layerName: `${wp}nor_altura_edificacion`, zIndex: 3, title: 'Alturas maximas de edificacion normativa'},
+  { id: 'norm_alt_edific', layerName: `${wp}nor_altura_edificacion`, zIndex: 5, title: 'Alturas maximas de edificacion normativa'},
   { id: 'tusne', layerName: `${wp}vw_tg_tusne`, zIndex: 3, title: 'Levantamiento Topográfico'},
 ];
 const SISTEMA_VIAL: WmsLayerConfig[] = [  

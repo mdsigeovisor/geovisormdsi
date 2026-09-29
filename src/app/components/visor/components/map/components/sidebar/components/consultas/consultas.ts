@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MapService } from '@app/services/map.service';
 import { AuthService } from '@app/services/auth.service';
-import { Subject, take, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Subject, take, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 import {
   GeoJSONFeature,
   GeoJSONGeometry,
@@ -619,32 +619,44 @@ export class Consultas {
     }
     this.loading.set(true);
     this.searchError.set(null);
-    this.mapService.searchParquesByDenominacion(this.nombreParque)
-      .pipe(take(1))
-      .subscribe({
-        next: (features) => {
+    // 1) Buscamos primero por denominación EXACTA (sin distinguir mayúsculas):
+    //    así el mapa se ajusta únicamente a los polígonos del parque solicitado
+    //    y el zoom no se aleja por áreas vecinas con nombres parecidos.
+    this.mapService.searchParquesByDenominacion(this.nombreParque, true).pipe(
+      take(1),
+      // 2) Sin coincidencia exacta (texto libre escrito a mano), recurrimos a la
+      //    búsqueda parcial que alimenta las sugerencias.
+      switchMap(exactos => (exactos && exactos.length > 0)
+        ? of(exactos)
+        : this.mapService.searchParquesByDenominacion(this.nombreParque))
+    ).subscribe({
+      next: (features) => {
+        if (features && features.length > 0) {
+          this.ubicarParque(features);
+        } else {
           this.loading.set(false);
-          if (features && features.length > 0) {
-            // Creamos una GeometryCollection para que fitToGeometry se ajuste a todas las geometrías.
-            const geometryCollection: GeoJSONGeometry = {
-              type: 'GeometryCollection',
-              geometries: features.map(f => f.geometry)
-            };
-            // Ajustamos el mapa para que todas las geometrías del parque sean visibles.
-            // La capa de resaltado se encargará de dibujar todos los polígonos.
-            this.mapService.fitToGeometry(geometryCollection, 'EPSG:32718', undefined, true);
-            // No se emite un SearchResult porque un parque no es un predio, solo se ubica en el mapa.
-            this.Close.emit(); // Cerramos el panel de búsqueda
-          } else {
-            this.searchError.set('No se encontraron parques con los criterios ingresados.');
-          }
-        },
-        error: (err) => {
-          console.error('Error en la búsqueda por parque:', err);
-          this.searchError.set('Error de conexión con el servicio de parques.');
-          this.loading.set(false);
+          this.searchError.set('No se encontraron parques con los criterios ingresados.');
         }
-      });
+      },
+      error: (err) => {
+        console.error('Error en la búsqueda por parque:', err);
+        this.loading.set(false);
+        this.searchError.set('Error de conexión con el servicio de parques.');
+      }
+    });
+  }
+
+  /**
+   * Ubica en el mapa el parque encontrado y cierra el panel de búsqueda.
+   * El encuadre (`fitToParque`) abarca la extensión unida de TODOS los polígonos
+   * que componen el parque, con un margen del 8 % y un tope de zoom, de modo que
+   * se vea completo lo que abarca el área recreacional sin perder el entorno.
+   * No se emite un SearchResult porque un parque no es un predio.
+   */
+  private ubicarParque(features: GeoJSONFeature[]): void {
+    this.loading.set(false);
+    this.mapService.fitToParque(features.map(f => f.geometry));
+    this.Close.emit(); // Cerramos el panel de búsqueda para una mejor visualización
   }
 
   /**

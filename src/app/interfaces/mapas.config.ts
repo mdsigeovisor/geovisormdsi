@@ -21,6 +21,13 @@ export const TRAMA_WMS_URL = environment.geoserver.wmsUrl;
 export const ANIMATION_DURATION = 1000;
 /** Nivel de zoom al que se acerca el mapa al obtener la ubicación del usuario */
 export const ZOOM_LEVEL_LOCATION = 14;
+/**
+ * Tope de acercamiento al ubicar un parque (área recreacional) por su nombre:
+ * evita que las áreas muy pequeñas se amplíen hasta perder el contexto del
+ * entorno. Coincide con el `maxZoom` de las teselas de los mapas base (19), por
+ * lo que no se provoca ampliación digital de teselas ("overzoom").
+ */
+export const ZOOM_MAX_PARQUE = 19;
 /** 
  * Extensión geográfica aproximada de San Isidro [oeste, sur, este, norte] en LonLat 
  * Coordenadas actualizadas para Jirón Augusto Tamayo (lon, lat)

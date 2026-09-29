@@ -42,6 +42,7 @@ import {
   OSM_URL,
   TRAMA_WMS_URL,
   ANIMATION_DURATION,
+  ZOOM_MAX_PARQUE,
   SAN_ISIDRO_CENTER,
   SAN_ISIDRO_ZOOM,
   SAN_ISIDRO_EXTENT,
@@ -49,12 +50,14 @@ import {
 } from '../interfaces/mapas.config';
 import {
   BaseLayer,
+  extend,
   Feature,
   Fill,
   fromLonLat,
   GeoJSON,
   getCenter,
   getDistance,
+  isEmpty,
   ImageLayer,
   ImageWMS,
   ImageTile,
@@ -1970,6 +1973,72 @@ export class MapService {
 
   }
   /**
+   * Encuadra en el mapa TODA la extensión de un área encontrada (por ejemplo un
+   * parque o área recreacional compuesto por uno o varios polígonos) y resalta
+   * cada uno de sus polígonos.
+   *
+   * Se usa en lugar de `fitToGeometry` cuando la búsqueda devuelve varias
+   * geometrías de un mismo elemento porque:
+   *  - une la extensión de TODAS ellas, de modo que el zoom resultante abarca el
+   *    área completa y no solo uno de sus polígonos,
+   *  - añade un margen del 8 % por lado, para que el perímetro completo del área
+   *    quede visible y no pegado a los bordes de la vista,
+   *  - limita el acercamiento con `maxZoom`, para no perder el contexto del
+   *    entorno cuando el área es pequeña,
+   *  - reserva espacio superior para el navbar y dibuja cada polígono como
+   *    feature independiente en la capa de resaltado de búsquedas.
+   * @param geometrias Geometrías GeoJSON (EPSG:32718) que componen el área.
+   * @param maxZoom Tope de acercamiento del ajuste de vista (por defecto `ZOOM_MAX_PARQUE`).
+   */
+  fitToParque(geometrias: GeoJSONGeometry[], maxZoom = ZOOM_MAX_PARQUE): void {
+    const map = this._map();
+    // Solo consideramos geometrías válidas: con 'coordinates' (simples) o
+    // 'geometries' (colecciones).
+    const validas = (geometrias ?? []).filter(g => !!g && (!!g.coordinates || !!g.geometries));
+    if (!map || validas.length === 0) return;
+
+    // Limpiamos cualquier resaltado anterior para evitar confusiones
+    this.clearHighlightLayer();
+
+    const format = new GeoJSON();
+    const view = map.getView();
+    const source = this.highlightLayer?.getSource();
+    let extent: number[] | undefined;
+
+    for (const geometria of validas) {
+      const geometryOl = format.readGeometry(geometria, {
+        dataProjection: 'EPSG:32718',
+        featureProjection: view.getProjection()
+      });
+      if (!geometryOl) continue;
+      // Resaltamos el polígono del área en la capa de resaltado de búsquedas
+      source?.addFeature(new Feature({ geometry: geometryOl }));
+      // Unimos la extensión de cada polígono para encuadrar el área completa:
+      // así el zoom comprende todo lo que abarca el parque encontrado.
+      extent = extent ? extend(extent, geometryOl.getExtent()) : geometryOl.getExtent();
+    }
+    if (!extent || isEmpty(extent)) return;
+
+    // Margen proporcional (8 % del lado mayor) alrededor del área, para que su
+    // perímetro quede holgado dentro de la ventana del mapa.
+    const margen = Math.max(extent[2] - extent[0], extent[3] - extent[1]) * 0.08;
+    const extentConMargen: number[] = [
+      extent[0] - margen,
+      extent[1] - margen,
+      extent[2] + margen,
+      extent[3] + margen
+    ];
+
+    view.fit(extentConMargen, {
+      duration: ANIMATION_DURATION,
+      // El panel de consultas se cierra al ubicar el parque, por lo que el
+      // margen es simétrico (no se reserva espacio lateral para el sidebar);
+      // el superior es mayor para no quedar bajo el navbar.
+      padding: [110, 90, 90, 90],
+      maxZoom
+    });
+  }
+  /**
    * Busca un lote por su código catastral (id_lote) consultando el servicio WFS de GeoServer.
    * @param codigo Código catastral en formato XX-XXX-XXX
    * @returns Observable con el feature encontrado o null
@@ -2134,13 +2203,22 @@ export class MapService {
     );
   }
   /**
-   * Busca un parque por su nombre consultando el servicio WFS de GeoServer.
-   * @param nombre_parque Nombre del parque a buscar.
+   * Busca áreas recreacionales (parques) por su denominación consultando el
+   * servicio WFS de GeoServer.
+   * @param denominacion Denominación del parque a buscar.
+   * @param exactMatch Si es `true`, exige coincidencia exacta (sin distinguir
+   *   mayúsculas/minúsculas) y devuelve solo los polígonos que componen el
+   *   parque solicitado, lo que permite encuadrarlo con un zoom ajustado. Con
+   *   `false` (por defecto) busca coincidencias parciales, comportamiento que
+   *   alimenta el autocompletado del campo "Nombre del Parque".
    * @returns Un Observable con un array de features encontrados o null.
    */
-  searchParquesByDenominacion(denominacion: string): Observable<GeoJSONFeature[] | null> {
+  searchParquesByDenominacion(denominacion: string, exactMatch = false): Observable<GeoJSONFeature[] | null> {
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
+    // Normalizamos a mayúsculas (el API compara así) y escapamos las comillas
+    // simples para no romper el cql_filter (p. ej. "PARQUE O'HIGGINS").
+    const nombre = denominacion.trim().toUpperCase().replace(/'/g, "''");
     const params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
@@ -2148,7 +2226,11 @@ export class MapService {
       .set('typeName', `${workspacePrefix}vw_tg_area_rec_nombres`)
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:32718')
-      .set('cql_filter', `denominaci ILIKE '%${denominacion.trim().toUpperCase()}%'`);
+      // ILIKE sin comodines equivale a una igualdad que ignora mayúsculas y
+      // minúsculas: trae únicamente los polígonos del parque buscado.
+      .set('cql_filter', exactMatch
+        ? `denominaci ILIKE '${nombre}'`
+        : `denominaci ILIKE '%${nombre}%'`);
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map((response) => {
         if (response?.features?.length > 0) {

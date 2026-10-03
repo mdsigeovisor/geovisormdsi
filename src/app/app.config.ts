@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
-import { auditoriaInterceptor } from './services/auditoria.interceptor';
+import { auditoriaInterceptor } from './interceptor/auditoria.interceptor';
 import { AUDITORIA_OPCIONES, AuditoriaService } from './services/auditoria.service';
 
 /**

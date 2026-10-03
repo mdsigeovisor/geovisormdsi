@@ -5,7 +5,7 @@ import { vi } from 'vitest';
 
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
-import { SIN_AUDITORIA, auditoriaInterceptor } from './auditoria.interceptor';
+import { SIN_AUDITORIA, auditoriaInterceptor } from '../interceptor/auditoria.interceptor';
 import { AUDITORIA_OPCIONES, AuditoriaService } from './auditoria.service';
 
 /** URL real del endpoint, tal y como la compone `environment.seguridadApiUrl`. */

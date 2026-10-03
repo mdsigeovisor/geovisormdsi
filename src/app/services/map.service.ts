@@ -4,7 +4,7 @@ import { DrawMeasureService } from './draw.service';
 import { AuthService } from './auth.service';
 import { ApisService } from './apis.service';
 import { AUDITORIA_OPCIONES, AuditoriaService } from './auditoria.service';
-import { SIN_AUDITORIA } from './auditoria.interceptor';
+import { SIN_AUDITORIA } from '../interceptor/auditoria.interceptor';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import type { Coordinate } from 'ol/coordinate';

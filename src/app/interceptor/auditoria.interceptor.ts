@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { catchError, tap, throwError } from 'rxjs';
 
 import { environment } from '../../environments/environment';
-import { AUDITORIA_OPCIONES, AuditoriaService } from './auditoria.service';
+import { AUDITORIA_OPCIONES, AuditoriaService } from '../services/auditoria.service';
 
 /* ---------------------------------------------------------------------------
  * INTERCEPTOR DE AUDITORÍA DEL VISOR

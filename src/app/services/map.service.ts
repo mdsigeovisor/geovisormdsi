@@ -2,11 +2,12 @@ import { Injectable, signal, computed, inject, NgZone, effect, untracked, Writab
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { DrawMeasureService } from './draw.service';
 import { AuthService } from './auth.service';
+import { ApisService } from './apis.service';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import type { Coordinate } from 'ol/coordinate';
 import type Geometry from 'ol/geom/Geometry';
-import { Observable, map, of, catchError, throwError, take } from 'rxjs';
+import { Observable, map, take, switchMap, catchError, of } from 'rxjs';
 
 import { ORTOFOTO_YEARS } from '../interfaces/ortofotos';
 import { LAYER_PANEL_SECTIONS } from '../interfaces/controlCapasConfig';
@@ -45,6 +46,7 @@ import {
   TRAMA_WMS_URL,
   ANIMATION_DURATION,
   ZOOM_MAX_PARQUE,
+  ZOOM_MAX_PARQUE_CENTROIDE,
   SAN_ISIDRO_CENTER,
   SAN_ISIDRO_ZOOM,
   SAN_ISIDRO_EXTENT,
@@ -52,6 +54,7 @@ import {
 } from '../interfaces/mapas.config';
 import {
   BaseLayer,
+  Circle,
   extend,
   Feature,
   Fill,
@@ -98,6 +101,8 @@ export class MapService {
   private readonly zone = inject(NgZone);
   private readonly drawMeasureService = inject(DrawMeasureService);
   private readonly authService = inject(AuthService);
+  /** API del Geovisor municipal (endpoints WSGEOVISOR centralizados). */
+  private readonly apisService = inject(ApisService);
   baseLayerType = signal<TipoMapaBase>('streets');
   /** Instancia del mapa OpenLayers */
   private readonly _map = signal<OlMap | undefined>(undefined);
@@ -911,35 +916,14 @@ export class MapService {
 
   /**
    * Consulta los datos resumidos del lote indicado en el API del Geovisor
-   * (`listar-datos-lote`). Estrategia de reintentos en orden:
-   *  1) Ruta relativa "/WSGEOVISOR/..." (proxy de desarrollo o same-origin)
-   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
-   *  3) Host de producción: https://www.munisanisidro.gob.pe
+   * (`listar-datos-lote`). Delegado en `ApisService`, que centraliza los
+   * endpoints y la estrategia de reintentos del Geovisor.
    * @param codlote Código catastral del lote (id_lote / codlote).
    * @returns Observable con los datos del lote o `null` si no se encontró.
    */  
   listarDatosLote(codlote: string): Observable<LoteDatosHover | null> {
-  const codigo = (codlote ?? '').trim();
-  if (!codigo) return of(null);
-
-  // URL relativa usando la configuración centralizada del environment
-  const url = `${environment.geovisorApiUrl}/listar-datos-lote`;
-  const params = new HttpParams().set('pvcCODLOTE', codigo);
-
-  return this.http.get<{ status?: number; data?: LoteDatosHover[] }>(url, { params }).pipe(
-    map(response => {
-      const registro = response?.data?.[0];
-      if (registro && (registro.codlote || registro.codlotecatastral)) {
-        return { ...registro, codlote: registro.codlote || registro.codlotecatastral || codigo };
-      }
-      return null;
-    }),
-    catchError(err => {
-      console.error('listarDatosLote: falló la conexión con el proxy inverso', err);
-      return of(null);
-    })
-  );
-}
+    return this.apisService.listarDatosLote(codlote);
+  }
 
   /**
    * Registra el evento `pointermove` del mapa: al pasar sobre la capa de lote
@@ -1618,10 +1602,7 @@ export class MapService {
    */
   drawSearchMarker(geometry: GeoJSONGeometry, text?: string): void {
     const map = this._map();
-    if (!map || !this.searchMarkerElement) {
-      console.warn('El marcador de búsqueda no se puede dibujar porque el elemento no ha sido registrado en MapService.');
-      return;
-    }
+    if (!map || !geometry) return;
     const view = map.getView();
     const format = new GeoJSON();
     // Le indicamos a OL que la data viene en 32718 y la transforme a la proyección del mapa
@@ -1629,8 +1610,52 @@ export class MapService {
       dataProjection: 'EPSG:32718',
       featureProjection: view.getProjection()
     });
-    const center = getCenter(olGeometry.getExtent());
-
+    if (!olGeometry) return;
+    this.colocarMarcadorBusqueda(getCenter(olGeometry.getExtent()), text);
+  }
+  /**
+   * Coloca el marcador de búsqueda (pin) en el centro del área encontrada a
+   * partir de la extensión unida de TODAS las geometrías que la componen (por
+   * ejemplo los polígonos de un parque). Replica el comportamiento de la
+   * búsqueda de lotes, donde el pin queda en el centro del predio encontrado.
+   * @param geometrias Geometrías GeoJSON (EPSG:32718) que componen el área.
+   * @param text Texto opcional para mostrar en el marcador.
+   */
+  drawSearchMarkerForParque(geometrias: GeoJSONGeometry[], text?: string): void {
+    const map = this._map();
+    // Solo consideramos geometrías válidas: con 'coordinates' (simples) o
+    // 'geometries' (colecciones).
+    const validas = (geometrias ?? []).filter(g => !!g && (!!g.coordinates || !!g.geometries));
+    if (!map || validas.length === 0) return;
+    const view = map.getView();
+    const format = new GeoJSON();
+    let extent: number[] | undefined;
+    for (const geometria of validas) {
+      const geometryOl = format.readGeometry(geometria, {
+        dataProjection: 'EPSG:32718',
+        featureProjection: view.getProjection()
+      });
+      if (!geometryOl) continue;
+      // Unimos la extensión de cada polígono para centrar el pin en el área
+      // completa del parque, no en uno solo de sus polígonos.
+      extent = extent ? extend(extent, geometryOl.getExtent()) : geometryOl.getExtent();
+    }
+    if (!extent || isEmpty(extent)) return;
+    this.colocarMarcadorBusqueda(getCenter(extent), text);
+  }
+  /**
+   * Ubica el pin del marcador de búsqueda en la coordenada indicada, creando
+   * el overlay la primera vez. Centraliza la lógica compartida por la búsqueda
+   * de lotes (una geometría) y la de parques (varias geometrías).
+   * @param center Coordenada (proyección de la vista) donde ubicar el pin.
+   * @param text Texto opcional del marcador.
+   */
+  private colocarMarcadorBusqueda(center: Coordinate, text?: string): void {
+    const map = this._map();
+    if (!map || !this.searchMarkerElement) {
+      console.warn('El marcador de búsqueda no se puede dibujar porque el elemento no ha sido registrado en MapService.');
+      return;
+    }
     if (!this.searchMarkerOverlay) {
       this.searchMarkerOverlay = new Overlay({
         element: this.searchMarkerElement,
@@ -2072,6 +2097,12 @@ export class MapService {
     }
     if (!extent || isEmpty(extent)) return;
 
+    // Cuando el buscador solo aporta el centroide del área (Point) la extensión
+    // no tiene tamaño; un zoom máximo dejaría el parque sin contexto, así que lo
+    // limitamos para que se aprecie el entorno de la ubicación encontrada.
+    const soloCentroides = validas.every(geometria => geometria.type === 'Point');
+    const topeZoom = soloCentroides ? Math.min(maxZoom, ZOOM_MAX_PARQUE_CENTROIDE) : maxZoom;
+
     // Margen proporcional (8 % del lado mayor) alrededor del área, para que su
     // perímetro quede holgado dentro de la ventana del mapa.
     const margen = Math.max(extent[2] - extent[0], extent[3] - extent[1]) * 0.08;
@@ -2088,7 +2119,7 @@ export class MapService {
       // margen es simétrico (no se reserva espacio lateral para el sidebar);
       // el superior es mayor para no quedar bajo el navbar.
       padding: [110, 90, 90, 90],
-      maxZoom
+      maxZoom: topeZoom
     });
   }
   /**
@@ -2294,94 +2325,122 @@ export class MapService {
     );
   }
   /**
-   * Busca predios por Código Único Catastral (CUC) consultando el API
-   * del Geovisor (`busqueda-cuc`). Reemplaza la antigua búsqueda directa
-   * contra la tabla gráfica (WFS `vw_tg_lote`), eliminada.
-   * Estrategia de reintentos en orden:
-   *  1) Ruta relativa "/WSGEOVISOR/api/geovisor/..." (proxy de desarrollo o same-origin)
-   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
-   *  3) Host de producción: https://www.munisanisidro.gob.pe
-   * Si todos fallan, propaga el error para que la UI distinga "sin resultados"
-   * de "sin conexión".
-   * @param cuc Código Único Catastral (8 dígitos).
-   * @returns Observable con la lista de coincidencias { txtcuc, txtpropietario, codlote, ... }.
+   * Busca el área recreativa (parque) que CONTIENE un punto del mapa.
+   *
+   * La capa que alimenta el buscador de parques (`vw_tg_area_rec_nombres`) solo
+   * guarda el centroide de cada área como geometría `Point`, por lo que no sirve
+   * para resaltar el parque (un `Point` no se dibuja con estilos de polígono).
+   * Esta consulta localiza por INTERSECCIÓN ESPACIAL el polígono de
+   * `vw_tg_area_rec` que engloba ese centroide. Se intersecciona (en lugar de
+   * comparar nombres) porque los nombres de ambas capas no coinciden
+   * literalmente: el buscador ofrece "Bosque El Olivar" y los polígonos usan
+   * "EL OLIVAR", de modo que la intersección funciona con cualquier parque y no
+   * depende de cómo esté escrito su nombre.
+   *
+   * @param punto Coordenada del centroide del parque en EPSG:32718.
+   * @returns Observable con la denominación del área encontrada, o `null`.
    */
-  buscarPorCuc(cuc: string): Observable<CucResultado[]> {
-    const codigo = (cuc ?? '').trim();
-    if (!codigo) return of([]);
-    const path = `${environment.geovisorApiUrl}/busqueda-cuc`;
-    const hosts = [
-      '', // 1) Ruta relativa (same-origin: proxy de desarrollo o Nginx de QA/Prod)
-      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas (fallback dev)
-      'https://www.munisanisidro.gob.pe' // 3) Host de producción (fallback)
-    ];
-    const params = new HttpParams().set('txtcuc', codigo);
-    const request = (url: string): Observable<CucResultado[]> =>
-      this.http.get<{ status?: number; data?: CucResultado[] }>(url ? url + path : path, { params }).pipe(
-        map(response => {
-          if (Array.isArray(response?.data)) return response.data;
-          return [];
-        })
-      );
-    // Encadenamos los intentos: pasamos al siguiente host solo si el anterior falla
-    return request(hosts[0]).pipe(
-      catchError(err => {
-        console.warn('buscarPorCuc: falló intento (ruta relativa), reintentando con test.munisanisidro.gob.pe', err);
-        return request(hosts[1]);
-      }),
-      catchError(err => {
-        console.warn('buscarPorCuc: falló intento (test), reintentando con www.munisanisidro.gob.pe', err);
-        return request(hosts[2]);
-      }),
-      catchError(err => {
-        console.error('buscarPorCuc: fallaron todos los intentos de conexión', err);
-        return throwError(() => err);
+  searchAreaRecreativaEnPunto(punto: Coordinate): Observable<string | null> {
+    const x = Number(punto?.[0]);
+    const y = Number(punto?.[1]);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return of(null);
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_area_rec`)
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:32718')
+      // Solo necesitamos el nombre del área: la respuesta es mínima.
+      .set('propertyName', 'denominaci')
+      .set('maxFeatures', '1')
+      // El filtro espacial exige declarar el SRID del punto buscado.
+      .set('cql_filter', `INTERSECTS(geom,SRID=32718;POINT(${x} ${y}))`);
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => String(response?.features?.[0]?.properties?.['denominaci'] ?? '').trim() || null)
+    );
+  }
+  /**
+   * Devuelve las geometrías de TODOS los polígonos que componen un área
+   * recreativa (parque), para poder resaltar su superficie completa en el mapa.
+   * @param denominacion Denominación exacta del área (`denominaci` en `vw_tg_area_rec`).
+   * @returns Observable con las geometrías en EPSG:32718, o `null` si no hay ninguna.
+   */
+  searchGeometriasAreaRecreativa(denominacion: string): Observable<GeoJSONGeometry[] | null> {
+    // Escapamos las comillas simples para no romper el cql_filter.
+    const nombre = denominacion.trim().replace(/'/g, "''");
+    if (!nombre) return of(null);
+    const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+    const params = new HttpParams()
+      .set('service', 'WFS')
+      .set('version', '1.1.0')
+      .set('request', 'GetFeature')
+      .set('typeName', `${workspacePrefix}vw_tg_area_rec`)
+      .set('outputFormat', 'application/json')
+      .set('srsName', 'EPSG:32718')
+      // Pedimos solo la geometría: un área puede agrupar cientos de polígonos
+      // (el Bosque El Olivar, 326) y así la respuesta pesa bastante menos.
+      .set('propertyName', 'geom')
+      .set('cql_filter', `denominaci = '${nombre}'`);
+    return this.http.get<WfsResponse>(url, { params }).pipe(
+      map(response => {
+        const geometrias = (response?.features ?? [])
+          .map(feature => feature.geometry)
+          .filter((geometria): geometria is GeoJSONGeometry => !!geometria);
+        return geometrias.length > 0 ? geometrias : null;
       })
     );
   }
   /**
-   * Busca predios por Código Predial consultando el API del Geovisor
-   * (`busqueda-codpredial`). Misma estrategia de reintentos que `buscarPorCuc`:
-   *  1) Ruta relativa "/WSGEOVISOR/api/geovisor/..." (proxy de desarrollo o same-origin)
-   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
-   *  3) Host de producción: https://www.munisanisidro.gob.pe
-   * Si todos fallan, propaga el error para que la UI distinga "sin resultados"
-   * de "sin conexión".
+   * Resuelve las geometrías con las que se resalta un parque encontrado por su
+   * nombre:
+   *  - Si el buscador devolvió centroides (`Point`, capa `vw_tg_area_rec_nombres`),
+   *    intenta localizar el área poligonal real en `vw_tg_area_rec` y devuelve sus
+   *    polígonos, de modo que el parque quede resaltado con su superficie.
+   *  - Si no hay área poligonal (o el servicio falla), devuelve los centroides,
+   *    con los que el mapa igualmente ubica y señala el parque con el pin.
+   * @param centroides Geometrías devueltas por el buscador de parques.
+   */
+  resolverGeometriasParque(centroides: GeoJSONGeometry[]): Observable<GeoJSONGeometry[]> {
+    const respaldo = (centroides ?? []).filter(geometria => !!geometria);
+    const centroide = respaldo.find(geometria =>
+      geometria.type === 'Point'
+      && Array.isArray(geometria.coordinates)
+      && geometria.coordinates.length >= 2);
+    if (!centroide) return of(respaldo);
+    const punto: Coordinate = [Number(centroide.coordinates?.[0]), Number(centroide.coordinates?.[1])];
+    return this.searchAreaRecreativaEnPunto(punto).pipe(
+      switchMap(denominacion => denominacion
+        ? this.searchGeometriasAreaRecreativa(denominacion)
+        : of(null)),
+      map(geometrias => (geometrias && geometrias.length > 0) ? geometrias : respaldo),
+      // Ante cualquier fallo del servicio de polígonos seguimos con el centroide:
+      // ubicar el parque es más importante que resaltar su superficie.
+      catchError(() => of(respaldo))
+    );
+  }
+  /**
+   * Busca predios por Código Único Catastral (CUC) (`busqueda-cuc`).
+   * Delegado en `ApisService`, que centraliza los endpoints y la estrategia
+   * de reintentos del Geovisor.
+   * @param cuc Código Único Catastral (8 dígitos).
+   * @returns Observable con la lista de coincidencias `{ txtcuc, txtpropietario, codlote, ... }`.
+   */
+  buscarPorCuc(cuc: string): Observable<CucResultado[]> {
+    return this.apisService.buscarPorCuc(cuc);
+  }
+  /**
+   * Busca predios por Código Predial (`busqueda-codpredial`).
+   * Delegado en `ApisService`, que centraliza los endpoints y la estrategia
+   * de reintentos del Geovisor.
    * @param codigoPredial Código de predio (ej. '270543112').
-   * @returns Observable con la lista de coincidencias { txtcodipredrent, txtcuc, txttitular, codlote, ... }.
+   * @returns Observable con la lista de coincidencias `{ txtcodipredrent, txtcuc, txttitular, codlote, ... }`.
    */
   buscarPorCodPredial(codigoPredial: string): Observable<CodPredialResultado[]> {
-    const codigo = (codigoPredial ?? '').trim();
-    if (!codigo) return of([]);
-    const path = `${environment.geovisorApiUrl}/busqueda-codpredial`;
-    const hosts = [
-      '', // 1) Ruta relativa (same-origin: proxy de desarrollo o Nginx de QA/Prod)
-      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas (fallback dev)
-      'https://www.munisanisidro.gob.pe' // 3) Host de producción (fallback)
-    ];
-    const params = new HttpParams().set('txtcodpredial', codigo);
-    const request = (url: string): Observable<CodPredialResultado[]> =>
-      this.http.get<{ status?: number; data?: CodPredialResultado[] }>(url ? url + path : path, { params }).pipe(
-        map(response => {
-          if (Array.isArray(response?.data)) return response.data;
-          return [];
-        })
-      );
-    // Encadenamos los intentos: pasamos al siguiente host solo si el anterior falla
-    return request(hosts[0]).pipe(
-      catchError(err => {
-        console.warn('buscarPorCodPredial: falló intento (ruta relativa), reintentando con test.munisanisidro.gob.pe', err);
-        return request(hosts[1]);
-      }),
-      catchError(err => {
-        console.warn('buscarPorCodPredial: falló intento (test), reintentando con www.munisanisidro.gob.pe', err);
-        return request(hosts[2]);
-      }),
-      catchError(err => {
-        console.error('buscarPorCodPredial: fallaron todos los intentos de conexión', err);
-        return throwError(() => err);
-      })
-    );
+    return this.apisService.buscarPorCodPredial(codigoPredial);
   }
   /**
    * Busca y devuelve una capa de OpenLayers por su ID asignado en la configuración.
@@ -2413,147 +2472,36 @@ export class MapService {
     return undefined;
   }
   /**
-   * Lista los números de vía (numeraciones) para un código de vía dado,
-   * consultando el API del Geovisor municipal.
-   * Estrategia de reintentos en orden:
-   *  1) Ruta relativa "/WSGEOVISOR/..." (same-origin: proxy de desarrollo o
-   *     el propio host municipal donde esté desplegada la app).
-   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
-   *  3) Host de producción: https://www.munisanisidro.gob.pe
-   * Si todos fallan, propaga el error (no devuelve vacío) para que la UI
-   * pueda distinguir "sin resultados" de "sin conexión".
+   * Lista los números de vía (numeraciones) para un código de vía dado
+   * (`listar-via-numero`). Delegado en `ApisService`, que centraliza los
+   * endpoints y la estrategia de reintentos del Geovisor.
    * @param codVia El código de la vía (ej. 'L271170').
-   * @returns Un Observable con un array de registros { numero, codlote, codlotenumero }.
+   * @returns Un Observable con un array de registros `{ numero, codlote, codlotenumero }`.
    */
   listarViaNumeros(codVia: string): Observable<ViaNumero[]> {
-    // URL relativa centralizada en el environment (proxy inverso Nginx en QA/Prod)
-    const path = `${environment.geovisorApiUrl}/listar-via-numero`;
-    const hosts = [
-      '', // 1) Ruta relativa (same-origin: proxy de desarrollo o Nginx de QA/Prod)
-      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas (fallback dev)
-      'https://www.munisanisidro.gob.pe' // 3) Host de producción (fallback)
-    ];
-    const params = new HttpParams().set('pvcCODVIA', codVia.trim());
-    const request = (url: string): Observable<ViaNumero[]> =>
-      this.http.get<ViaNumero[] | ViaNumero>(url ? url + path : path, { params }).pipe(
-        map(response => {
-          if (Array.isArray(response)) return response;
-          // La respuesta del API viene envuelta: { status: 200, data: [...] }
-          if (response && typeof response === 'object') {
-            const wrapped = response as any;
-            if (Array.isArray(wrapped.data)) return wrapped.data;
-            if (Array.isArray(wrapped.result)) return wrapped.result;
-            return [response as ViaNumero];
-          }
-          return [];
-        })
-      );
-    // Encadenamos los intentos: pasamos al siguiente host solo si el anterior falla
-    return request(hosts[0]).pipe(
-      catchError(err => {
-        console.warn('listarViaNumeros: falló intento (ruta relativa), reintentando con test.munisanisidro.gob.pe', err);
-        return request(hosts[1]);
-      }),
-      catchError(err => {
-        console.warn('listarViaNumeros: falló intento (test), reintentando con www.munisanisidro.gob.pe', err);
-        return request(hosts[2]);
-      }),
-      catchError(err => {
-        console.error('listarViaNumeros: fallaron todos los intentos de conexión', err);
-        return throwError(() => err);
-      })
-    );
+    return this.apisService.listarViaNumeros(codVia);
   }
 
   /**
-   * Busca titulares catastrales por apellido / razón social, consultando el API
-   * del Geovisor (`busqueda-titular-catastral`). Estrategia de reintentos en orden:
-   *  1) Ruta relativa "/WSGEOVISOR/api/geovisor/..." (proxy de desarrollo o same-origin)
-   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
-   *  3) Host de producción: https://www.munisanisidro.gob.pe
-   * Si todos fallan, propaga el error para que la UI distinga "sin resultados"
-   * de "sin conexión".
+   * Busca titulares catastrales por apellido o razón social
+   * (`busqueda-titular-catastral`). Delegado en `ApisService`, que centraliza
+   * los endpoints y la estrategia de reintentos del Geovisor.
    * @param razonSocial Apellido o razón social (búsqueda parcial).
-   * @returns Observable con la lista de coincidencias { txttitular, codlote }.
+   * @returns Observable con la lista de coincidencias `{ txttitular, codlote }`.
    */
   buscarTitularCatastral(razonSocial: string): Observable<TitularCatastral[]> {
-    const texto = (razonSocial ?? '').trim();
-    if (!texto) return of([]);
-    const path = `${environment.geovisorApiUrl}/busqueda-titular-catastral`;
-    const hosts = [
-      '', // 1) Ruta relativa (same-origin: proxy de desarrollo o Nginx de QA/Prod)
-      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas (fallback dev)
-      'https://www.munisanisidro.gob.pe' // 3) Host de producción (fallback)
-    ];
-    const params = new HttpParams().set('pvcTXTRAZONSOCIAL', texto);
-    const request = (url: string): Observable<TitularCatastral[]> =>
-      this.http.get<{ status?: number; data?: TitularCatastral[] }>(url ? url + path : path, { params }).pipe(
-        map(response => {
-          if (Array.isArray(response?.data)) return response.data;
-          return [];
-        })
-      );
-    // Encadenamos los intentos: pasamos al siguiente host solo si el anterior falla
-    return request(hosts[0]).pipe(
-      catchError(err => {
-        console.warn('buscarTitularCatastral: falló intento (ruta relativa), reintentando con test.munisanisidro.gob.pe', err);
-        return request(hosts[1]);
-      }),
-      catchError(err => {
-        console.warn('buscarTitularCatastral: falló intento (test), reintentando con www.munisanisidro.gob.pe', err);
-        return request(hosts[2]);
-      }),
-      catchError(err => {
-        console.error('buscarTitularCatastral: fallaron todos los intentos de conexión', err);
-        return throwError(() => err);
-      })
-    );
+    return this.apisService.buscarTitularCatastral(razonSocial);
   }
 
   /**
-   * Busca predios por Denominación del Predio consultando el API del Geovisor
-   * (`busqueda-denominacion-lote`). Misma estrategia de reintentos que
-   * `buscarTitularCatastral`:
-   *  1) Ruta relativa "/WSGEOVISOR/api/geovisor/..." (proxy de desarrollo o same-origin)
-   *  2) Host de pruebas: https://test.munisanisidro.gob.pe
-   *  3) Host de producción: https://www.munisanisidro.gob.pe
-   * Si todos fallan, propaga el error para que la UI distinga "sin resultados"
-   * de "sin conexión".
+   * Busca predios por Denominación del Predio (`busqueda-denominacion-lote`).
+   * Delegado en `ApisService`, que centraliza los endpoints y la estrategia
+   * de reintentos del Geovisor.
    * @param denominacion Denominación del predio (búsqueda parcial).
-   * @returns Observable con la lista de coincidencias { codlote, txtdenominacion, txtdirecprincipal, ... }.
+   * @returns Observable con la lista de coincidencias `{ codlote, txtdenominacion, txtdirecprincipal, ... }`.
    */
   buscarDenominacionLote(denominacion: string): Observable<DenominacionLoteResultado[]> {
-    const texto = (denominacion ?? '').trim();
-    if (!texto) return of([]);
-    const path = `${environment.geovisorApiUrl}/busqueda-denominacion-lote`;
-    const hosts = [
-      '', // 1) Ruta relativa (same-origin: proxy de desarrollo o Nginx de QA/Prod)
-      'https://test.munisanisidro.gob.pe', // 2) Host de pruebas (fallback dev)
-      'https://www.munisanisidro.gob.pe' // 3) Host de producción (fallback)
-    ];
-    const params = new HttpParams().set('pvcDENOMINACIONCAT', texto);
-    const request = (url: string): Observable<DenominacionLoteResultado[]> =>
-      this.http.get<{ status?: number; data?: DenominacionLoteResultado[] }>(url ? url + path : path, { params }).pipe(
-        map(response => {
-          if (Array.isArray(response?.data)) return response.data;
-          return [];
-        })
-      );
-    // Encadenamos los intentos: pasamos al siguiente host solo si el anterior falla
-    return request(hosts[0]).pipe(
-      catchError(err => {
-        console.warn('buscarDenominacionLote: falló intento (ruta relativa), reintentando con test.munisanisidro.gob.pe', err);
-        return request(hosts[1]);
-      }),
-      catchError(err => {
-        console.warn('buscarDenominacionLote: falló intento (test), reintentando con www.munisanisidro.gob.pe', err);
-        return request(hosts[2]);
-      }),
-      catchError(err => {
-        console.error('buscarDenominacionLote: fallaron todos los intentos de conexión', err);
-        return throwError(() => err);
-      })
-    );
+    return this.apisService.buscarDenominacionLote(denominacion);
   }
 
   /**
@@ -2742,6 +2690,18 @@ export class MapService {
             new Style({ stroke: new Stroke({ color: 'rgba(255, 193, 7, 0.45)', width: 12 }) }),
             new Style({ stroke: new Stroke({ color: '#ff8f00', width: 5 }) }),
           ];
+        }
+        // Puntos (centroides de áreas recreativas): un estilo con `stroke` y
+        // `fill` NO dibuja nada sobre un Point, así que las áreas de las que
+        // solo se conoce su centroide se señalan con un círculo verde.
+        if (geometryType === 'Point' || geometryType === 'MultiPoint') {
+          return new Style({
+            image: new Circle({
+              radius: 10,
+              fill: new Fill({ color: 'rgba(70, 87, 15, 0.25)' }),
+              stroke: new Stroke({ color: '#46570f', width: 3 }),
+            }),
+          });
         }
         return new Style({
           stroke: new Stroke({

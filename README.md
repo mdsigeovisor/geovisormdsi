@@ -1,6 +1,6 @@
 # Aplicativo Visor Geográfico del Visor Municipalidad de San Isidro
 
-Aplicación frontend desarrollada con **Angular 17.2**.
+Aplicación frontend desarrollada con **Angular 20**.
 
 ---
 
@@ -39,11 +39,11 @@ src/environments/
 
 ### Ambientes disponibles
 
-| Archivo | Ambiente | Portal / API base |
-|---|---|---|
-| `environment.ts` | **Desarrollo** | `https://test.munisanisidro.gob.pe` |
-| `environment.qa.ts` | **QA** | `https://test.munisanisidro.gob.pe` |
-| `environment.prod.ts` | **Producción** | `https://munisanisidro.gob.pe` |
+| Archivo | Ambiente | Portal / API base | GeoServer |
+|---|---|---|---|
+| `environment.ts` | **Desarrollo** | `https://test.munisanisidro.gob.pe` | `http://192.168.40.58:8081/geoserver` (red interna) |
+| `environment.qa.ts` | **QA** | `https://test.munisanisidro.gob.pe` | `http://192.168.40.58:8081/geoserver` (red interna) |
+| `environment.prod.ts` | **Producción** | `https://munisanisidro.gob.pe` | `https://geomapas.munisanisidro.gob.pe/geoserver` (público) |
 
 Los tres archivos se generan con la fábrica `crearEnvironment()` de
 `src/environments/environment.model.ts`, que centraliza toda la configuración
@@ -62,19 +62,44 @@ export const environment = crearEnvironment({
 
 ### Comandos por ambiente
 
+#### 🧑💻 Desarrollo
+
 ```bash
-# Desarrollo (proxy local, test.munisanisidro.gob.pe)
+# Levantar el servidor de desarrollo (http://localhost:4200 · usa proxy.conf.json)
 npm start
 
-# Servir QA localmente
-npm run start:qa
+# Build de desarrollo (sin optimizar y con sourcemaps) → dist/visor-mdsi/browser
+ng build --configuration development
 
-# Compilar para QA  (equivale a: ng build -c qa)
-npm run build:qa
-
-# Compilar para Producción (equivale a: ng build -c production)
-npm run build:prod
+# Build de desarrollo en modo watch (recompila automáticamente al guardar)
+npm run watch
 ```
+
+#### 🏭 Producción
+
+```bash
+# Build de producción (optimizado, con hashing y environment.prod.ts)
+npm run build:prod          # equivale a: ng build -c production
+
+# Atajo: 'npm run build' TAMBIÉN compila producción, porque el
+# defaultConfiguration del target build es "production" (ver angular.json)
+npm run build               # equivale a: ng build -c production
+```
+
+> ⚠️ **Ojo:** `npm run build` **no** compila para desarrollo: por defecto usa la
+> configuración `production` (`defaultConfiguration: "production"` en
+> `angular.json`). Para un build de desarrollo usa `ng build --configuration
+> development` o `npm run watch`.
+
+#### 🔍 QA (referencia)
+
+```bash
+npm run start:qa            # servir la configuración QA localmente
+npm run build:qa            # compilar para QA (equivale a: ng build -c qa)
+```
+
+**Salida del build:** `dist/visor-mdsi/browser/` (contiene el `index.html` y los
+`.js`/`.css` con hash de contenido, listos para publicar en Nginx).
 
 La selección del ambiente se hace mediante `fileReplacements` en
 `angular.json`: la configuración `qa` sustituye `environment.ts` por

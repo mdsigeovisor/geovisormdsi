@@ -28,6 +28,13 @@ export const ZOOM_LEVEL_LOCATION = 14;
  * lo que no se provoca ampliación digital de teselas ("overzoom").
  */
 export const ZOOM_MAX_PARQUE = 19;
+/**
+ * Tope de acercamiento al ubicar un área recreativa de la que solo se conoce su
+ * centroide (geometría `Point`, capa `vw_tg_area_rec_nombres`): con un zoom
+ * mayor la vista quedaría tan cerca del punto que se perdería el contexto del
+ * entorno del parque.
+ */
+export const ZOOM_MAX_PARQUE_CENTROIDE = 17;
 /** 
  * Extensión geográfica aproximada de San Isidro [oeste, sur, este, norte] en LonLat 
  * Coordenadas actualizadas para Jirón Augusto Tamayo (lon, lat)

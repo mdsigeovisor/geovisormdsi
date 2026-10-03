@@ -9,6 +9,11 @@ export const environment = crearEnvironment({
   production: true,
   ambiente: 'Producción',
   portalUrl: 'https://munisanisidro.gob.pe',
-  // GeoServer unificado para todos los ambientes (puerto 8081).
-  geoserverUrl: 'http://192.168.40.58:8081/geoserver'
+  // GeoServer de PRODUCCIÓN (público, servido por el dominio del municipio).
+  // Desarrollo y QA usan el servidor interno por defecto
+  // ('http://192.168.40.58:8081/geoserver', definido en environment.model.ts),
+  // que solo es accesible desde la red municipal; los usuarios de producción
+  // llegan por esta URL pública, así que el build de producción NO debe llevar
+  // la IP interna.
+  geoserverUrl: 'https://geomapas.munisanisidro.gob.pe/geoserver'
 });

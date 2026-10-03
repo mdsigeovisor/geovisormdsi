@@ -16,6 +16,19 @@ import {
   DenominacionLoteResultado
 } from '@app/interfaces/geoLayers';
 
+/**
+ * Términos genéricos que NO forman parte de la denominación de las áreas
+ * recreativas de la capa de búsqueda (`vw_tg_area_rec_nombres` guarda
+ * "Bosque El Olivar", no "Parque El Olivar"). Se descartan al hacer la búsqueda
+ * de respaldo, para localizar el parque aunque el usuario escriba el nombre
+ * genérico que sugiere el campo.
+ */
+const GENERICOS_PARQUE = [
+  'PARQUE', 'PARQUES', 'BOSQUE', 'BULEVAR', 'ÓVALO', 'OVALO', 'PLAZA', 'ALAMEDA',
+  'ÁREA', 'AREA', 'RECREATIVA', 'RECREACIONAL', 'VERDE', 'DE', 'DEL', 'LA', 'LAS',
+  'LOS', 'EL', 'Y'
+];
+
 @Component({
   selector: 'app-consultas',
   standalone: true,
@@ -628,7 +641,17 @@ export class Consultas {
       //    búsqueda parcial que alimenta las sugerencias.
       switchMap(exactos => (exactos && exactos.length > 0)
         ? of(exactos)
-        : this.mapService.searchParquesByDenominacion(this.nombreParque))
+        : this.mapService.searchParquesByDenominacion(this.nombreParque)),
+      // 3) Último recurso: consultar solo por las palabras significativas. La
+      //    capa guarda el nombre propio del área sin el término genérico, así
+      //    que el texto de ejemplo ("Parque El Olivar") no coincide literalmente
+      //    con "Bosque El Olivar" y hay que buscar por "OLIVAR".
+      switchMap(features => {
+        const significativas = this.palabrasSignificativasParque(this.nombreParque);
+        return (features && features.length > 0) || !significativas
+          ? of(features)
+          : this.mapService.searchParquesByDenominacion(significativas);
+      })
     ).subscribe({
       next: (features) => {
         if (features && features.length > 0) {
@@ -648,15 +671,56 @@ export class Consultas {
 
   /**
    * Ubica en el mapa el parque encontrado y cierra el panel de búsqueda.
-   * El encuadre (`fitToParque`) abarca la extensión unida de TODOS los polígonos
-   * que componen el parque, con un margen del 8 % y un tope de zoom, de modo que
-   * se vea completo lo que abarca el área recreacional sin perder el entorno.
+   * El encuadre (`fitToParque`) abarca la extensión unida de TODAS las geometrías
+   * del área, con un margen del 8 % y un tope de zoom, de modo que se vea
+   * completo lo que abarca el área recreacional sin perder el entorno.
+   * Además se coloca el marcador (pin) en el centro del área encontrada, igual
+   * que en la búsqueda de lotes, donde el pin queda sobre el predio hallado.
    * No se emite un SearchResult porque un parque no es un predio.
    */
   private ubicarParque(features: GeoJSONFeature[]): void {
+    // El buscador devuelve el CENTROIDE de cada área (geometría `Point`), con lo
+    // que no se puede resaltar su superficie: `MapService` resuelve con él el
+    // área poligonal real (`vw_tg_area_rec`) y, si no existe, ubica el parque
+    // con el propio centroide.
+    const centroides = features.map(f => f.geometry);
+    this.mapService.resolverGeometriasParque(centroides)
+      .pipe(take(1))
+      .subscribe({
+        next: geometrias => this.resaltarParque(geometrias),
+        // El servicio siempre emite (contempla el respaldo), pero ante un fallo
+        // inesperado ubicamos el parque con el centroide para no dejar la
+        // búsqueda sin ningún efecto sobre el mapa.
+        error: () => this.resaltarParque(centroides)
+      });
+  }
+
+  /**
+   * Encuadra y resalta en el mapa las geometrías del parque (su área poligonal o
+   * su centroide), coloca el pin en el centro y cierra el panel para dejar ver el
+   * resultado.
+   */
+  private resaltarParque(geometrias: GeoJSONGeometry[]): void {
     this.loading.set(false);
-    this.mapService.fitToParque(features.map(f => f.geometry));
+    this.mapService.fitToParque(geometrias);
+    this.mapService.drawSearchMarkerForParque(geometrias);
     this.Close.emit(); // Cerramos el panel de búsqueda para una mejor visualización
+  }
+
+  /**
+   * Palabras significativas del texto escrito en "Nombre del Parque", sin los
+   * términos genéricos que la capa de áreas recreativas no incluye en la
+   * denominación del área (`GENERICOS_PARQUE`).
+   * Devuelve `null` cuando el texto depurado no aporta nada nuevo (es igual al
+   * escrito o se queda vacío), para no repetir una consulta idéntica.
+   */
+  private palabrasSignificativasParque(texto: string): string | null {
+    const original = texto.trim().toUpperCase().replace(/\s+/g, ' ');
+    const depurado = original
+      .split(' ')
+      .filter(palabra => palabra.length > 1 && !GENERICOS_PARQUE.includes(palabra))
+      .join(' ');
+    return depurado && depurado !== original ? depurado : null;
   }
 
   /**

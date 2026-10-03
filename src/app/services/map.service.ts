@@ -1,8 +1,10 @@
 import { Injectable, signal, computed, inject, NgZone, effect, untracked, WritableSignal } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { DrawMeasureService } from './draw.service';
 import { AuthService } from './auth.service';
 import { ApisService } from './apis.service';
+import { AUDITORIA_OPCIONES, AuditoriaService } from './auditoria.service';
+import { SIN_AUDITORIA } from './auditoria.interceptor';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
 import type { Coordinate } from 'ol/coordinate';
@@ -104,6 +106,8 @@ export class MapService {
   private readonly authService = inject(AuthService);
   /** API del Geovisor municipal (endpoints WSGEOVISOR centralizados). */
   private readonly apisService = inject(ApisService);
+  /** Registro de auditoría del uso de los servicios cartográficos (WMS). */
+  private readonly auditoria = inject(AuditoriaService);
   baseLayerType = signal<TipoMapaBase>('streets');
   /** Instancia del mapa OpenLayers */
   private readonly _map = signal<OlMap | undefined>(undefined);
@@ -837,6 +841,18 @@ export class MapService {
       `${url}${separator}` +
       `SERVICE=WMS&VERSION=${version}&REQUEST=GetLegendGraphic&FORMAT=image/png&LAYER=${capaLeyenda}&TRANSPARENT=true`);
     this.updateLayerProperties(options.id, { olLayer: layer, legendUrl: legendUrls[0], legendUrls });
+
+    // Auditoría del consumo del servicio cartográfico.
+    //
+    // No puede interceptarse aquí con el interceptor de `HttpClient`: las capas
+    // WMS las pide OpenLayers (`ImageWMS`), que usa el `Image` del navegador y
+    // NO pasa por el cliente HTTP de Angular. Por eso se registra aquí, en el
+    // punto donde el visor abre la conexión con la capa.
+    this.auditoria.accion(
+      AUDITORIA_OPCIONES.CONSULTA_GEOSERVER,
+      `WMS carga la capa "${options.layerName}"`,
+      { conexionNombre: 'GEOSERVER' }
+    );
   }
   /**
    * Método para agregar capas XYZ al mapa.
@@ -2191,7 +2207,7 @@ export class MapService {
    * @param partialName El nombre parcial de la habilitación.
    * @returns Un Observable con un array de nombres de habilitaciones únicos.
    */
-  searchHabilitaciones(partialName: string): Observable<GeoJSONFeature[] | null> {
+  searchHabilitaciones(partialName: string, esSugerencia = false): Observable<GeoJSONFeature[] | null> {
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
     const params = new HttpParams()
@@ -2203,7 +2219,12 @@ export class MapService {
       .set('srsName', 'EPSG:32718')
       .set('cql_filter', `urbanizaci ILIKE '%${partialName.trim().toUpperCase()}%'`);
 
-    return this.http.get<WfsResponse>(url, { params }).pipe(
+    // `esSugerencia` marca el autocompletado (texto que se va tecleando): esas
+    // consultas no son una búsqueda del usuario y no se auditan.
+    const opciones = esSugerencia
+      ? { context: new HttpContext().set(SIN_AUDITORIA, true) }
+      : undefined;
+    return this.http.get<WfsResponse>(url, { params, ...opciones }).pipe(
       map(response => {
         if (response?.features?.length > 0) {
           // Para evitar duplicados, creamos un mapa de habilitaciones únicas
@@ -2298,7 +2319,7 @@ export class MapService {
    *   alimenta el autocompletado del campo "Nombre del Parque".
    * @returns Un Observable con un array de features encontrados o null.
    */
-  searchParquesByDenominacion(denominacion: string, exactMatch = false): Observable<GeoJSONFeature[] | null> {
+  searchParquesByDenominacion(denominacion: string, exactMatch = false, esSugerencia = false): Observable<GeoJSONFeature[] | null> {
     const url = environment.geoserver.owsUrl;
     const workspacePrefix = environment.geoserver.workspacePrefix;
     // Normalizamos a mayúsculas (el API compara así) y escapamos las comillas
@@ -2316,7 +2337,12 @@ export class MapService {
       .set('cql_filter', exactMatch
         ? `denominaci ILIKE '${nombre}'`
         : `denominaci ILIKE '%${nombre}%'`);
-    return this.http.get<WfsResponse>(url, { params }).pipe(
+    // `esSugerencia` marca el autocompletado: esas consultas son el texto que se
+    // va tecleando, no una búsqueda del usuario, y no se auditan (ver SIN_AUDITORIA).
+    const opciones = esSugerencia
+      ? { context: new HttpContext().set(SIN_AUDITORIA, true) }
+      : undefined;
+    return this.http.get<WfsResponse>(url, { params, ...opciones }).pipe(
       map((response) => {
         if (response?.features?.length > 0) {
           return response.features;

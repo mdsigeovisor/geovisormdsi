@@ -1,6 +1,7 @@
 import { Component, signal, output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MapService } from '@app/services/map.service';
+import { AUDITORIA_OPCIONES, AuditoriaService } from '@app/services/auditoria.service';
 import { LayerItemComponent } from './layer-item';
 
 
@@ -14,6 +15,8 @@ import { LayerItemComponent } from './layer-item';
 export class CapasComponent {
   onClose = output<void>();
   private readonly mapService = inject(MapService);
+  /** Registro de auditoría de las acciones sobre las capas. */
+  private readonly auditoria = inject(AuditoriaService);
   /** Estado de minimización del panel */
   isMinimized = signal(false);
   /** Vista del panel filtrada por sesión (oculta capas con `requiresAuth` si no hay sesión) */
@@ -26,9 +29,17 @@ export class CapasComponent {
   }
   toggleLayerVisibility(sectionId: string, layerId: string) {
     this.mapService.toggleLayerVisibility(sectionId, layerId);
+    this.auditoria.accion(
+      AUDITORIA_OPCIONES.CAPA_VISIBILIDAD,
+      `Capa "${layerId}" de la sección "${sectionId}"`
+    );
   }
   toggleAllLayersInSection(sectionId: string, visible: boolean) {
     this.mapService.toggleAllLayersInSection(sectionId, visible);
+    this.auditoria.accion(
+      AUDITORIA_OPCIONES.CAPA_VISIBILIDAD_GRUPADA,
+      `Capas de la sección "${sectionId}" ${visible ? 'visibles' : 'ocultas'}`
+    );
   }
 
   toggleSubSectionExpanded(sectionId: string, subSectionId: string) {
@@ -53,5 +64,9 @@ export class CapasComponent {
     const target = event.target as HTMLInputElement;
     const newOpacity = Number(target.value) / 100;
     this.mapService.setLayerOpacity(sectionId, layerId, newOpacity);
+    this.auditoria.accion(
+      AUDITORIA_OPCIONES.CAPA_OPACIDAD,
+      `Opacidad de la capa "${layerId}" al ${Math.round(newOpacity * 100)}%`
+    );
   }
 }

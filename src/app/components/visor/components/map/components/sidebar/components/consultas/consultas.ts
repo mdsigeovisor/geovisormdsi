@@ -265,10 +265,13 @@ export class Consultas {
         this.activeTab = 'catastral';
       }
     });
+    // Autocompletado: `esSugerencia` evita auditar cada consulta parcial mientras
+    // el usuario escribe (una por pausa de 300 ms). La búsqueda definitiva sí se
+    // registra, en `handleBuscarByParque`.
     this.nombreParqueSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      switchMap(partialName => this.mapService.searchParquesByDenominacion(partialName))
+      switchMap(partialName => this.mapService.searchParquesByDenominacion(partialName, false, true))
     ).subscribe(suggestions => {
       this.parqueSuggestions = suggestions || [];
       this.showParqueSuggestions = (suggestions?.length ?? 0) > 0;
@@ -277,7 +280,7 @@ export class Consultas {
     this.nombreHabilitacionSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      switchMap(partialName => this.mapService.searchHabilitaciones(partialName))
+      switchMap(partialName => this.mapService.searchHabilitaciones(partialName, true))
     ).subscribe(suggestions => {
       this.habilitacionSuggestions = suggestions || [];
       this.showHabilitacionSuggestions = (suggestions?.length ?? 0) > 0;
@@ -1115,6 +1118,10 @@ private limpiarBusquedaDireccion(): void {
     if (this.isSearchDisabled() || this.loading()) {
       return; // No hacer nada si la búsqueda está deshabilitada o ya está cargando
     }
+    // La auditoría de esta búsqueda la hace el interceptor de HTTP, que ya
+    // guarda la consulta real que sale (endpoint, capa WFS y filtro CQL): es más
+    // preciso que un evento genérico "BUSQUEDA" sin detalles, y evita duplicar
+    // un registro por cada búsqueda.
     // La búsqueda de parques se gestiona exclusivamente por el autocompletado,
     // por lo que el botón "Consultar" no debe hacer nada en esta pestaña.
     if (this.activeTab === 'parque') {
@@ -1172,6 +1179,9 @@ private limpiarBusquedaDireccion(): void {
         },
         error: (err) => {
           console.error('Error en la búsqueda catastral:', err);
+          // No se audita aquí: el interceptor ya registra el fallo de esta misma
+          // petición con su código (`ERR-...`). Auditarlo dos veces generaba un
+          // registro duplicado por cada búsqueda fallida.
           this.searchError.set('Error de conexión con el servicio catastral.');
           this.loading.set(false);
         }

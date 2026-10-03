@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { GeoJSON, getCenter, OlMap } from '@app/modules/openlayers.module';
 import { MapService } from '@services/map.service';
 import { AuthService } from '@services/auth.service';
+import { AUDITORIA_OPCIONES, AuditoriaService } from '@services/auditoria.service';
 import { GeoJSONFeature } from '@app/interfaces/geoLayers';
 import { environment } from '@environments/environment';
 
@@ -36,6 +37,8 @@ const COLOR_VERDE: [number, number, number] = [70, 87, 15];         // #46570f
 export class Imprimir {
   readonly mapService = inject(MapService);
   readonly authService = inject(AuthService);
+  /** Registro de auditoría de las impresiones/exportaciones de la ficha. */
+  private readonly auditoria = inject(AuditoriaService);
   /** Solo usuarios autenticados pueden imprimir la fotografía del lote */
   puedeImprimirFoto = computed(() => this.authService.isAuthenticated());
   /** Título editable que se estampará en el plano */
@@ -776,8 +779,18 @@ export class Imprimir {
 
       const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
       pdf.save(`${this.slug(this.titulo())}_${stamp}.pdf`);
+      this.auditoria.accion(
+        AUDITORIA_OPCIONES.IMPRESION_FICHA,
+        `PDF de la ficha del lote ${this.mapService.loteSeleccionadoCodigo() ?? '(sin lote)'}`
+      );
     } catch (err) {
       console.error('Error generando PDF:', err);
+      this.auditoria.error(
+        AUDITORIA_OPCIONES.ERROR_CLIENTE,
+        err instanceof Error ? err.message : 'No se pudo generar el PDF.',
+        { conexionNombre: 'NAVEGADOR' },
+        'ERR-PDF'
+      );
       this.error.set(err instanceof Error ? err.message : 'No se pudo generar el PDF.');
     } finally {
       this.generando.set(false);
@@ -816,8 +829,19 @@ export class Imprimir {
       setTimeout(() => {
         window.print();
       }, 2000);
+      this.auditoria.accion(
+        AUDITORIA_OPCIONES.IMPRESION_FICHA,
+        `Impresión del mapa, lote ${this.mapService.loteSeleccionadoCodigo() ?? '(sin lote)'}`
+      );
     } catch (err) {
       console.error('Error preparando la impresión:', err);
+      this.auditoria.error(
+        AUDITORIA_OPCIONES.ERROR_CLIENTE,
+        err instanceof Error ? err.message : 'No se pudo preparar la impresión.',
+        { conexionNombre: 'NAVEGADOR' },
+        // `vchcodmensaje` es varchar(12): el código debe caber en la columna.
+        'ERR-IMPR'
+      );
       this.error.set(err instanceof Error ? err.message : 'No se pudo preparar la impresión.');
       this.generando.set(false);
     }

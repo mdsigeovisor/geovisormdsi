@@ -1,7 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 //Servicio
 import { MapService } from '@app/services/map.service';
+import { AUDITORIA_OPCIONES, AuditoriaService } from '@app/services/auditoria.service';
+import { AuthService } from '@app/services/auth.service';
 
 /**
  * Cláusulas numeradas del cuerpo del modal (párrafos 1 a 7).
@@ -33,6 +35,10 @@ const CLAUSULAS_TERMINOS: readonly string[] = [
 })
 export class TermsModal {
   public readonly mapService = inject(MapService);
+  /** Registro de auditoría del acceso del visitante (mostrar/aceptar/rechazar). */
+  private readonly auditoria = inject(AuditoriaService);
+  /** Sesión actual: distingue el ingreso anónimo del ingreso con credenciales. */
+  private readonly authService = inject(AuthService);
 
   /**
    * Duración (ms) de la animación de salida definida en terminos.css
@@ -52,9 +58,29 @@ export class TermsModal {
   /** URL pública del sitio de la Municipalidad de San Isidro a la que se redirige al rechazar los términos */
   private readonly institutionalUrl = 'https://msi.gob.pe';
 
+  constructor() {
+    // El modal aparece por dos vías (zoom sobre el distrito o el botón "Ver
+    // Términos" del panel Acerca de) y en ambas lo abre `MapService`, así que se
+    // vigila el signal en lugar de auditar en los dos llamadores.
+    effect(() => {
+      if (this.mapService.showTermsModal()) {
+        this.auditoria.accion(
+          AUDITORIA_OPCIONES.TERMINOS_MOSTRADOS,
+          'Se mostró el modal de Términos y Condiciones',
+          { conexionNombre: 'NAVEGADOR' }
+        );
+      }
+    });
+  }
+
   /** El usuario no acepta los términos: cierra la aplicación y sale hacia el sitio web de la municipalidad */
   rejectAndExit(): void {
     this.modalTermsAccepted.set(false);
+    this.auditoria.accion(
+      AUDITORIA_OPCIONES.TERMINOS_RECHAZADOS,
+      'El visitante rechazó los términos y salió al portal',
+      { conexionNombre: 'NAVEGADOR' }
+    );
     this.mapService.closeTermsModal();
     // El visor puede estar embebido en un iframe del portal municipal. Si ocurre,
     // lo correcto es navegar la ventana superior para "salir" de la aplicación;
@@ -77,6 +103,15 @@ export class TermsModal {
     // Espera a que termine la animación antes de remover el modal del DOM
     setTimeout(() => {
       this.mapService.acceptTerms();
+      // Aceptar los términos ES el ingreso al visor: hasta aquí el visitante es
+      // anónimo, así que este es el evento que lo registra como tal.
+      this.auditoria.accion(
+        AUDITORIA_OPCIONES.INGRESO_ANONIMO,
+        this.authService.isAuthenticated()
+          ? 'Ingreso con sesión ya iniciada al aceptar los términos'
+          : 'Ingreso como usuario anónimo al aceptar los términos',
+        { conexionNombre: 'NAVEGADOR' }
+      );
       this.modalTermsAccepted.set(false);
       this.isClosing.set(false);
     }, TermsModal.CLOSE_ANIMATION_MS);

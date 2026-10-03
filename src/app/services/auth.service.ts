@@ -1,7 +1,8 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, throwError, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { AUDITORIA_OPCIONES, AuditoriaService } from './auditoria.service';
 
 /* ---------------------------------------------------------------------------
  * CONTRATOS DEL MÓDULO DE SEGURIDAD (MSICAS) DEL API WSGEOVISOR
@@ -141,6 +142,19 @@ const CODIGO_SIN_SESION = '99';
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
+
+  /**
+   * `AuditoriaService` se resuelve de forma **perezosa** (y no con `inject`)
+   * porque depende de esta clase para leer el usuario: inyectarlo aquí crearía
+   * un ciclo de dependencias. Se pide al `Injector` en el momento de auditar,
+   * cuando ambos servicios ya están construidos.
+   */
+  private readonly injector = inject(Injector);
+
+  /** Servicio de auditoría, resuelto bajo demanda. */
+  private get auditoria(): AuditoriaService {
+    return this.injector.get(AuditoriaService);
+  }
 
   /**
    * Indica si la caducidad de la sesión la impuso el API (emitió `token`): el
@@ -289,9 +303,23 @@ export class AuthService {
           codigoRol: ''
         };
         this.guardarSesion(respuesta, informacion.codigoUsuario || codigoUsuario);
+        this.auditoria.accion(
+          AUDITORIA_OPCIONES.SESION,
+          `Inicio de sesión de ${informacion.codigoUsuario || codigoUsuario}`,
+          { conexionNombre: 'ORACLE' }
+        );
         return informacion;
       }),
-      catchError(error => throwError(() => AuthService.normalizarError(error)))
+      catchError(error => {
+        const fallo = AuthService.normalizarError(error);
+        this.auditoria.error(
+          AUDITORIA_OPCIONES.SESION,
+          `Fallo al iniciar sesión de ${codigoUsuario}: ${fallo.message}`,
+          { conexionNombre: 'ORACLE' },
+          fallo.codigo || 'ERR-SESION'
+        );
+        return throwError(() => fallo);
+      })
     );
   }
 
@@ -301,6 +329,10 @@ export class AuthService {
    * caducada (`sesionExpirada`).
    */
   logout(): void {
+    // Se audita antes de limpiar: después, `codigoUsuario()` ya está vacío.
+    this.auditoria.accion(AUDITORIA_OPCIONES.SESION, 'Cierre de sesión voluntario', {
+      conexionNombre: 'ORACLE',
+    });
     this.limpiarSesion();
     this.sesionExpirada.set(false);
   }
@@ -484,6 +516,9 @@ export class AuthService {
    */
   private expirarSesion(): void {
     if (!this.isAuthenticated()) return;
+    this.auditoria.accion(AUDITORIA_OPCIONES.SESION_EXPIRADA, 'La sesión expiró por tiempo', {
+      conexionNombre: 'ORACLE',
+    });
     this.limpiarSesion();
     this.sesionExpirada.set(true);
   }

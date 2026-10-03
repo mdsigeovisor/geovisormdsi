@@ -40,6 +40,246 @@ describe('Consultas', () => {
     expect(component).toBeTruthy();
   });
 
+  describe('búsqueda por Dirección', () => {
+    let httpMock: HttpTestingController;
+    /** Petición al API listar-vias (búsqueda por nombre de vía). */
+    const peticionApi = (nombre: string) => httpMock.expectOne(
+      req => req.url.endsWith('/listar-vias') && req.params.get('pvcTXTNOMBREVIA') === nombre);
+    /** Petición al WFS que trae la geometría de la vía por su código. */
+    const peticionGeometria = () => httpMock.expectOne(
+      req => (req.params.get('typeName') ?? '').includes('vw_tg_via'));
+    const viaApi = {
+      codvia: '1170',
+      txtnomvia: 'Juan De Arona',
+      txttipoviaabrev: 'Av.',
+      codviaequ: 'L271170',
+      codtipovia: '010011',
+      txttipovia: 'AVENIDA'
+    };
+    const segmento = (id: string) => ({
+      type: 'Feature',
+      id,
+      properties: { codi_via: 'L271170', codi_via2: '1170', etiquetado_ext: 'Av. Juan De Arona' },
+      geometry: {
+        type: 'MultiLineString',
+        coordinates: [[[279000, 8661000], [279100, 8661050]]]
+      }
+    });
+
+    beforeEach(() => {
+      httpMock = TestBed.inject(HttpTestingController);
+      component.activeTab = 'direccion';
+      component.nombreVia = 'Juan De Arona';
+    });
+
+    it('abre el modal con las coincidencias y no mueve el mapa hasta elegir una vía', () => {
+      const fitSpy = vi.spyOn(TestBed.inject(MapService), 'fitToGeometry').mockImplementation(() => undefined);
+      const closeSpy = vi.spyOn(component.Close, 'emit');
+
+      component.handleSearch();
+
+      // 1) El API es la fuente de verdad de los nombres de vías.
+      peticionApi('Juan De Arona').flush({ status: 200, data: [viaApi] });
+
+      // 2) Con coincidencias se abre el modal y el mapa aún no se mueve.
+      expect(component.modalViasAbierto()).toBe(true);
+      expect(component.viasEncontradas.length).toBe(1);
+      expect(fitSpy).not.toHaveBeenCalled();
+      expect(closeSpy).not.toHaveBeenCalled();
+    });
+
+    it('resalta la vía en la gráfica al elegir una coincidencia del modal', () => {
+      const fitSpy = vi.spyOn(TestBed.inject(MapService), 'fitToGeometry').mockImplementation(() => undefined);
+      const closeSpy = vi.spyOn(component.Close, 'emit');
+
+      component.handleSearch();
+      peticionApi('Juan De Arona').flush({ status: 200, data: [viaApi] });
+      expect(component.modalViasAbierto()).toBe(true);
+
+      // Se elige la coincidencia: se cierra el modal y se busca por su código.
+      component.irAViaSeleccionada(component.sugerenciaDe(component.viasEncontradas[0]));
+
+      expect(component.modalViasAbierto()).toBe(false);
+      expect(component.codVia).toBe('L271170');
+      const geometria = peticionGeometria();
+      expect(geometria.request.params.get('cql_filter')).toContain("codi_via = 'L271170'");
+      geometria.flush({ type: 'FeatureCollection', features: [segmento('a')] });
+
+      expect(fitSpy).toHaveBeenCalledTimes(1);
+      expect(fitSpy.mock.calls[0][0].type).toBe('MultiLineString');
+      expect(closeSpy).toHaveBeenCalled();
+      expect(component.searchError()).toBeNull();
+    });
+
+    it('avisa cuando la vía existe en el API pero no está dibujada en la cartografía', () => {
+      const fitSpy = vi.spyOn(TestBed.inject(MapService), 'fitToGeometry').mockImplementation(() => undefined);
+      const closeSpy = vi.spyOn(component.Close, 'emit');
+
+      component.handleSearch();
+      peticionApi('Juan De Arona').flush({ status: 200, data: [viaApi] });
+      component.irAViaSeleccionada(component.sugerenciaDe(component.viasEncontradas[0]));
+      peticionGeometria().flush({ type: 'FeatureCollection', features: [] });
+
+      expect(fitSpy).not.toHaveBeenCalled();
+      expect(closeSpy).not.toHaveBeenCalled();
+      expect(component.searchError()).toContain('no está dibujada en el mapa');
+      expect(component.loading()).toBe(false);
+    });
+
+    it('informa cuando el API no devuelve ninguna vía con ese nombre', () => {
+      const fitSpy = vi.spyOn(TestBed.inject(MapService), 'fitToGeometry').mockImplementation(() => undefined);
+
+      component.handleSearch();
+      peticionApi('Juan De Arona').flush({ status: 200, data: [] });
+
+      expect(component.modalViasAbierto()).toBe(false);
+      expect(fitSpy).not.toHaveBeenCalled();
+      expect(component.searchError()).toContain('No se encontraron vías');
+      expect(component.loading()).toBe(false);
+    });
+
+    it('renderiza el modal de vías en el DOM al abrirlo', () => {
+      fixture.detectChanges();
+      const modal = fixture.nativeElement.querySelector('#vias-modal');
+      expect(modal).toBeNull();
+
+      component.handleSearch();
+      peticionApi('Juan De Arona').flush({ status: 200, data: [viaApi] });
+      fixture.detectChanges();
+
+      // El modal existe en el DOM y lista la vía encontrada.
+      const renderizado = fixture.nativeElement.querySelector('#vias-modal');
+      expect(renderizado).toBeTruthy();
+      expect(renderizado.textContent).toContain('Juan De Arona');
+      // El código de vía no se muestra al usuario.
+      expect(renderizado.textContent).not.toContain('L271170');
+
+      component.cerrarModalVias();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('#vias-modal')).toBeNull();
+    });
+
+    it('abre el modal al pulsar Buscar con una sola letra escrita', () => {
+      fixture.detectChanges();
+      component.activeTab = 'direccion';
+      // Una única letra escrita: el botón NO debe estar deshabilitado.
+      component.nombreVia = 'A';
+      fixture.detectChanges();
+      expect(component.isSearchDisabled()).toBe(false);
+      expect(component.modalViasAbierto()).toBe(false);
+
+      // Se pulsa el botón Buscar.
+      component.handleSearch();
+      peticionApi('A').flush({ status: 200, data: [viaApi] });
+      fixture.detectChanges();
+
+      // El modal debe mostrarse con la coincidencia.
+      expect(component.modalViasAbierto()).toBe(true);
+      expect(component.viasEncontradas.length).toBe(1);
+      const modal = fixture.nativeElement.querySelector('#vias-modal');
+      expect(modal).toBeTruthy();
+      expect(modal.textContent).toContain('Juan De Arona');
+    });
+
+    it('lista en el modal todas las coincidencias con una sola letra', () => {
+      component.activeTab = 'direccion';
+      component.nombreVia = 'J';
+
+      component.handleSearch();
+      peticionApi('J').flush({
+        status: 200,
+        data: [
+          viaApi,
+          { ...viaApi, codvia: '1900', codviaequ: 'L271900', txtnomvia: 'José Gálvez', txttipoviaabrev: 'Jr.' }
+        ]
+      });
+      fixture.detectChanges();
+
+      // Ambas vías se listan en el modal con su etiqueta oficial.
+      expect(component.viasEncontradas.length).toBe(2);
+      expect(component.sugerenciaDe(component.viasEncontradas[0]).etiqueta).toBe('Av. Juan De Arona');
+      expect(component.sugerenciaDe(component.viasEncontradas[0]).codVia).toBe('L271170');
+      const modal = fixture.nativeElement.querySelector('#vias-modal');
+      expect(modal.textContent).toContain('José Gálvez');
+      // Los códigos de vía no se muestran en el modal.
+      expect(modal.textContent).not.toContain('L271170');
+      expect(modal.textContent).not.toContain('L271900');
+    });
+
+    it('Volver a buscar reinicia la búsqueda igual que Limpiar', () => {
+      component.activeTab = 'direccion';
+      component.nombreVia = 'Av. Juan De Arona';
+      // Estado de una búsqueda ya completada: vía elegida con sus numeraciones
+      // y un número seleccionado (esto es lo que rompía el flujo).
+      component.codVia = 'L271170';
+      component.viaNumeros = [{ numero: '0110', codlote: '3105075021', codlotenumero: '31050750210110' }];
+      component.numeroSeleccionado = '0110';
+      component.viasEncontradas = [viaApi];
+      component.modalViasAbierto.set(true);
+      fixture.detectChanges();
+
+      // Se pulsa "Volver a buscar" dentro del modal.
+      component.volverABuscarVias();
+      fixture.detectChanges();
+
+      // Deja la búsqueda en cero, igual que el botón Limpiar: sin texto, sin
+      // código, sin numeraciones y con el modal cerrado.
+      expect(component.nombreVia).toBe('');
+      expect(component.codVia).toBe('');
+      expect(component.viaNumeros).toEqual([]);
+      expect(component.numeroSeleccionado).toBe('');
+      expect(component.viasEncontradas).toEqual([]);
+      expect(component.modalViasAbierto()).toBe(false);
+      // El selector "Número" desaparece y el botón Buscar se deshabilita.
+      expect(fixture.nativeElement.querySelector('#numeroViaSelect')).toBeNull();
+      expect(component.isSearchDisabled()).toBe(true);
+      // No se consulta el API: se reinicia para escribir una vía nueva.
+      httpMock.expectNone(req => req.url.endsWith('/listar-vias'));
+    });
+
+    it('no renderiza lista desplegable bajo el campo de vía', () => {
+      component.activeTab = 'direccion';
+      fixture.detectChanges();
+      // El combobox se retiró: bajo el campo solo hay texto, sin lista de sugerencias.
+      const campo = fixture.nativeElement.querySelector('#nombreViaInput');
+      expect(campo).toBeTruthy();
+      expect(campo.parentElement.querySelector('button')).toBeNull();
+    });
+
+    it('Limpiar devuelve la búsqueda de dirección a cero y borra el selector de Número', () => {
+      // Simula una búsqueda completa: vía elegida, modal y numeraciones cargadas.
+      component.activeTab = 'direccion';
+      component.nombreVia = 'Av. Juan De Arona';
+      component.codVia = 'L271170';
+      component.viasEncontradas = [viaApi];
+      component.modalViasAbierto.set(true);
+      component.viaNumeros = [
+        { numero: '101', codlote: 'LOT1', codlotenumero: 'LOT1-101' }
+      ] as any;
+      component.numeroSeleccionado = '101';
+      component.viaNumerosError = null;
+      fixture.detectChanges();
+      // El selector "Número" está visible porque hay numeraciones.
+      expect(fixture.nativeElement.querySelector('#numeroViaSelect')).toBeTruthy();
+
+      component.handleClear();
+      fixture.detectChanges();
+
+      // Todo vuelve a cero: sin texto, sin código y sin numeraciones.
+      expect(component.nombreVia).toBe('');
+      expect(component.codVia).toBe('');
+      expect(component.viaNumeros).toEqual([]);
+      expect(component.numeroSeleccionado).toBe('');
+      expect(component.viaNumerosError).toBeNull();
+      expect(component.viasEncontradas).toEqual([]);
+      expect(component.modalViasAbierto()).toBe(false);
+      // El selector "Número" desaparece del DOM.
+      expect(fixture.nativeElement.querySelector('#numeroViaSelect')).toBeNull();
+      // Y el botón Buscar vuelve a quedar deshabilitado.
+      expect(component.isSearchDisabled()).toBe(true);
+    });
+  });
+
   describe('búsqueda por Nombre del Parque', () => {
     let httpMock: HttpTestingController;
     /** Filtro CQL con el que se consultan las áreas recreacionales (parques). */

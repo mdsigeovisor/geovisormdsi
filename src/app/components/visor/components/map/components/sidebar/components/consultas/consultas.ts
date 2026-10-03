@@ -2,14 +2,16 @@ import { Component, Input, signal, output, inject, effect } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MapService } from '@app/services/map.service';
+import { ApisService } from '@app/services/apis.service';
 import { AuthService } from '@app/services/auth.service';
-import { Subject, take, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
+import { Subject, take, debounceTime, distinctUntilChanged, switchMap, of, map } from 'rxjs';
 import {
   GeoJSONFeature,
   GeoJSONGeometry,
   SearchResult,
   ViaNumero,
   ViaSugerencia,
+  ViaApi,
   TitularCatastral,
   CucResultado,
   CodPredialResultado,
@@ -39,6 +41,8 @@ const GENERICOS_PARQUE = [
 export class Consultas {
   @Input() isGuest: boolean = false;
   private readonly mapService = inject(MapService);
+  /** API del Geovisor: fuente de verdad de los nombres de vías y sus códigos. */
+  private readonly apisService = inject(ApisService);
   private readonly authService = inject(AuthService);
   /** Estado de autenticación: las pestañas CUC y Titular solo se muestran con sesión iniciada. */
   public isAuthenticated = this.authService.isAuthenticated;
@@ -206,10 +210,6 @@ export class Consultas {
       }
     });
   }
-  // --- Lógica para autocompletado de vías ---
-  private readonly nombreViaSubject = new Subject<string>();
-  viaSuggestions: ViaSugerencia[] = [];
-  showViaSuggestions = false;
   // --- Lógica para autocompletado de parques ---
   private readonly nombreParqueSubject = new Subject<string>();
   parqueSuggestions: GeoJSONFeature[] = [];
@@ -243,6 +243,10 @@ export class Consultas {
   denominacionConsultado = false;
   /** Controla la visibilidad del modal de coincidencias por Denominación del Predio */
   modalDenominacionAbierto = signal(false);
+  /** Vías encontradas en la búsqueda por dirección, mostradas en el modal de coincidencias. */
+  viasEncontradas: ViaApi[] = [];
+  /** Controla la visibilidad del modal de coincidencias de vías (dirección). */
+  modalViasAbierto = signal(false);
   /** Campos para búsqueda por Nombre de Parque */
   nombreParque = '';
   /** Campos para búsqueda Catastral */
@@ -261,15 +265,6 @@ export class Consultas {
         this.activeTab = 'catastral';
       }
     });
-    this.nombreViaSubject.pipe(
-      debounceTime(300), // Espera 300ms después de la última pulsación
-      distinctUntilChanged(), // Solo emite si el valor ha cambiado
-      switchMap(partialName => this.mapService.searchViasConCodigo(partialName))
-    ).subscribe(suggestions => {
-      this.viaSuggestions = suggestions || [];
-      this.showViaSuggestions = (suggestions?.length ?? 0) > 0;
-    });
-
     this.nombreParqueSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -287,11 +282,6 @@ export class Consultas {
       this.habilitacionSuggestions = suggestions || [];
       this.showHabilitacionSuggestions = (suggestions?.length ?? 0) > 0;
     });
-  }
-
-  onNombreViaInput(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.nombreViaSubject.next(value);
   }
 
   onNombreParqueInput(event: Event) {
@@ -350,9 +340,7 @@ export class Consultas {
     const clearActions: Record<typeof this.activeTab, () => void> = {
       cuc: () => { this.cuc = ''; this.cucResultados = []; this.cucConsultado = false; this.cucSeleccionado = null; },
       predial: () => { this.codigoPredial = ''; this.codPredialResultados = []; this.codPredialConsultado = false; this.codPredialSeleccionado = null; },
-      direccion: () => {        
-        this.nombreVia = '';        
-      },
+      direccion: () => this.limpiarBusquedaDireccion(),
       habilitacion: () => {
         this.nombreHabilitacion = '';
         this.habilitacionSuggestions = [];
@@ -403,22 +391,17 @@ export class Consultas {
     }
   }
 
-  /** Ejecuta la búsqueda según la pestaña activa */
-  selectViaSuggestion(suggestion: ViaSugerencia) {
-    // Asignamos el nombre de la vía y su código (codi_via del WFS)
-    this.nombreVia = suggestion.etiqueta.trim();
-    this.codVia = suggestion.codVia.trim();
-    this.showViaSuggestions = false;
-    this.viaSuggestions = [];
-    // Acto 1: mostramos la vía resaltada en el mapa
-    this.mostrarViaSeleccionada();
-    // Acto 1: cargamos las numeraciones para el selector (acto 2)
-    this.consultarViaNumeros();
-  }
-
-  onNombreViaBlur() {
-    // Ocultamos las sugerencias con un pequeño retardo para permitir el clic
-    setTimeout(() => this.showViaSuggestions = false, 200);
+  /**
+ * Arma la sugerencia (etiqueta + código) de una vía del API, para reutilizarla en
+ * el modal de coincidencias y en el autocompletado.
+ */
+  sugerenciaDe(via: ViaApi): ViaSugerencia {
+    const nombre = String(via.txtnomvia ?? '').trim();
+    const tipo = String(via.txttipoviaabrev ?? '').trim();
+    return {
+      etiqueta: tipo ? `${tipo} ${nombre}` : nombre,
+      codVia: String(via.codviaequ ?? '').trim()
+    };
   }
 
   /**
@@ -500,8 +483,14 @@ export class Consultas {
   }
 
   /**
-   * Maneja específicamente la búsqueda por dirección, que tiene una lógica diferente
-   * al resto de búsquedas (no emite un SearchResult, solo navega).
+   * Búsqueda por dirección: consulta el API `listar-vias` del Geovisor, que es
+   * la fuente de verdad de los nombres de vías del distrito (el WFS `vw_tg_via`
+   * solo tiene las vías dibujadas en la cartografía, por lo que buscando solo en
+   * él muchas vías existentes no se encontraban).
+   *
+   * Las coincidencias se muestran en un modal para que el usuario elija la vía
+   * sin que el mapa se mueva todavía; la geometría se resuelve al seleccionar
+   * una (ver `irAViaSeleccionada`).
    */
   private handleBuscarByDireccion() {
     if (this.isSearchDisabled() || this.loading()) {
@@ -509,27 +498,79 @@ export class Consultas {
     }
     this.loading.set(true);
     this.searchError.set(null);
-    this.mapService.searchVias(this.nombreVia, true, false)
+    this.apisService.listarVias(this.nombreVia)
       .pipe(take(1))
       .subscribe({
-        next: (features) => {
-          if (!features || features.length === 0) {
-            // La coincidencia exacta puede fallar por pequeñas diferencias de
-            // escritura; reintentamos con búsqueda parcial (ILIKE).
-            this.buscarViaParcial();
+        next: (vias) => {
+          this.loading.set(false);
+          if (!vias || vias.length === 0) {
+            // El API es la fuente de verdad: si aquí no hay resultados, no existe
+            // ninguna vía con ese nombre.
+            this.viasEncontradas = [];
+            this.modalViasAbierto.set(false);
+            this.searchError.set('No se encontraron vías con los criterios ingresados.');
             return;
           }
-          // Capturamos el código de vía del resultado y cargamos las numeraciones
-          // (listar-via-numero), igual que al elegir una sugerencia del autocompletado.
-          this.capturarCodVia(features);
-          this.procesarViasEncontradas(features);
+          // Con coincidencias se abre el modal con la lista de vías.
+          this.viasEncontradas = vias;
+          this.modalViasAbierto.set(true);
         },
         error: (err) => {
           console.error('Error en la búsqueda por dirección:', err);
-          this.searchError.set('Error de conexión con el servicio de vías.');
           this.loading.set(false);
+          this.searchError.set('Error de conexión con el servicio de vías.');
         }
       });
+  }
+
+  /**
+ * Deja la búsqueda por dirección en cero: borra el texto, el código de vía, las
+ * numeraciones, el número seleccionado y las coincidencias del modal (y cierra
+ * el modal si estaba abierto).
+ *
+ * La comparten el botón "Limpiar" del formulario y el "Volver a buscar" del
+ * modal de vías, de modo que ambos dejan la búsqueda exactamente igual.
+ */
+private limpiarBusquedaDireccion(): void {
+  this.nombreVia = '';
+  this.codVia = '';
+  this.viaNumeros = [];
+  this.viaNumerosError = null;
+  this.loadingViaNumeros = false;
+  this.numeroSeleccionado = '';
+  this.viasEncontradas = [];
+  this.modalViasAbierto.set(false);
+}
+
+/** Cierra el modal de coincidencias de vías. */
+  cerrarModalVias() {
+    this.modalViasAbierto.set(false);
+  }
+
+  /**
+   * Botón "Volver a buscar" del modal de vías: reinicia la búsqueda a cero, igual
+   * que el botón "Limpiar" del formulario, para poder escribir una vía nueva.
+   *
+   * Reutiliza `handleClear` (y con él `limpiarBusquedaDireccion`) en lugar de
+   * `handleSearch`, porque este último, cuando ya hay un número seleccionado,
+   * navega al lote en vez de repetir la búsqueda.
+   */
+  volverABuscarVias(): void {
+    this.handleClear();
+  }
+
+  /**
+   * Selecciona una vía del modal de coincidencias: se toma su código y se busca
+   * la geometría en la cartografía para resaltarla y cargar sus numeraciones.
+   * Si la vía no está dibujada en el mapa, se informa con un mensaje claro.
+   */
+  irAViaSeleccionada(via: ViaSugerencia) {
+    this.modalViasAbierto.set(false);
+    this.nombreVia = via.etiqueta.trim();
+    this.codVia = via.codVia.trim();
+    this.loading.set(true);
+    this.searchError.set(null);
+    this.mostrarViaSeleccionada();
   }
 
   /**
@@ -545,31 +586,6 @@ export class Consultas {
       this.codVia = codVia;
       this.consultarViaNumeros();
     }
-  }
-
-  /**
-   * Segundo intento de búsqueda por dirección usando coincidencia parcial.
-   */
-  private buscarViaParcial(): void {
-    this.mapService.searchVias(this.nombreVia, false, false)
-      .pipe(take(1))
-      .subscribe({
-        next: (features) => {
-          if (!features || features.length === 0) {
-            this.loading.set(false);
-            this.searchError.set('No se encontraron vías con los criterios ingresados.');
-            return;
-          }
-          // Mismo tratamiento que la búsqueda exacta: capturamos el código
-          // de vía y cargamos sus numeraciones.
-          this.capturarCodVia(features);
-          this.procesarViasEncontradas(features);
-        },
-        error: () => {
-          this.loading.set(false);
-          this.searchError.set('Error de conexión con el servicio de vías.');
-        }
-      });
   }
 
   /**
@@ -597,31 +613,40 @@ export class Consultas {
   }
 
   /**
-   * Acto 1 del flujo por dirección: al seleccionar una vía de las sugerencias,
-   * la dibuja resaltada en el mapa (sin cerrar el panel) y carga las
+   * Acto 1 del flujo por dirección: al seleccionar una vía de las sugerencias
+   * se dibuja resaltada en el mapa (sin cerrar el panel) y se cargan las
    * numeraciones de esa vía para el selector de números.
+   *
+   * La geometría se pide por el código de vía (`codVia`), no por el nombre: así
+   * se resaltan exactamente los segmentos de la vía elegida, sin depender de que
+   * el nombre escrito coincida con la etiqueta de la cartografía.
    */
   private mostrarViaSeleccionada(): void {
-    if (!this.nombreVia.trim()) return;
+    if (!this.nombreVia.trim() || !this.codVia.trim()) return;
     this.loading.set(true);
     this.searchError.set(null);
-    this.mapService.searchVias(this.nombreVia, false, false)
+    this.mapService.buscarGeometriaPorCodigosVia([{ codviaequ: this.codVia.trim(), codvia: '' } as ViaApi])
       .pipe(take(1))
       .subscribe({
         next: (features) => {
-          if (features && features.length > 0) {
-            // Dibujamos solo los segmentos de la vía seleccionada (mismo codi_via);
-            // si el filtro no arroja resultados, usamos todos los encontrados.
-            const propias = features.filter(f =>
-              String(f.properties['codi_via'] ?? '').trim() === this.codVia
-            );
-            this.procesarViasEncontradas(propias.length > 0 ? propias : features, false);
-          }
           this.loading.set(false);
+          if (features && features.length > 0) {
+            this.procesarViasEncontradas(features, true);
+            // Cargamos las numeraciones de la vía elegida para el selector de números.
+            this.consultarViaNumeros();
+            return;
+          }
+          // La vía está en el registro oficial pero no hay segmentos dibujados
+          // en el mapa: avisamos en lugar de cerrar el panel sin mostrar nada.
+          this.searchError.set(
+            `La vía "${this.nombreVia.trim()}" fue encontrada en el registro de vías, pero no está dibujada en el mapa de consulta.` +
+            ' Contacte al área de catastro para reportar la ausencia del segmento en la cartografía.'
+          );
         },
         error: (err) => {
           console.error('Error al mostrar la vía seleccionada:', err);
           this.loading.set(false);
+          this.searchError.set('Error de conexión con el servicio de vías.');
         }
       });
   }

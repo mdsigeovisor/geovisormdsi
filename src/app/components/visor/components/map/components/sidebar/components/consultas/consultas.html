@@ -319,23 +319,11 @@
           <label for="nombreViaInput"
             class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Nombre de la
             Vía</label>
-          <div class="relative">
-            <input id="nombreViaInput" type="text" [(ngModel)]="nombreVia" (input)="onNombreViaInput($event)"
-              (blur)="onNombreViaBlur()" placeholder="Escriba para buscar una vía..."
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
-            <!-- Lista de sugerencias de Vía -->
-            @if (showViaSuggestions && viaSuggestions.length > 0) {
-            <div
-              class="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
-              @for (suggestion of viaSuggestions; track suggestion.codVia) {
-              <button (click)="selectViaSuggestion(suggestion)"
-                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary/5 transition-colors">
-                {{ suggestion.etiqueta }}
-              </button>
-              }
-            </div>
-            }
-          </div>
+          <!-- Campo de búsqueda: las coincidencias se muestran en el modal al
+               pulsar "Buscar", no en una lista desplegable bajo el campo. -->
+          <input id="nombreViaInput" type="text" [(ngModel)]="nombreVia"
+            placeholder="Escriba el nombre de la vía y pulse Buscar..."
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all">
         </div>
 
         <!-- Consulta de numeraciones por vía -->
@@ -790,4 +778,84 @@
       fill="#FF3D00" />
   </svg>
 </div>
+
+<!-- Modal de coincidencias por Dirección.
+     Se ubica al final del template, FUERA del bloque `@if (activeTab === 'direccion')`
+     y del contenedor con `overflow-y-auto` que envuelve los formularios. Al quedar
+     dentro de ese bloque el `fixed` se resolvía contra el panel lateral y el modal
+     no se veía. El estado vive en la señal `modalViasAbierto`, así que el modal
+     sigue mostrando las coincidencias aunque se cambie de pestaña. -->
+@if (modalViasAbierto()) {
+<div id="vias-modal"
+  class="fixed inset-0 z-[1050] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+  (click)="cerrarModalVias()">
+  <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-scale-in"
+    (click)="$event.stopPropagation()">
+    <!-- Encabezado -->
+    <div class="flex items-center gap-3 bg-primary px-5 py-4">
+      <span class="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center shrink-0">
+        <i class="bi bi-signpost-split"></i>
+      </span>
+      <div class="min-w-0 flex-1">
+        <h3 class="text-sm font-bold text-white truncate">Vías encontradas</h3>
+        <p class="text-[10px] text-white/70 truncate">Criterio: "{{ nombreVia }}"</p>
+      </div>
+      <button (click)="cerrarModalVias()" title="Cerrar"
+        class="w-8 h-8 rounded-lg bg-white/10 text-white/80 flex items-center justify-center transition-all duration-150 hover:bg-white hover:text-primary hover:rotate-90 shrink-0">
+        <i class="bi bi-x-lg text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Contador -->
+    <div
+      class="flex items-center gap-1.5 px-5 pt-3 pb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+      <i class="bi bi-signpost-split"></i>
+      {{ viasEncontradas.length }} {{ viasEncontradas.length === 1 ? 'vía' : 'vías' }}
+      <span class="normal-case font-normal text-gray-300">— clic para ver en el mapa</span>
+    </div>
+
+    <!-- Lista de coincidencias -->
+    <div class="max-h-72 overflow-y-auto custom-scrollbar border-t border-gray-100">
+      @for (via of viasEncontradas; track via.codviaequ) {
+      <button (click)="irAViaSeleccionada(sugerenciaDe(via))" [disabled]="loading()"
+        class="group relative w-full text-left px-5 py-3 text-xs text-gray-700 transition-all duration-150 border-b border-gray-50 last:border-0 flex items-start gap-3 hover:bg-primary/10 hover:text-primary hover:pl-6 active:bg-primary/15 disabled:opacity-50 disabled:pointer-events-none">
+        <span
+          class="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center transition-all duration-150 group-hover:bg-primary group-hover:text-white group-hover:scale-110">
+          <i class="bi bi-geo-alt-fill text-xs"></i>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block font-bold leading-snug">
+            @if (via.txttipoviaabrev) {
+            <span class="text-gray-400 font-normal">{{ via.txttipoviaabrev }}</span>
+            }
+            {{ via.txtnomvia }}
+          </span>
+          @if (via.txtnomviA_ANT) {
+          <span class="block text-[10px] text-gray-400 mt-0.5 truncate">
+            <i class="bi bi-clock-history text-[9px]"></i> {{ via.txtnomviA_ANT }}
+          </span>
+          }
+        </span>
+        <!-- Sin código de vía a la vista: el `codviaequ` se usa internamente
+             para localizar la geometría, pero no se muestra al usuario. -->
+        <i
+          class="bi bi-chevron-right text-gray-300 group-hover:text-primary transition-colors ml-auto shrink-0 self-center"></i>
+      </button>
+      }
+    </div>
+
+    <!-- Pie del modal -->
+    <div class="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
+      <button (click)="volverABuscarVias()" [disabled]="loading()"
+        class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-primary/20 text-[10px] font-bold text-primary uppercase tracking-wide transition-all duration-150 hover:bg-primary hover:border-primary hover:text-white hover:shadow-md active:scale-95 disabled:opacity-50 disabled:pointer-events-none">
+        <i class="bi bi-arrow-clockwise text-xs"></i> Volver a buscar
+      </button>
+      <button (click)="cerrarModalVias()"
+        class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-wide transition-all duration-150 hover:bg-gray-100 hover:border-gray-300 hover:text-gray-700 active:scale-95">
+        <i class="bi bi-x-lg text-xs"></i> Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+}
 

@@ -246,6 +246,26 @@ export interface ViaSugerencia {
   codVia: string;
 }
 
+/**
+ * Vía devuelta por el API `listar-vias` del Geovisor municipal, que es la
+ * fuente de verdad de los nombres de vías (el WFS `vw_tg_via` solo trae las
+ * vías que tienen geometría dibujada, y no todas las del distrito).
+ *
+ * - `codviaequ` (ej. 'L271170') es el código de vía con el que se emparejan los
+ *   segmentos del WFS `vw_tg_via` (`codi_via`) para poder resaltarla.
+ * - `txtnomviA_ANT` conserva el nombre anterior de la vía, por lo que el API
+ *   también encuentra vías con su denominación antigua.
+ */
+export interface ViaApi {
+  codvia: string;
+  txtnomvia: string;
+  txttipoviaabrev: string;
+  codviaequ: string;
+  codtipovia: string;
+  txttipovia: string;
+  txtnomviA_ANT?: string;
+}
+
 /* ------------------------------------------------------------------------- */
 /*  Estado del visor                                                          */
 /* ------------------------------------------------------------------------- */

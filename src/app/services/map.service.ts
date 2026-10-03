@@ -24,6 +24,7 @@ import {
   CucResultado,
   CodPredialResultado,
   ViaSugerencia,
+  ViaApi,
   TipoMapaBase,
   LoteDatosHover,
   LoteInfoWindow,
@@ -2544,56 +2545,54 @@ export class MapService {
     );
   }
   /**
-   * Busca vías por nombre parcial (para el autocompletado) y devuelve también
-   * el código de vía (cod_via) de cada resultado, necesario para consultar las
-   * numeraciones del API listar-via-numero del Geovisor municipal.
-   * @param query El nombre (parcial) de la vía a buscar.
-   * @returns Un Observable con un array de sugerencias { etiqueta, codVia }.
+   * Resuelve la geometría de una vía a partir de los códigos que devuelve el
+   * API `listar-vias`.
+   *
+   * El API entrega `codviaequ` (ej. 'L271170') y `codvia` (ej. '1170'); estos
+   * corresponden a los campos `codi_via` ('L271170') y `codi_via2` ('1170') del
+   * WFS `vw_tg_via`, que es donde están los segmentos dibujados de la vía. Por
+   * eso la búsqueda por dirección consulta primero el API (fuente de verdad de
+   * los nombres) y luego usa estos códigos para resaltar la vía en la gráfica.
+   *
+   * @param vias Vías devueltas por `ApisService.listarVias`.
+   * @returns Observable con los features de la vía (varios segmentos), o `null`
+   *   si ninguna de las vías indicadas tiene geometría en la cartografía.
    */
-  searchViasConCodigo(query: string): Observable<ViaSugerencia[]> {
-    if (!query || query.trim().length < 2) {
-      return new Observable(subscriber => subscriber.next([]));
-    }
-    // Búsqueda flexible por tokens: dividimos la consulta en palabras y exigimos
-    // que TODAS estén presentes en la etiqueta (orden y separación indiferentes).
-    // Así 'Ca. 21', 'CA 21', 'ca.21' o incluso '21' encuentran 'CA. 21'.
-    const tokens = query
-      .trim()
-      .toUpperCase()
-      .replace(/^CA\s+/, 'CA. ')
-      .replace(/^CA\.(?!\s)/, 'CA. ')
-      .split(/\s+/)
-      .filter(Boolean)
-      .map(t => t.replace(/'/g, "''")); // escapamos comillas simples para el CQL
-    const cqlFilter = tokens
-      .map(token => `etiquetado_ext ILIKE '%${token}%'`)
-      .join(' AND ');
+  buscarGeometriaPorCodigosVia(vias: ViaApi[]): Observable<GeoJSONFeature[] | null> {
+    const codigos = Array.from(new Set(
+      (vias ?? [])
+        .flatMap(via => [String(via.codviaequ ?? '').trim(), String(via.codvia ?? '').trim()])
+        .filter(codigo => !!codigo)
+    ));
+    if (codigos.length === 0) return of(null);
     const url = environment.geoserver.owsUrl;
+    const workspacePrefix = environment.geoserver.workspacePrefix;
+    // Buscamos en ambos campos (codi_via con el prefijo 'L' y codi_via2 sin él)
+    // para no depender de cuál de los dos códigos trae completos cada registro.
+    const filtros = ['codi_via', 'codi_via2']
+      .map(campo => codigos.map(codigo => `${campo} = '${codigo}'`).join(' OR '))
+      .filter(filtro => filtro.length > 0)
+      .map(filtro => `(${filtro})`)
+      .join(' OR ');
     const params = new HttpParams()
       .set('service', 'WFS')
       .set('version', '1.1.0')
       .set('request', 'GetFeature')
-      .set('typeName', `${environment.geoserver.workspacePrefix}vw_tg_via`)
+      .set('typeName', `${workspacePrefix}vw_tg_via`)
       .set('outputFormat', 'application/json')
       .set('srsName', 'EPSG:32718')
-      .set('propertyName', 'etiquetado_ext,codi_via')
-      .set('cql_filter', cqlFilter);
+      .set('maxFeatures', '9999')
+      .set('cql_filter', filtros);
     return this.http.get<WfsResponse>(url, { params }).pipe(
       map(response => {
-        if (!response?.features) return [];
-        // Devolvemos pares únicos etiqueta+codigo
-        const seen = new Set<string>();
-        const suggestions: ViaSugerencia[] = [];
-        for (const f of response.features) {
-          const etiqueta = String(f.properties['etiquetado_ext'] ?? '').trim();
-          const codVia = String(f.properties['codi_via'] ?? '').trim();
-          const key = `${etiqueta}|${codVia}`;
-          if (etiqueta && codVia && !seen.has(key)) {
-            seen.add(key);
-            suggestions.push({ etiqueta, codVia });
-          }
+        if (!response?.features?.length) return null;
+        // Un mismo segmento puede venir duplicado por coincidir en ambos campos;
+        // lo eliminamos por identificador de feature para no dibujar dos veces.
+        const unicos = new Map<string, GeoJSONFeature>();
+        for (const feature of response.features) {
+          unicos.set(String(feature.id ?? unicos.size), feature);
         }
-        return suggestions;
+        return Array.from(unicos.values());
       })
     );
   }

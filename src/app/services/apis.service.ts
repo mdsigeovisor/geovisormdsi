@@ -9,6 +9,7 @@ import {
   LoteDatosHover,
   TitularCatastral,
   ViaNumero,
+  ViaApi,
 } from '../interfaces/geoLayers';
 
 /* ---------------------------------------------------------------------------
@@ -38,6 +39,8 @@ export const GEOVISOR_ENDPOINTS = {
   buscarPorCodPredial: 'busqueda-codpredial',
   /** Numeraciones (lotes) asociadas a un código de vía. */
   listarViaNumeros: 'listar-via-numero',
+  /** Vías por nombre (fuente de verdad de los nombres de vías del distrito). */
+  listarVias: 'listar-vias',
   /** Titulares catastrales por apellido / razón social. */
   buscarTitularCatastral: 'busqueda-titular-catastral',
   /** Predios por denominación del predio. */
@@ -207,6 +210,32 @@ export class ApisService {
       GEOVISOR_ENDPOINTS.listarViaNumeros,
       params,
       respuesta => this.extraerViaNumero(respuesta)
+    );
+  }
+
+  /**
+   * Lista las vías del distrito cuyo nombre coincida con el texto indicado
+   * (`listar-vias`).
+   *
+   * El API es la fuente de verdad de los nombres de vías: el WFS `vw_tg_via`
+   * solo contiene las vías con geometría dibujada, por lo que buscar en él
+   * deja fuera vías existentes (de ahí que se consulte primero aquí). El API
+   * también busca por el nombre anterior (`txtnomviA_ANT`), de modo que
+   * escribir el nombre antiguo de una vía la encuentra igual.
+   * @param nombre Texto de búsqueda (parcial). Admite un solo carácter, de modo
+   *   que las coincidencias se muestren desde la primera tecla.
+   * @returns Observable con las vías `{ codviaequ, txtnomvia, ... }`.
+   */
+  listarVias(nombre: string): Observable<ViaApi[]> {
+    const texto = (nombre ?? '').trim();
+    // El API responde bien con un único carácter; sin texto no hay nada que buscar.
+    if (!texto) return of([]);
+    const params = new HttpParams().set('pvcTXTNOMBREVIA', texto);
+    return this.peticionConReintentos(
+      'listarVias',
+      GEOVISOR_ENDPOINTS.listarVias,
+      params,
+      respuesta => this.extraerData<ViaApi>(respuesta)
     );
   }
 

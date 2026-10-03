@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { HttpClient, HttpContext, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { vi } from 'vitest';
 
 import { environment } from '../../environments/environment';
@@ -96,8 +96,9 @@ describe('AuditoriaService', () => {
     expect(cuerpo.mensaje).toBe('lote 31-01');
     expect(typeof cuerpo.equipo).toBe('string');
     expect(cuerpo.nodo).not.toBe('');
-    // Sin sesión abierta el usuario va vacío, no `null`.
-    expect(cuerpo.codigoUsuario).toBe('');
+    // Sin sesión abierta viaja el identificador del visitante anónimo, no vacío:
+    // el API convertiría el vacío en un único ANONIMO para todos.
+    expect(cuerpo.codigoUsuario).toMatch(/^ANON-[0-9a-f-]{36}$/);
     // El API espera `tiempoMs` numérico.
     expect(typeof cuerpo.tiempoMs).toBe('number');
     expect(confirmar()).toBe(true);
@@ -185,9 +186,9 @@ describe('AuditoriaService', () => {
     expect(confirmar()).toBe(true);
   });
 
-  it('recorta el userAgent a los 50 caracteres de vchequipo', () => {
-    // El navegador real envía un userAgent de más de 50 caracteres: sin recorte
-    // la columna vchequipo rechazaría la fila.
+  it('recorta el perfil del equipo a los 50 caracteres de vchequipo', () => {
+    // El perfil compuesto (navegador + SO + idioma + zona horaria) puede pasar de
+    // 50 caracteres: sin recorte la columna vchequipo rechazaría la fila.
     const { cuerpo, confirmar } = registrar({ opcion: 'X' });
 
     expect(cuerpo.equipo.length).toBeLessThanOrEqual(50);
@@ -350,6 +351,25 @@ describe('auditoriaInterceptor', () => {
     httpMock.expectNone(URL_AUDITORIA);
   });
 
+  it('NO audita la llamada de login: la emite AuthService con el usuario ya guardado', () => {
+    // El login se audita en `AuthService.iniciarSesion` (opción SESION), que se
+    // ejecuta DESPUÉS de `guardarSesion()` y por tanto ya conoce el usuario.
+    // Si además lo auditara el interceptor, el mismo login dejaría dos filas: una
+    // correcta y otra sin usuario, porque el `tap` del interceptor corre antes del
+    // `map` que guarda la sesión (y sin token, que en ese instante no existe).
+    const cuerpo = new HttpParams()
+      .set('codigoUsuario', 'ADMIN')
+      .set('contrasena', '123456')
+      .set('codigoSistema', '010004')
+      .toString();
+    http
+      .post(`${environment.seguridadApiUrl}/auth/iniciar-sesion`, cuerpo)
+      .subscribe();
+    httpMock.expectOne(r => r.url.includes('/auth/iniciar-sesion')).flush({ codigoRespuesta: '00' });
+
+    httpMock.expectNone(URL_AUDITORIA);
+  });
+
   it('ignora los backends ajenos al visor (DataGIS, TUSNE)', () => {
     http.get('/DataGIS_WGS84/LotePublico.asp?codigo_i=31').subscribe();
 
@@ -483,11 +503,39 @@ describe('AuditoriaService · usuario de la sesión', () => {
     peticion.flush({ codigoRespuesta: '00' });
   });
 
-  it('envía vacío (no ANONIMO) cuando no hay sesión', () => {
+  it('identifica al visitante anónimo con un código persistente, no vacío', () => {
     auditoria.accion(AUDITORIA_OPCIONES.CONSULTA_GEOVISOR, 'consulta');
     const peticion = httpMock.expectOne(URL_AUDITORIA);
 
-    expect(peticion.request.body.codigoUsuario).toBe('');
+    // El visor se usa sin autenticar por defecto. Mandar vacío aquí haría que el
+    // API guardara TODOS esos eventos en un mismo ANONIMO, sin poder distinguir
+    // un visitante de otro ni contar cuántos entraron.
+    expect(peticion.request.body.codigoUsuario).toMatch(/^ANON-[0-9a-f-]{36}$/);
+    peticion.flush({ codigoRespuesta: '00' });
+  });
+
+  it('mantiene el mismo identificador entre eventos del mismo visitante', () => {
+    auditoria.accion(AUDITORIA_OPCIONES.BUSQUEDA, 'primera');
+    const primera = httpMock.expectOne(URL_AUDITORIA);
+    auditoria.accion(AUDITORIA_OPCIONES.BUSQUEDA, 'segunda');
+    const segunda = httpMock.expectOne(URL_AUDITORIA);
+
+    // Es lo que permite reconstruir el recorrido de un visitante: los dos
+    // eventos tienen que caer en la misma fila de sesión del API.
+    expect(segunda.request.body.codigoUsuario).toBe(primera.request.body.codigoUsuario);
+    primera.flush({ codigoRespuesta: '00' });
+    segunda.flush({ codigoRespuesta: '00' });
+  });
+
+  it('compone el perfil del equipo con navegador, SO e idioma', () => {
+    auditoria.accion(AUDITORIA_OPCIONES.CONSULTA_GEOVISOR, 'consulta');
+    const peticion = httpMock.expectOne(URL_AUDITORIA);
+
+    // Antes se mandaba el userAgent recortado, que a los 50 chars solo dejaba
+    // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi…", sin navegador ni
+    // sistema operativo. Ahora el perfil sí los dice.
+    expect(peticion.request.body.equipo).toContain('/');
+    expect(peticion.request.body.equipo).not.toMatch(/^Mozilla/);
     peticion.flush({ codigoRespuesta: '00' });
   });
 });

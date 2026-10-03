@@ -28,8 +28,14 @@ import { AUDITORIA_OPCIONES, AuditoriaService } from '../services/auditoria.serv
  * el `Image` del navegador (`ImageWMS`) y nunca por `HttpClient`. Esas se
  * auditan en `MapService.addWmsLayer`, donde el visor abre la conexión con la capa.
  *
- * La propia llamada de auditoría se EXCLUYE: registrarla dispararía otra
- * auditoría y provocaría un bucle infinito de peticiones.
+ * Dos rutas quedan FUERA del interceptor, porque ya se auditan en el sitio
+ * correcto y aquí solo producirían un registro duplicado o sin atribución:
+ *
+ *  - la propia auditoría (`/seguridad/auditoria/`), que si no dispararía otra
+ *    auditoría y provocaría un bucle infinito de peticiones;
+ *  - el login (`/seguridad/auth/`), que emite `AuthService.iniciarSesion` con
+ *    `opcion: SESION` DESPUÉS de guardar la sesión, con el usuario y el token ya
+ *    disponibles. Aquí el `tap` correría antes de que existieran.
  * ------------------------------------------------------------------------- */
 
 /**
@@ -109,6 +115,13 @@ export const auditoriaInterceptor: HttpInterceptorFn = (req, next) => {
   if (!esApi && !ogcs) return next(req);
   // La auditoría no se audita a sí misma (si no, cada registro generaría otro).
   if (req.url.startsWith(`${environment.seguridadApiUrl}/auditoria/`)) return next(req);
+  // El login tampoco pasa por aquí: `AuthService.iniciarSesion` ya emite su
+  // propio evento `SESION` con el usuario correcto. El interceptor lo registraría
+  // ADEMÁS y en el momento equivocado: su `tap` corre antes del `map` que
+  // llama a `guardarSesion()`, así que todavía no hay `codigoUsuario` ni token,
+  // y esa fila se guardaría como ANONIMO/visitante anónimo. Con la exclusión el
+  // login deja un solo registro, ya con el login del usuario.
+  if (req.url.startsWith(`${environment.seguridadApiUrl}/auth/`)) return next(req);
 
   const auditoria = inject(AuditoriaService);
   const inicio = performance.now();

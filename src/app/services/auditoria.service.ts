@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, map, of, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { ID_VISITANTE, perfilEquipo } from './identidad-navegador';
 
 /* ---------------------------------------------------------------------------
  * MÓDULO DE AUDITORÍA DEL API WSGEOVISOR (MSICAS)
@@ -164,6 +165,13 @@ const ID_NODO = idNodoDePestana();
  * del usuario y los fallos de las consultas, completando los campos de contexto
  * (aplicación, usuario, equipo y nodo) que el front conoce y el API no envía.
  *
+ * Usuario sin sesión: el negocio navega el visor sin autenticar por defecto, y
+ * esos eventos NO pueden quedarse todos en un mismo `ANONIMO` del API, porque
+ * se vuelve imposible saber si fue una persona o cien. Cuando no hay sesión se
+ * envía el identificador persistente del visitante (`ANON-<uuid>`, ver
+ * `identidad-navegador.ts`), que permite seguir su recorrido entre eventos y
+ * distinguir visitantes distintos sin recoger ningún dato personal.
+ *
  * Política de errores: la auditoría es **accessoria**, nunca debe romper una
  * acción del visor, por lo que `registrar()` nunca propaga el error — resuelve
  * `false` y deja un aviso en consola. El llamador no necesita `subscribe` con
@@ -274,20 +282,21 @@ export class AuditoriaService {
       tiempoMs: Number.isFinite(numero) ? Math.round(numero * 100) / 100 : 0,
       codigoMensaje: recortar(entrada.codigoMensaje ?? '', LIMITE_CAMPOS.codigoMensaje),
       mensaje: recortar(entrada.mensaje ?? '', LIMITE_CAMPOS.mensaje),
-      // Sin sesión abierta se reporta el usuario vacío: el registro del fallo es
-      // justamente lo que interesa cuando el problema es la propia sesión.
+      // Sin sesión abierta se reporta el identificador persistente del visitante
+      // anónimo (`ANON-<uuid>`) en lugar de vacío: el API lo guardaría como
+      // ANONIMO, y con todos los eventos en un único ANONIMO indistinguible no
+      // se puede ni seguir el recorrido de un visitante ni contar cuántos
+      // entraron. El identificador lo genera `identidad-navegador.ts` y persiste
+      // en `localStorage`, así que el mismo visitante conserva el mismo código
+      // entre visitas y entre pestañas. Si el usuario SÍ tiene sesión, manda su
+      // login y esta ruta no interviene.
       codigoUsuario: recortar(
-        entrada.codigoUsuario ?? this.authService.codigoUsuario() ?? '',
+        entrada.codigoUsuario ?? this.authService.codigoUsuario() ?? ID_VISITANTE,
         LIMITE_CAMPOS.codigoUsuario
       ),
-      equipo: recortar(entrada.equipo ?? this.nombreEquipo(), LIMITE_CAMPOS.equipo),
+      equipo: recortar(entrada.equipo ?? perfilEquipo(), LIMITE_CAMPOS.equipo),
       nodo: recortar(entrada.nodo ?? (ID_NODO || NODO_POR_DEFECTO), LIMITE_CAMPOS.nodo),
     };
   }
 
-  /** Nombre del navegador (`equipo`), tolerante a entornos sin `navigator`. */
-  private nombreEquipo(): string {
-    if (typeof navigator === 'undefined') return '';
-    return navigator.userAgent ?? '';
   }
-}

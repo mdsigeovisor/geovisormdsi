@@ -7,6 +7,7 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import { SIN_AUDITORIA, auditoriaInterceptor } from '../interceptor/auditoria.interceptor';
 import { AUDITORIA_OPCIONES, AuditoriaService } from './auditoria.service';
+import { fijarIpDePruebas } from './ip-equipo.service';
 
 /** URL real del endpoint, tal y como la compone `environment.seguridadApiUrl`. */
 const URL_AUDITORIA = `${environment.seguridadApiUrl}/auditoria/registrar`;
@@ -14,6 +15,15 @@ const URL_AUDITORIA = `${environment.seguridadApiUrl}/auditoria/registrar`;
 const CLAVE_SESION = 'gmsi_sesion_geovisor';
 /** GeoServer de desarrollo, tal y como lo resuelve el proxy de `ng serve`. */
 const URL_GEOSERVER = '/geoserver/ows';
+/** IP con la que estas pruebas ven el campo `vchequipo` de cada evento. */
+const IP_PRUEBA = '192.168.0.50';
+
+// La IP real de la PC se resuelve con WebRTC o servicios externos, vías de
+// red que no deben correr en pruebas (el entorno ya la fija en
+// `src/test-setup.ts`); aquí se reafirma para que el valor de `equipo` de
+// este archivo sea explícito y previsible.
+beforeEach(() => fijarIpDePruebas(IP_PRUEBA));
+afterEach(() => fijarIpDePruebas(null));
 
 /**
  * Pruebas del registro de auditoría.
@@ -187,10 +197,21 @@ describe('AuditoriaService', () => {
   });
 
   it('recorta el perfil del equipo a los 50 caracteres de vchequipo', () => {
-    // El perfil compuesto (navegador + SO + idioma + zona horaria) puede pasar de
-    // 50 caracteres: sin recorte la columna vchequipo rechazaría la fila.
+    // El perfil compuesto (IP + navegador + SO) puede pasar de 50 caracteres:
+    // sin recorte la columna vchequipo rechazaría la fila.
     const { cuerpo, confirmar } = registrar({ opcion: 'X' });
 
+    expect(cuerpo.equipo.length).toBeLessThanOrEqual(50);
+    expect(confirmar()).toBe(true);
+  });
+
+  it('incluye la IP de la PC al inicio de vchequipo (equipo)', () => {
+    // El negocio define vchequipo como el campo donde se graba la IP del
+    // equipo que entra al visor: la IP viaja SIEMPRE primera y, si queda
+    // sitio, a su derecha va el perfil técnico del navegador.
+    const { cuerpo, confirmar } = registrar({ opcion: AUDITORIA_OPCIONES.INGRESO_ANONIMO });
+
+    expect(cuerpo.equipo.startsWith(`${IP_PRUEBA} /`)).toBe(true);
     expect(cuerpo.equipo.length).toBeLessThanOrEqual(50);
     expect(confirmar()).toBe(true);
   });
@@ -527,13 +548,14 @@ describe('AuditoriaService · usuario de la sesión', () => {
     segunda.flush({ codigoRespuesta: '00' });
   });
 
-  it('compone el perfil del equipo con navegador, SO e idioma', () => {
+  it('compone el equipo con la IP de la PC primero y el perfil después', () => {
     auditoria.accion(AUDITORIA_OPCIONES.CONSULTA_GEOVISOR, 'consulta');
     const peticion = httpMock.expectOne(URL_AUDITORIA);
 
     // Antes se mandaba el userAgent recortado, que a los 50 chars solo dejaba
-    // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi…", sin navegador ni
-    // sistema operativo. Ahora el perfil sí los dice.
+    // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi…": sin IP y sin
+    // navegador ni SO. Ahora vchequipo abre con la IP y sigue con el perfil.
+    expect(peticion.request.body.equipo.startsWith(`${IP_PRUEBA} /`)).toBe(true);
     expect(peticion.request.body.equipo).toContain('/');
     expect(peticion.request.body.equipo).not.toMatch(/^Mozilla/);
     peticion.flush({ codigoRespuesta: '00' });

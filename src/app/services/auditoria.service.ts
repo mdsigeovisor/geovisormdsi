@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, map, of, timeout } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import { ID_VISITANTE, perfilEquipo } from './identidad-navegador';
+import { IpEquipoService } from './ip-equipo.service';
 
 /* ---------------------------------------------------------------------------
  * MÓDULO DE AUDITORÍA DEL API WSGEOVISOR (MSICAS)
@@ -75,7 +76,10 @@ export interface AuditoriaEntrada {
   mensaje?: string;
   /** Login del usuario. La completa el servicio con el de la sesión. */
   codigoUsuario?: string;
-  /** Navegador / equipo. La completa el servicio si no se informa. */
+  /**
+   * Equipo (`vchequipo`): IP de la PC que entra al visor y perfil del
+   * navegador. La completa el servicio con la IP resuelta si no se informa.
+   */
   equipo?: string;
   /** Nodo o sesión del cliente (ventana). La completa el servicio si no se informa. */
   nodo?: string;
@@ -184,6 +188,8 @@ export class AuditoriaService {
   private readonly http = inject(HttpClient);
   /** Sesión del módulo de Seguridad, para correlacionar el usuario. */
   private readonly authService = inject(AuthService);
+  /** IP de la PC que entra al visor, el dato que se graba en `vchequipo`. */
+  private readonly ipEquipo = inject(IpEquipoService);
 
   /**
    * Envía un registro de auditoría al API.
@@ -206,16 +212,25 @@ export class AuditoriaService {
     let cabeceras = new HttpHeaders({ 'Content-Type': 'application/json' });
     if (token) cabeceras = cabeceras.set('Authorization', `Bearer ${token}`);
 
-    return this.http
-      .post<AuditoriaRespuesta>(url, this.completarContexto(entrada), { headers: cabeceras })
-      .pipe(
-        timeout(TIEMPO_MAXIMO_MS),
-        map(respuesta => respuesta?.codigoRespuesta === CODIGO_AUDITORIA_OK),
-        catchError(error => {
-          console.warn('[Auditoría] No se pudo registrar el evento:', entrada?.opcion, error);
-          return of(false);
-        })
-      );
+    // La IP de la PC (`vchequipo`) se resuelve ANTES de componer el cuerpo:
+    // la primera vez puede demorar (WebRTC o servicio público, con techo de
+    // 3 s) y a partir de ahí queda en memoria y sale síncrona. Si no se
+    // consigue IP, se envía solo el perfil del navegador: el evento nunca se
+    // pierde esperando este dato.
+    return this.ipEquipo.ip().pipe(
+      switchMap(ip =>
+        this.http
+          .post<AuditoriaRespuesta>(url, this.completarContexto(entrada, ip), { headers: cabeceras })
+          .pipe(
+            timeout(TIEMPO_MAXIMO_MS),
+            map(respuesta => respuesta?.codigoRespuesta === CODIGO_AUDITORIA_OK)
+          )
+      ),
+      catchError(error => {
+        console.warn('[Auditoría] No se pudo registrar el evento:', entrada?.opcion, error);
+        return of(false);
+      })
+    );
   }
 
   /**
@@ -265,9 +280,12 @@ export class AuditoriaService {
    *  - cada texto se recorta a la longitud de su columna (`varchar(n)`), porque
    *    un valor más largo que la columna haría fallar el INSERT completo;
    *  - los campos ausentes se completan con el contexto que el front conoce
-   *    (aplicación, usuario, navegador y nodo) y nunca viajan en `null`.
+   *    (aplicación, usuario, equipo con su IP y nodo) y nunca viajan en `null`.
+   *
+   * @param entrada Datos del evento tal y como los aportó el llamador.
+   * @param ip IP de la PC resuelta por `IpEquipoService` (`''` si no la hay).
    */
-  private completarContexto(entrada: AuditoriaEntrada): AuditoriaEntrada {
+  private completarContexto(entrada: AuditoriaEntrada, ip: string): AuditoriaEntrada {
     const recortar = (valor: string, limite: number): string => valor.slice(0, limite);
     const numero = Number(entrada.tiempoMs);
     return {
@@ -294,7 +312,10 @@ export class AuditoriaService {
         entrada.codigoUsuario ?? this.authService.codigoUsuario() ?? ID_VISITANTE,
         LIMITE_CAMPOS.codigoUsuario
       ),
-      equipo: recortar(entrada.equipo ?? perfilEquipo(), LIMITE_CAMPOS.equipo),
+      // `vchequipo` es donde se graba la IP de la PC que entra al visor: la IP
+      // va PRIMERO para que quepa en los 50 caracteres y se lea de un vistazo;
+      // a su derecha queda el perfil técnico del navegador.
+      equipo: recortar(entrada.equipo ?? perfilEquipo(ip), LIMITE_CAMPOS.equipo),
       nodo: recortar(entrada.nodo ?? (ID_NODO || NODO_POR_DEFECTO), LIMITE_CAMPOS.nodo),
     };
   }

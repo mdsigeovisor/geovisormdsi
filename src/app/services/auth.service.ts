@@ -1,8 +1,9 @@
 import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, throwError, timeout } from 'rxjs';
+import { Observable, catchError, map, switchMap, throwError, timeout } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AUDITORIA_OPCIONES, AuditoriaService } from './auditoria.service';
+import { IpEquipoService } from './ip-equipo.service';
 
 /* ---------------------------------------------------------------------------
  * CONTRATOS DEL MÓDULO DE SEGURIDAD (MSICAS) DEL API WSGEOVISOR
@@ -142,6 +143,8 @@ const CODIGO_SIN_SESION = '99';
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  /** IP de la PC que ingresa al visor: viaja en `direccionIp` del login. */
+  private readonly ipEquipo = inject(IpEquipoService);
 
   /**
    * `AuditoriaService` se resuelve de forma **perezosa** (y no con `inject`)
@@ -264,6 +267,10 @@ export class AuthService {
    *  - los campos obligatorios son `codigoUsuario`, `contrasena` y
    *    `codigoSistema`, y el código de sistema DEBE estar registrado en el API
    *    (ver `environment.codigoSistema`);
+   *  - `direccionIp` lo declara el front con la IP de la PC (ver
+   *    `IpEquipoService`): si no se envía, el backend lo rellena con la IP que
+   *    ve en la petición y, detrás del proxy inverso, eso es la IP del
+   *    servidor —no la de la PC que entra—;
    *  - en caso de error responde HTTP 200 con `codigoRespuesta: "ERR-..."` (o
    *    `"99"` sin sesión) y el detalle en `mensajeRespuesta`, por lo que el
    *    error se valida en el body.
@@ -279,46 +286,63 @@ export class AuthService {
     codigoSistema: string = environment.codigoSistema
   ): Observable<UsuarioSesion> {
     const url = `${environment.seguridadApiUrl}/auth/iniciar-sesion`;
-    const cuerpo = new HttpParams()
-      .set('codigoUsuario', codigoUsuario)
-      .set('contrasena', contrasena)
-      .set('codigoSistema', codigoSistema);
     const cabeceras = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
 
-    return this.http.post<LoginRespuesta>(url, cuerpo.toString(), { headers: cabeceras }).pipe(
-      timeout(TIEMPO_MAXIMO_MS),
-      map(respuesta => {
-        if (!this.esRespuestaExitosa(respuesta)) {
-          throw new ErrorAutenticacion(
-            respuesta?.codigoRespuesta ?? '',
-            AuthService.mensajeDeError(respuesta)
+    // `direccionIp` (BeLoginEntrada) es el campo donde el negocio guarda la IP
+    // de la PC que INGRESA al visor. La declara el front porque es la única vía
+    // fiable: si viene sin declarar, el backend lo rellena con la IP que ve en
+    // la petición y, detrás del proxy inverso (nginx), eso es la IP del
+    // servidor (p. ej. 192.168.40.58), no la de la PC. La resuelve
+    // `IpEquipoService` con el mismo techo y la misma caché que la auditoría.
+    return this.ipEquipo.ip().pipe(
+      switchMap(ip => {
+        const declarada = ip.trim();
+        const cuerpo = new HttpParams()
+          .set('codigoUsuario', codigoUsuario)
+          .set('contrasena', contrasena)
+          .set('codigoSistema', codigoSistema);
+        // Sin IP no se manda el campo: así el comportamiento del login es el
+        // mismo que hasta ahora y el backend aplica su propia lógica.
+        const cuerpoFinal = declarada ? cuerpo.set('direccionIp', declarada) : cuerpo;
+
+        return this.http
+          .post<LoginRespuesta>(url, cuerpoFinal.toString(), { headers: cabeceras })
+          .pipe(
+            timeout(TIEMPO_MAXIMO_MS),
+            map(respuesta => {
+              if (!this.esRespuestaExitosa(respuesta)) {
+                throw new ErrorAutenticacion(
+                  respuesta?.codigoRespuesta ?? '',
+                  AuthService.mensajeDeError(respuesta)
+                );
+              }
+              // Si el API emite el token pero omite `informacionUsuario`, la sesión se
+              // identifica con el usuario que se escribió en el formulario.
+              const informacion: UsuarioSesion = respuesta.informacionUsuario ?? {
+                codigoUsuario,
+                nombres: '',
+                correoElectronico: '',
+                codigoRol: ''
+              };
+              this.guardarSesion(respuesta, informacion.codigoUsuario || codigoUsuario);
+              this.auditoria.accion(
+                AUDITORIA_OPCIONES.SESION,
+                `Inicio de sesión de ${informacion.codigoUsuario || codigoUsuario}`,
+                { conexionNombre: 'ORACLE' }
+              );
+              return informacion;
+            }),
+            catchError(error => {
+              const fallo = AuthService.normalizarError(error);
+              this.auditoria.error(
+                AUDITORIA_OPCIONES.SESION,
+                `Fallo al iniciar sesión de ${codigoUsuario}: ${fallo.message}`,
+                { conexionNombre: 'ORACLE' },
+                fallo.codigo || 'ERR-SESION'
+              );
+              return throwError(() => fallo);
+            })
           );
-        }
-        // Si el API emite el token pero omite `informacionUsuario`, la sesión se
-        // identifica con el usuario que se escribió en el formulario.
-        const informacion: UsuarioSesion = respuesta.informacionUsuario ?? {
-          codigoUsuario,
-          nombres: '',
-          correoElectronico: '',
-          codigoRol: ''
-        };
-        this.guardarSesion(respuesta, informacion.codigoUsuario || codigoUsuario);
-        this.auditoria.accion(
-          AUDITORIA_OPCIONES.SESION,
-          `Inicio de sesión de ${informacion.codigoUsuario || codigoUsuario}`,
-          { conexionNombre: 'ORACLE' }
-        );
-        return informacion;
-      }),
-      catchError(error => {
-        const fallo = AuthService.normalizarError(error);
-        this.auditoria.error(
-          AUDITORIA_OPCIONES.SESION,
-          `Fallo al iniciar sesión de ${codigoUsuario}: ${fallo.message}`,
-          { conexionNombre: 'ORACLE' },
-          fallo.codigo || 'ERR-SESION'
-        );
-        return throwError(() => fallo);
       })
     );
   }

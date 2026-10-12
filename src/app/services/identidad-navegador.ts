@@ -162,25 +162,32 @@ function zonaHorariaDe(): string {
 }
 
 /**
- * Perfil del equipo que se registra en `equipo` (`vchequipo varchar(50)`).
+ * Perfil del equipo que se registra en `equipo` (`vchequipo varchar(50)`), el
+ * campo donde el negocio espera la IP de la PC que entra al visor.
  *
- * Antes de esto se enviaba el `userAgent` recortado a 50 caracteres, lo que en
- * la práctica solo dejaba `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi…`:
- * la parte útil (navegador y SO) quedaba cortada. Aquí se compone un perfil
- * legible que entra en los 50 caracteres:
+ * Antes se enviaba el `userAgent` recortado a 50 caracteres, lo que en la
+ * práctica solo dejaba `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKi…`:
+ * la parte útil (navegador y SO) quedaba cortada. Ahora el valor se compone
+ * con la IP DELANTE —es el dato que define la columna— y, si queda sitio, el
+ * perfil técnico:
  *
  * ```
- * Chrome/138 / Windows / es-PE / America/Lima
+ * 192.168.40.77 / Chrome/138 / Windows
  * ```
  *
- * @param equipo Valor informado por el llamador; si viene, se respeta tal cual.
+ * Si la IP no está disponible (red bloqueada o resolución aún en curso) se
+ * conserva el perfil completo (navegador, SO, idioma y zona horaria) como
+ * hasta ahora: la auditoría nunca se queda sin `equipo`.
+ *
+ * @param ip IP de la PC, resuelta por `IpEquipoService`; vacía si no la hay.
  */
-export function perfilEquipo(equipo?: string): string {
-  if (equipo) return equipo;
-  if (typeof navigator === 'undefined') return '';
+export function perfilEquipo(ip?: string): string {
+  if (typeof navigator === 'undefined') return ip ?? '';
   const ua = navigator.userAgent ?? '';
-  return [navegadorDe(ua), sistemaOperativoDe(ua), navigator.language || 'es', zonaHorariaDe()]
-    .filter(Boolean)
-    .join(' / ')
-    .slice(0, LIMITE_EQUIPO);
+  const navegador = navegadorDe(ua);
+  const sistema = sistemaOperativoDe(ua);
+  const perfil = ip
+    ? [ip, navegador, sistema]
+    : [navegador, sistema, navigator.language || 'es', zonaHorariaDe()];
+  return perfil.filter(Boolean).join(' / ').slice(0, LIMITE_EQUIPO);
 }

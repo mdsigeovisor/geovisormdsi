@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { AuthService } from './auth.service';
+import { fijarIpDePruebas } from './ip-equipo.service';
 
 /** Minuto en milisegundos, para avanzar el reloj simulado. */
 const MINUTO = 60_000;
@@ -13,6 +14,14 @@ const MINUTOS_TOKEN_API = 60;
 const MINUTOS_POR_DEFECTO = 30;
 /** Clave de `sessionStorage` usada por el servicio para persistir la sesión. */
 const CLAVE_SESION = 'gmsi_sesion_geovisor';
+/** IP con la que estas pruebas ven `direccionIp` (y `vchequipo`) del login. */
+const IP_PRUEBA = '192.168.0.50';
+
+// La IP real de la PC se resuelve con WebRTC o servicios externos, vías de red
+// que no deben correr en pruebas (el entorno ya la fija en
+// `src/test-setup.ts`); aquí se reafirma para que el valor declarado en el
+// login sea explícito y previsible.
+beforeEach(() => fijarIpDePruebas(IP_PRUEBA));
 
 /** Usuario autenticado y permisos que devuelve el API (`BeLoginSalida`). */
 const INFORMACION_USUARIO = {
@@ -323,5 +332,39 @@ describe('AuthService · sesión sin caducidad', () => {
     expect(service.expiraEn()).toBeNull();
     expect(sessionStorage.getItem(CLAVE_SESION)).toBeNull();
     expect(mensaje).toContain('código 99');
+  });
+
+  // --- direccionIp: la IP de la PC que ingresa -----------------------------
+
+  it('declara la IP de la PC en direccionIp del login', () => {
+    // El éxito del login dispara además la auditoría de sesión, que también
+    // pasa por `post`: se capturan las peticiones con su URL para poder
+    // mirar SOLO la del login sin que la auditoría pise el valor.
+    const peticiones: { url: string; cuerpo: string }[] = [];
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: HttpClient,
+          useValue: {
+            post: (url: string, body: unknown) => {
+              peticiones.push({ url, cuerpo: String(body) });
+              return of(url.includes('iniciar-sesion') ? respuestaApi() : { codigoRespuesta: '00' });
+            },
+          },
+        },
+      ],
+    });
+    service = TestBed.inject(AuthService);
+
+    service.iniciarSesion('ADMIN', '123456').subscribe();
+
+    // `BeLoginEntrada.direccionIp` es el campo donde el negocio guarda la IP
+    // de la PC que entra. Si no se declara, el backend lo rellena con la IP
+    // que ve en la petición y, detrás del proxy inverso, eso es la IP del
+    // servidor (192.168.40.58), no la de la PC.
+    const login = peticiones.filter(p => p.url.includes('iniciar-sesion'));
+    expect(login).toHaveLength(1);
+    expect(login[0].cuerpo).toContain(`direccionIp=${IP_PRUEBA}`);
+    expect(service.isAuthenticated()).toBe(true);
   });
 });

@@ -8,3 +8,11 @@
  */
 import 'zone.js';
 import 'zone.js/testing';
+
+import { fijarIpDePruebas } from './app/services/ip-equipo.service';
+
+// La IP de la PC (`vchequipo`) se resuelve con WebRTC o con servicios
+// públicos: dos vías de red asíncronas que no deben ejecutarse dentro de una
+// prueba. Se fija un valor fijo para que `registrar()` emita la petición de
+// forma síncrona, igual que en producción cuando la IP ya está resuelta.
+fijarIpDePruebas('192.168.0.50');

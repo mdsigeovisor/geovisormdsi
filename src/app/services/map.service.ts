@@ -368,17 +368,17 @@ export class MapService {
     this.infoLayerConfig('cactus_yucca_2015', p => p['codigo'], id => `${environment.dataGis.catArbolesUrl}?codigo_i=${id}`, this.arboladoUrbano2015Url),
     this.infoLayerConfig('tusne', p => p['id_lote'] ?? p['codigo'] ?? p['id'], id => `${environment.dataGis.tusneUrlBase}/${id}.pdf`, this.tusneUrl),
     // Cruces de accesibilidad (5 capas: cruces_accesibilidad_1 al 5)
-    this.infoLayerConfig('cruces_accesibilidad_1', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
-    this.infoLayerConfig('cruces_accesibilidad_2', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
-    this.infoLayerConfig('cruces_accesibilidad_3', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
-    this.infoLayerConfig('cruces_accesibilidad_4', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
-    this.infoLayerConfig('cruces_accesibilidad_5', p => p['id_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    this.infoLayerConfig('cruces_accesibilidad_1', p => p['cod_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    this.infoLayerConfig('cruces_accesibilidad_2', p => p['cod_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    this.infoLayerConfig('cruces_accesibilidad_3', p => p['cod_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    this.infoLayerConfig('cruces_accesibilidad_4', p => p['cod_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
+    this.infoLayerConfig('cruces_accesibilidad_5', p => p['cod_cruce'], id => `${environment.dataGis.fichaAccCruceUrl}?codigo_i=${id}`, this.cruceAccesibilidadUrl),
     // Manzanas de accesibilidad (5 capas: manzanas_cruces_accesibilidad_1 al 5)
-    this.infoLayerConfig('manzanas_cruces_accesibilidad_1', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
-    this.infoLayerConfig('manzanas_cruces_accesibilidad_2', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
-    this.infoLayerConfig('manzanas_cruces_accesibilidad_3', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
-    this.infoLayerConfig('manzanas_cruces_accesibilidad_4', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
-    this.infoLayerConfig('manzanas_cruces_accesibilidad_5', p => p['objectid'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_1', p => p['cod_manz'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_2', p => p['cod_manz'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_3', p => p['cod_manz'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_4', p => p['cod_manz'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
+    this.infoLayerConfig('manzanas_cruces_accesibilidad_5', p => p['cod_manz'], id => `${environment.dataGis.fichaAccManzaUrl}?codigo_i=${id}`, this.cruceAccesibilidadManzanaUrl),
     // Bancas 2016
     this.infoLayerConfig('mu_bancas_2016', p => p['COD_COMPON'] ?? p['cod_compon'], id => `${environment.dataGis.bancas2016Url}?codigo_i=${id}`, this.bancas2016Url),
     // Estacionamientos de bicicletas 2016

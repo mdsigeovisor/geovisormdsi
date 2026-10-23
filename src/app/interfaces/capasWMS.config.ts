@@ -122,6 +122,7 @@ const TEMATICA: WmsLayerConfig[] = [
   { id: 'tem_view_lote_ley27157b', layerName: `${wp}view_lote_ley_27157_b`, zIndex: 3, title: 'view_lote_ley_27157_b' },
   { id: 'tem_view_lote_rrpp', layerName: `${wp}view_lote_rrpp`, zIndex: 3, title: 'view_lote_rrpp' },
   { id: 'uso_predo_2021', layerName: `${wp}uso_predominante_2021`, zIndex: 3, title: 'Uso predominante 2021' },
+  { id: 'uso_predo_2026', layerName: `${wp}uso_predominante_2026`, zIndex: 3, title: 'Uso predominante 2026' },
 ];
 const AGUA_Y_ALCANTARILLADO: WmsLayerConfig[] = [
   { id: 'mu_hidrante_2024', layerName: `${wp}hidrantes_2024`, zIndex: 3, title: 'Hidrnate 2016' },

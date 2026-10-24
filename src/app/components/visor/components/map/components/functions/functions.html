@@ -77,8 +77,15 @@
             class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
       <i class="bi bi-bounding-box-circles text-xl"></i>
     </button>
-        <button id="btn-poligono" (click)="dibujarPoligono()" title="Dibujar Polígono (Enter o ✓ para finalizar)"
-            class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
+            <button id="btn-area-lote" (click)="toggleMedicionAreaLote()"
+                [class.bg-secondary]="areaLoteActiva()"
+                [attr.aria-pressed]="areaLoteActiva()"
+                [title]="areaLoteActiva() ? 'Cancelar cálculo de área por lote' : 'Calcular área del lote con un clic'"
+                class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
+          <i class="bi bi-calculator text-xl"></i>
+        </button>
+            <button id="btn-poligono" (click)="dibujarPoligono()" title="Dibujar Polígono (Enter o ✓ para finalizar)"
+                class="w-10 h-10 flex items-center justify-center bg-white backdrop-blur-md text-primary rounded-xl shadow-lg border border-white/20 hover:bg-secondary hover:text-white hover:scale-105 transition-all active:scale-95 cursor-pointer">
       <i class="bi bi-pentagon text-xl"></i>
     </button>
         <button id="btn-linea" (click)="dibujarLinea()" title="Dibujar Línea (Enter o ✓ para finalizar)"
@@ -93,6 +100,17 @@
             class="w-10 h-10 flex items-center justify-center bg-red-500 backdrop-blur-md text-white rounded-xl shadow-lg border border-white/20 hover:bg-red-600 hover:scale-105 transition-all active:scale-95 cursor-pointer">
       <i class="bi bi-trash-fill text-xl"></i>
     </button>
+  </div>
+  }
+  @if (areaLoteCargando() || areaLoteError() || (areaLoteActiva() && !areaLoteResultado())) {
+  <div class="fixed right-28 top-1/2 -translate-y-1/2 z-50 w-64 rounded-xl border border-blue-100 bg-white/95 p-3 shadow-xl backdrop-blur-md">
+    @if (areaLoteCargando()) {
+      <p class="text-xs font-medium text-gray-600">Calculando el área del lote…</p>
+    } @else if (areaLoteError()) {
+      <p class="text-xs font-medium text-red-600">{{ areaLoteError() }}</p>
+    } @else {
+      <p class="text-xs font-medium text-gray-600">Haz clic sobre un lote catastral para calcular su área.</p>
+    }
   </div>
   }
   <div class="hidden md:block">
@@ -159,4 +177,3 @@
      class="search-marker-container pointer-events-none z-10">
   <svg class="h-8 w-8 drop-shadow-lg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" fill="#FF3D00"></path></svg>
 </div>
-

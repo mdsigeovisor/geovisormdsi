@@ -10,6 +10,8 @@ import { easeOut } from 'ol/easing';
 import { defaults as defaultInteractions } from 'ol/interaction';
 import type { Coordinate } from 'ol/coordinate';
 import type Geometry from 'ol/geom/Geometry';
+import MultiPolygon from 'ol/geom/MultiPolygon';
+import Polygon from 'ol/geom/Polygon';
 import { Observable, map, take, switchMap, catchError, of } from 'rxjs';
 
 import { ORTOFOTO_YEARS } from '../interfaces/ortofotos';
@@ -121,6 +123,8 @@ export class MapService {
   public streetsLayer?: TileLayer;
   /** Capa para resaltar geometrías de búsqueda */
   private highlightLayer: VectorLayer<any> | undefined;
+  /** Capa cyan para resaltar el lote calculado y rotular su área. */
+  private areaLoteLayer: VectorLayer<any> | undefined;
   /** Capa para resaltar el lote seleccionado para impresión (borde rojo grueso + medidas) */
   private loteSeleccionLayer: VectorLayer<any> | undefined;
   /**
@@ -296,14 +300,47 @@ export class MapService {
   pickLoteActivo = signal(false);
   /** Código catastral (id_lote) seleccionado en el mapa para imprimir */
   loteSeleccionadoCodigo = signal<string | null>(null);
+  /** Modo de selección de lote para calcular y mostrar su área. */
+  areaLoteActivo = signal(false);
+  /** Indica que se está recuperando la geometría del lote seleccionado. */
+  areaLoteCargando = signal(false);
+  /** Resultado del último cálculo de área de lote. */
+  areaLoteResultado = signal<{ codigo: string; areaM2: number } | null>(null);
+  /** Error visible al intentar seleccionar o medir un lote. */
+  areaLoteError = signal<string | null>(null);
+  private areaLoteRequestId = 0;
 
   /** Activa el modo de selección de lote sobre el mapa */
   activarPickLote(): void {
+    this.cancelarMedicionAreaLote();
     this.pickLoteActivo.set(true);
   }
   /** Cancela el modo de selección de lote */
   cancelarPickLote(): void {
     this.pickLoteActivo.set(false);
+  }
+  /** Activa el modo para calcular el área del lote elegido con un clic. */
+  activarMedicionAreaLote(): void {
+    this.pickLoteActivo.set(false);
+    this.areaLoteResultado.set(null);
+    this.areaLoteError.set(null);
+    this.areaLoteLayer?.getSource()?.clear();
+    this.limpiarHover();
+    this.areaLoteActivo.set(true);
+  }
+  /** Cancela la selección de lotes para calcular áreas. */
+  cancelarMedicionAreaLote(): void {
+    this.areaLoteRequestId++;
+    this.areaLoteActivo.set(false);
+    this.areaLoteCargando.set(false);
+  }
+  /** Limpia los lotes calculados sin salir del modo de selección. */
+  limpiarAreasLotes(): void {
+    this.areaLoteRequestId++;
+    this.areaLoteCargando.set(false);
+    this.areaLoteResultado.set(null);
+    this.areaLoteError.set(null);
+    this.areaLoteLayer?.getSource()?.clear();
   }
   /** Quita el lote seleccionado para impresión */
   limpiarLoteSeleccionado(): void {
@@ -571,6 +608,7 @@ export class MapService {
     this.setupInitialWmsLayers();
     this.handleMapResizing(olMap);
     this.setupHighlightLayer();
+    this.setupAreaLoteLayer();
     this.setupLoteSeleccionLayer();
     this.handleInitialRender(olMap);
     this.setupMapClickHandler(olMap);
@@ -1019,7 +1057,7 @@ export class MapService {
    */
   private procesarHover(coordinate: Coordinate, pixel: number[]): void {
     const pixelX = pixel[0], pixelY = pixel[1];
-    if (this.drawMeasureService.isDrawing()) { this.zone.run(() => this.limpiarHover()); return; }
+    if (this.drawMeasureService.isDrawing() || this.areaLoteActivo()) { this.zone.run(() => this.limpiarHover()); return; }
     // Identificamos el lote bajo el cursor (mismo patrón del doble clic)
     const layer = this.getLayerById('lote');
     if (!layer?.getVisible()) { this.zone.run(() => this.limpiarHover()); return; }
@@ -1129,6 +1167,7 @@ export class MapService {
    * (`loteDatosCache` evita repetir la llamada a listar-datos-lote).
    */
   private mostrarHoverDeLote(codigo: string, x: number, y: number): void {
+    if (this.areaLoteActivo()) return;
     // Si el popup de este lote se ocultó automáticamente, no se vuelve a mostrar
     // hasta que el cursor entre en un lote distinto.
     if (this.hoverHiddenCode === codigo) return;
@@ -1196,6 +1235,11 @@ export class MapService {
   /** Oculta el popup hover y resetea el estado de las consultas del hover. */
   private limpiarHover(): void {
     this.hoverRequestId++;
+    if (this.hoverMoveTimer !== null) {
+      clearTimeout(this.hoverMoveTimer);
+      this.hoverMoveTimer = null;
+    }
+    this.hoverPendingEvt = null;
     this.hoverInfoPendiente = null;
     this.hoverUltimaConsulta = null;
     this.ocultarHover();
@@ -1217,6 +1261,12 @@ export class MapService {
       // Modo "seleccionar lote para imprimir": capturamos el lote clicado y salimos.
       if (this.pickLoteActivo()) {
         this.handlePickLoteClick(olMap, evt.coordinate);
+        return;
+      }
+      if (this.areaLoteActivo()) {
+        if (!this.areaLoteCargando()) {
+          this.handlePickAreaLoteClick(olMap, evt.coordinate);
+        }
         return;
       }
       this.queryInfoLayers(olMap, evt.coordinate);
@@ -1254,6 +1304,118 @@ export class MapService {
     } else {
       this.zone.run(() => this.pickLoteActivo.set(false));
     }
+  }
+
+  /**
+   * Identifica el lote bajo el clic y calcula el área de su geometría WFS en
+   * EPSG:32718, cuyas coordenadas están expresadas en metros.
+   */
+  private handlePickAreaLoteClick(olMap: OlMap, coordinate: Coordinate): void {
+    const loteLayer = this.getLayerById('lote');
+    const source = loteLayer?.getSource();
+    const view = olMap.getView();
+    const infoUrl = loteLayer?.getVisible()
+      ? source?.getFeatureInfoUrl(coordinate, view.getResolution()!, view.getProjection(), MapService.FEATURE_INFO_PARAMS)
+      : undefined;
+
+    if (!infoUrl) {
+      this.areaLoteError.set('Activa la capa de lotes catastrales para calcular el área.');
+      return;
+    }
+
+    this.areaLoteCargando.set(true);
+    this.areaLoteError.set(null);
+    const requestId = ++this.areaLoteRequestId;
+    this.http.get<WfsResponse>(infoUrl).pipe(
+      take(1),
+      switchMap(response => {
+        const feature = response?.features?.[0];
+        const codigo = String(feature?.properties?.['id_lote'] ?? '').trim();
+        if (!codigo) {
+          return of({ codigo: null, lote: null });
+        }
+        return this.searchLoteByCodigoCatastral(codigo).pipe(
+          map(lote => lote ? { codigo, lote } : null)
+        );
+      })
+    ).subscribe({
+      next: resultado => {
+        if (requestId !== this.areaLoteRequestId) return;
+        this.zone.run(() => {
+          this.areaLoteCargando.set(false);
+          if (resultado?.codigo === null) {
+            this.areaLoteError.set('No se encontró un lote en ese punto. Intenta hacer clic dentro del lote.');
+            return;
+          }
+          if (!resultado?.lote.geometry) {
+            this.areaLoteError.set('No se pudo recuperar la geometría del lote para calcular su área.');
+            return;
+          }
+          try {
+            const geometria = new GeoJSON().readGeometry(resultado.lote.geometry, {
+              dataProjection: 'EPSG:32718',
+              featureProjection: 'EPSG:32718',
+            });
+            const areaM2 = this.calcularAreaGeometriaLote(geometria);
+            if (!Number.isFinite(areaM2) || areaM2 <= 0) {
+              this.areaLoteError.set('La geometría del lote no tiene un área válida.');
+              return;
+            }
+            const geometriaVista = geometria.clone();
+            geometriaVista.transform('EPSG:32718', olMap.getView().getProjection());
+            const puntoEtiqueta = this.obtenerPuntoEtiquetaAreaLote(geometriaVista);
+            if (!puntoEtiqueta) {
+              this.areaLoteError.set('No se pudo ubicar la etiqueta dentro del lote.');
+              return;
+            }
+            this.areaLoteLayer?.getSource()?.addFeatures([
+              new Feature({ geometry: geometriaVista }),
+              new Feature({
+                geometry: puntoEtiqueta,
+                areaLabel: this.formatearEtiquetaAreaLote(areaM2),
+              }),
+            ]);
+            this.areaLoteResultado.set({ codigo: resultado.codigo, areaM2 });
+          } catch (error) {
+            console.error('No se pudo calcular el área del lote:', error);
+            this.areaLoteError.set('No se pudo calcular el área de este lote.');
+          }
+        });
+      },
+      error: error => {
+        console.error('No se pudo recuperar la geometría del lote para calcular su área:', error);
+        this.zone.run(() => {
+          if (requestId === this.areaLoteRequestId) {
+            this.areaLoteCargando.set(false);
+            this.areaLoteError.set('Ocurrió un error al calcular el área. Intenta seleccionar el lote nuevamente.');
+          }
+        });
+      },
+    });
+  }
+
+  private calcularAreaGeometriaLote(geometria: Geometry): number {
+    if (geometria instanceof Polygon || geometria instanceof MultiPolygon) {
+      return geometria.getArea();
+    }
+    return 0;
+  }
+
+  private obtenerPuntoEtiquetaAreaLote(geometria: Geometry): Point | null {
+    const poligono = geometria instanceof Polygon
+      ? geometria
+      : geometria instanceof MultiPolygon
+        ? geometria.getPolygons().sort((a, b) => b.getArea() - a.getArea())[0]
+        : null;
+    return poligono ? new Point(poligono.getInteriorPoint().getCoordinates()) : null;
+  }
+
+  private formatearEtiquetaAreaLote(areaM2: number): string {
+    const formato = new Intl.NumberFormat('es-PE', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return `Área: ${formato.format(areaM2)} m²\n${formato.format(areaM2 / 10000)} ha`;
   }
 
   /**
@@ -1305,7 +1467,7 @@ export class MapService {
    */
   private setupDoubleClickHandler(olMap: OlMap): void {
     olMap.on('dblclick', (evt) => {
-      if (this.drawMeasureService.isDrawing()) {
+      if (this.drawMeasureService.isDrawing() || this.areaLoteActivo()) {
         return;
       }
       const layer = this.getLayerById('lote');
@@ -2181,7 +2343,6 @@ export class MapService {
       .set('request', 'GetFeature')
       .set('typeName', `${workspacePrefix}vw_tg_lote`)
       .set('outputFormat', 'application/json')
-      // Solicitamos las coordenadas en la misma proyección del mapa
       .set('srsName', 'EPSG:32718')
       .set('cql_filter', `id_lote = '${codigoSinGuiones}'`);
     return this.http.get<WfsResponse>(url, { params }).pipe(
@@ -2767,6 +2928,38 @@ export class MapService {
     });
     map.addLayer(this.highlightLayer);
   }
+
+  /** Configura la capa cyan con la geometría y etiqueta del área calculada. */
+  private setupAreaLoteLayer(): void {
+    const map = this._map();
+    if (!map) return;
+    this.areaLoteLayer = new VectorLayer({
+      source: new VectorSource(),
+      style: feature => {
+        if (feature.get('areaLabel')) {
+          return new Style({
+            text: new Text({
+              text: feature.get('areaLabel') as string,
+              font: 'bold 13px Helvetica, Arial, sans-serif',
+              fill: new Fill({ color: '#003b49' }),
+              stroke: new Stroke({ color: 'rgba(255, 255, 255, 0.95)', width: 4 }),
+              backgroundFill: new Fill({ color: 'rgba(224, 251, 255, 0.92)' }),
+              backgroundStroke: new Stroke({ color: '#00a9bd', width: 1 }),
+              padding: [4, 6, 4, 6],
+              overflow: true,
+            }),
+          });
+        }
+        return new Style({
+          stroke: new Stroke({ color: '#00bcd4', width: 3 }),
+          fill: new Fill({ color: 'rgba(0, 229, 255, 0.32)' }),
+        });
+      },
+      zIndex: 1002,
+    });
+    map.addLayer(this.areaLoteLayer);
+  }
+
   /**
    * Configura la capa dedicada al lote seleccionado para impresión:
    * borde rojo grueso (con halo blanco para contraste sobre ortofotos)

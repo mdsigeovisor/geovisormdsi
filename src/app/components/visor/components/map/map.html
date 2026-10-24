@@ -26,6 +26,7 @@
 <img src="/assets/images/logo_visor.png" alt="Logo San Isidro" draggable="false"
   class="absolute left-16 bottom-16 z-[5] h-20 w-auto pointer-events-none select-none [filter:drop-shadow(0_0_12px_rgba(255,255,255,0.7))]" />
 <!-- Ventanas flotantes de información del lote (no bloquean el mapa; varias pueden estar abiertas) -->
+@if (!mapService.areaLoteActivo()) {
 @for (win of mapService.loteInfoWindows(); track win.id) {
 <div
   class="fixed flex flex-col bg-white rounded-lg shadow-2xl border border-gray-300 max-w-[92vw] animate-scale-in overflow-hidden"
@@ -56,6 +57,7 @@
       (load)="onLoteIframeLoad(win.id)"></iframe>
   </div>
 </div>
+}
 }
 <!-- Popup flotante al pasar el mouse sobre un lote catastral: datos del API
      listar-datos-lote. pointer-events-none para no bloquear el mapa; se oculta

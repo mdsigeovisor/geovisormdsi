@@ -4,6 +4,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { firstValueFrom, Observable, of } from 'rxjs';
 import { vi } from 'vitest';
+import Polygon from 'ol/geom/Polygon';
+import MultiPolygon from 'ol/geom/MultiPolygon';
+import Point from 'ol/geom/Point';
 
 import { environment } from '../../environments/environment';
 import { ApisService } from './apis.service';
@@ -248,6 +251,104 @@ describe('MapService', () => {
 
       service.cancelarPickLote();
       expect(service.pickLoteActivo()).toBe(false);
+    });
+
+    describe('cálculo de área por lote', () => {
+      it('activa y cancela el modo de selección de área', () => {
+        service.activarMedicionAreaLote();
+        expect(service.areaLoteActivo()).toBe(true);
+
+        service.cancelarMedicionAreaLote();
+        expect(service.areaLoteActivo()).toBe(false);
+        expect(service.areaLoteCargando()).toBe(false);
+      });
+
+      it('desactiva el modo de impresión al activar el cálculo de área', () => {
+        service.activarPickLote();
+
+        service.activarMedicionAreaLote();
+
+        expect(service.pickLoteActivo()).toBe(false);
+        expect(service.areaLoteActivo()).toBe(true);
+      });
+
+      it('limpia los resultados de área sin desactivar el modo de selección', () => {
+        service.activarMedicionAreaLote();
+        service.areaLoteCargando.set(true);
+        service.areaLoteResultado.set({ codigo: 'LOTE-1', areaM2: 100 });
+        service.areaLoteError.set('Error anterior');
+
+        service.limpiarAreasLotes();
+
+        expect(service.areaLoteActivo()).toBe(true);
+        expect(service.areaLoteCargando()).toBe(false);
+        expect(service.areaLoteResultado()).toBeNull();
+        expect(service.areaLoteError()).toBeNull();
+      });
+
+      it('limpia el popup hover al activar la selección del lote', () => {
+        service.loteHoverDatos.set({
+          codlote: 'LOTE-1',
+          txtcuc: '',
+          txtmzaurbano: '',
+          txtloteurbano: '',
+          lotecodcatant: '',
+          codlotecatastral: '',
+          txtdirecprincipal: '',
+        });
+        service.loteHoverPosicion.set({ x: 20, y: 30 });
+
+        service.activarMedicionAreaLote();
+
+        expect(service.loteHoverDatos()).toBeNull();
+        expect(service.loteHoverPosicion()).toBeNull();
+      });
+    });
+
+    describe('geometría de lote para cálculo de área', () => {
+      it('calcula el área en metros cuadrados para polígonos y multipolígonos UTM', () => {
+        const poligono = new Polygon([[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]);
+        const multipoligono = new MultiPolygon([
+          [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]],
+          [[[20, 0], [30, 0], [30, 10], [20, 10], [20, 0]]],
+        ]);
+
+        expect(service['calcularAreaGeometriaLote'](poligono)).toBe(100);
+        expect(service['calcularAreaGeometriaLote'](multipoligono)).toBe(200);
+      });
+
+      it('ubica la etiqueta del área dentro del polígono más grande del lote', () => {
+        const multipoligono = new MultiPolygon([
+          [[[20, 0], [25, 0], [25, 5], [20, 5], [20, 0]]],
+          [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]],
+        ]);
+
+        const punto = service['obtenerPuntoEtiquetaAreaLote'](multipoligono);
+
+        expect(punto).toBeInstanceOf(Point);
+        expect(punto!.getCoordinates()[0]).toBeGreaterThan(0);
+        expect(punto!.getCoordinates()[0]).toBeLessThan(10);
+        expect(punto!.getCoordinates()[1]).toBeGreaterThan(0);
+        expect(punto!.getCoordinates()[1]).toBeLessThan(10);
+      });
+
+      it('genera la etiqueta del área en metros cuadrados y hectáreas', () => {
+        const etiqueta = service['formatearEtiquetaAreaLote'](12345.67);
+
+        expect(etiqueta).toContain('Área: ');
+        expect(etiqueta).toContain('m²\n');
+        expect(etiqueta).toContain(' ha');
+      });
+
+      it('solicita la geometría del lote en EPSG:32718 para calcular el área en metros cuadrados', async () => {
+        const promesa = firstValueFrom(service.searchLoteByCodigoCatastral('3112065002'));
+        const peticion = httpMock.expectOne(porUrl(environment.geoserver.owsUrl));
+
+        expect(peticion.request.params.get('srsName')).toBe('EPSG:32718');
+
+        peticion.flush({ features: [{ geometry: { type: 'Polygon', coordinates: [] }, properties: { id_lote: '3112065002' } }] });
+        await expect(promesa).resolves.toMatchObject({ properties: { id_lote: '3112065002' } });
+      });
     });
 
     it('limpiar la selección borra el código del lote', () => {

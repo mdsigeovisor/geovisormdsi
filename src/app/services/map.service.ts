@@ -7,6 +7,7 @@ import { AUDITORIA_OPCIONES, AuditoriaService } from './auditoria.service';
 import { SIN_AUDITORIA } from '../interceptor/auditoria.interceptor';
 import { environment } from '../../environments/environment';
 import { easeOut } from 'ol/easing';
+import { defaults as defaultInteractions } from 'ol/interaction';
 import type { Coordinate } from 'ol/coordinate';
 import type Geometry from 'ol/geom/Geometry';
 import { Observable, map, take, switchMap, catchError, of } from 'rxjs';
@@ -555,7 +556,9 @@ export class MapService {
         zoom: INITIAL_ZOOM,
         minZoom: 4,
         maxZoom: MAP_MAX_ZOOM,
-      })
+      }),
+       interactions: defaultInteractions({ doubleClickZoom: false }),
+
     });
     this._map.set(olMap);
     olMap.getViewport().style.cursor = 'pointer';

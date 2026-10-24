@@ -39,9 +39,7 @@ const NOMENCLATURA_SECCIONES: WmsLayerConfig[] = [
   { id: 'seccion-vial', layerName: `${wp}seccion-vial`, zIndex: 5, title: 'Sección de Vías' },
 ];
 const NUMERACION_LAYERS: WmsLayerConfig[] = [
-  { id: 'num_municipal_2024', layerName: `${wp}vw_numeracion_campo_2024`, zIndex: 3, title: 'Numeración de campo 2024' },
-  { id: 'num_municipal_2022', layerName: `${wp}mv_tg_numeracion_campo_2022`, zIndex: 3, title: 'Numeración de campo 2022' },
-  { id: 'puertas2024', layerName: `${wp}vw_tg_puertas`, zIndex: 3, title: 'Puertas 2024' },
+  { id: 'num_municipal_2024', layerName: `${wp}vw_numeracion_campo_2024`, zIndex: 3, title: 'Numeración de campo 2024' },  
 ];
 const AMBIENTAL_LAYERS: WmsLayerConfig[] = [
   { id: 'arbolado_urbano_2024', layerName: `${wp}vw_arboles_2024`, zIndex: 3, title: 'Árboles 2024' },

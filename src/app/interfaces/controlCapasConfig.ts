@@ -100,9 +100,7 @@ const PANEL_BASE: Section[] = [
       ]),
       /*Numeracion de campo*/
       subseccion('num_municipal', 'NÚMERACION DE CAMPO', [
-        capa('num_municipal_2024', 'Numeración de campo 2024', { visible: false, showInLegend: true }),
-        capa('num_municipal_2022', 'Numeración de campo 2022', { visible: false, showInLegend: true }),        
-        capa('puertas2024', 'Puertas 2024', { visible: false, showInLegend: true }),
+        capa('num_municipal_2024', 'Numeración de campo 2024', { visible: false, showInLegend: false }),
       ]),
       /*Arbolado Urbano*/
       subseccion('arb_urbano', 'ARBOLADO URBANO', [

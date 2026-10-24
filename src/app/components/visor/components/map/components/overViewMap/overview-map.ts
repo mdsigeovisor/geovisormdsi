@@ -1,7 +1,7 @@
 import { Component, Input, ElementRef, ViewChild, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OlMap, OverviewMap, View, TileLayer, XYZ } from '../../../../../../modules/openlayers.module';
-import { OSM_URL } from '../../../../../../interfaces/mapas.config';
+import { GOOGLE_SATELLITE_URL } from '../../../../../../interfaces/mapas.config';
 
 /**
  * Componente para integrar el control OverviewMap de OpenLayers.
@@ -35,13 +35,18 @@ export class OverviewMapComponent implements OnDestroy, AfterViewInit {
 
   /**
    * Inicializa el control OverviewMap y lo añade al mapa principal.
-   * Utiliza un TileLayer con OpenStreetMap para el mapa de vista general.
+   * Utiliza la capa satelital para el mapa de vista general.
    */
   private initOverviewMap(): void {
   if (!this.mainMap || !this.overviewMapContainer) return;
 
   const overviewTileLayer = new TileLayer({
-    source: new XYZ({ url: OSM_URL }),
+    source: new XYZ({
+      url: GOOGLE_SATELLITE_URL,
+      crossOrigin: 'anonymous',
+      maxZoom: 19,
+      interpolate: true,
+    }),
   });
 
   const control = new OverviewMap({

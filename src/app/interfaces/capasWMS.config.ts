@@ -63,6 +63,7 @@ const MOVILIARIO_URBANO: WmsLayerConfig[] = [
   { id: 'cuponeras_2025', layerName: `${wp}cuponeras_2025_set`, zIndex: 3, title: 'Emisión de Cuponeras 2025' },
   { id: 'procesos_2025', layerName: `${wp}ZL_PROCESO_JUDICIAL_AL_2025`, zIndex: 3, title: 'Procesos Judiciales 2025' },
   { id: 'predios_recuperados', layerName: `${wp}PREDIOS_RECUPERADOS_A_SAN_ISIDRO`, zIndex: 3, title: 'Predios recuperados' },
+  { id: 'mobiliario_urbano_elementos_2026', layerName: `${wp}tg_mobiliario_urbano_elementos_2026`, zIndex: 3, title: 'Mobiliario urbano y Elementos del Espacio Público 2026' },  
 ];
 const VUELOS_LAYERS: WmsLayerConfig[] = [
   { id: 'lote-ortofoto', layerName: `${wp}vw_tg_lote_ortofoto`, zIndex: 15, title: 'Lote Catastral' },

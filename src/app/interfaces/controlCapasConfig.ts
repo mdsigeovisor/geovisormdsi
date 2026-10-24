@@ -111,7 +111,7 @@ const PANEL_BASE: Section[] = [
       ]),
       /*Mobiliario Urbano*/
       subseccion('moviliario_urbano', 'MOBILIARIO URBANO', [
-        capa('mu_sub_sectores_vecinales_2025', 'Subsectores vecinales 1-3 y 2-1 (2025)', { visible: false, showInLegend: true }),        
+        capa('mu_sub_sectores_vecinales_2025', 'Mobiliario urbano y Elementos del Espacio Público 2025', { visible: false, showInLegend: true }),        
         capa('mu_estac_bicis_2016', 'Estacionamientos de bicicletas 2016', { visible: false, showInLegend: true }),
         capa('mu_juego_ninos_2016', 'Juegos para niños 2016', { visible: false, showInLegend: true }),
         capa('mu_mini_gimnasios', 'Minigimnasios 2016', { visible: false, showInLegend: true }),
@@ -120,8 +120,9 @@ const PANEL_BASE: Section[] = [
         capa('mu_papelera_2016', 'Papeleras 2016', { visible: false, showInLegend: true }),
         capa('mu_parklet', 'Parklets', { visible: false, showInLegend: true }),        
         capa('mu_paneles_publicitarios_2018', 'Paneles Publicitarios 2018', { visible: false, showInLegend: true }),
-        capa('mu_monu_bustos_toten_2021', 'Monumentos, Bustos y Toten 2021', { visible: false, showInLegend: true }),
-        capa('mu_monu_esculturas_2016', 'Monumentos o esculturas 2016', { visible: false, showInLegend: true }),
+        capa('mu_monu_esculturas_2016', 'Elementos Patrimoniales Urbanos 2016', { visible: false, showInLegend: true }),
+        capa('mu_monu_bustos_toten_2021', 'Elementos Patrimoniales Urbanos 2021', { visible: false, showInLegend: true }),
+        capa('mobiliario_urbano_elementos_2026', 'Mobiliario urbano y Elementos del Espacio Público 2026', { visible: false, showInLegend: true }),        
       ], false, { requiresAuth: true }),
     ],
   },
@@ -132,7 +133,7 @@ const PANEL_BASE: Section[] = [
     items: [      
       // Superposición de lotes catastrales (WMS, zIndex 15) pensada para verse
       // sobre la ortofoto activa; no interviene en la regla de radio de ortofotos.
-      capa('lote-ortofoto', 'Lote Catastral', { visible: false, showInLegend: true }),
+      capa('lote-ortofoto', 'Lote Catastral', { visible: false, showInLegend: false }),
       subseccion('ortofotos_historicas', 'Ortofotos Históricas', [      
         ...ORTOFOTO_YEARS.map(year => capa(`ortofoto_${year}`, `${year}`)),
       ], false, { requiresAuth: false }),
@@ -147,10 +148,11 @@ const PANEL_BASE: Section[] = [
     title: 'NORMATIVA URBANA',
     expanded: false,
     items: [
+      capa('lote-ortofoto', 'Lote Catastral', { visible: false, showInLegend: false }),
       subseccion('normaUrbana', 'NORMATIVA URBANA', [
         // Una sola entrada agrupa el polígono de usos del suelo y sus límites
         // normativos (capa compuesta declarada en capasWMS.config.ts): un único
-        // interruptor, un único control de opacidad y una única leyenda.
+        // interruptor, un único control de opacidad y una única leyenda.        
         capa('zonificacion', 'Zonificación usos del suelo', { visible: false, showInLegend: true }),
         capa('amUrbHomogeneo', 'Ambitos Urbanos Homogéneos', { visible: false, showInLegend: false, requiresAuth: true }),
         capa('norm_alt_edific', 'Alturas Maximas de Edificacion', { visible: false, showInLegend: true }),        
@@ -182,7 +184,7 @@ const PANEL_BASE: Section[] = [
         capa('manzanas_cruces_accesibilidad_5', 'Sector Vecinal 05', { visible: false, showInLegend: true }),
       ]),
       subseccion('agua_alcantarillado', 'AGUA Y ALCANTARILLADO', [        
-        capa('mu_hidrante_2024', 'Hidrante', { visible: false, showInLegend: true }),
+        capa('mu_hidrante_2024', 'Hidrante (SEDAPAL 2020)', { visible: false, showInLegend: true }),
       ]),
       subseccion('vial', 'VIAL', [
         capa('red_semaforizada', 'Intersecciones Semaforizadas', { visible: false, showInLegend: true }),

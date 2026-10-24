@@ -266,6 +266,12 @@ export class MapService {
    * GetFeatureInfo; el popup solo cambia al entrar en otro lote.
    */
   private readonly hoverGeometriasCache = new Map<string, Geometry>();
+  /** Código del lote cuyo popup se ocultó automáticamente tras 8 s (no se vuelve a mostrar hasta cambiar de lote). */
+  private hoverHiddenCode: string | null = null;
+  /** Temporizador que oculta el popup hover tras 8 s. */
+  private hoverHideTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Tiempo máximo de permanencia del popup hover. */
+  private static readonly HOVER_AUTO_HIDE_MS = 5000;
   /** Código del lote actualmente bajo el cursor. */
   private hoverCodActual: string | null = null;
   /** Identificador de la última consulta hover; descarta respuestas obsoletas. */
@@ -1123,6 +1129,12 @@ export class MapService {
    * (`loteDatosCache` evita repetir la llamada a listar-datos-lote).
    */
   private mostrarHoverDeLote(codigo: string, x: number, y: number): void {
+    // Si el popup de este lote se ocultó automáticamente, no se vuelve a mostrar
+    // hasta que el cursor entre en un lote distinto.
+    if (this.hoverHiddenCode === codigo) return;
+    if (this.hoverHiddenCode !== null && codigo !== this.hoverHiddenCode) {
+      this.hoverHiddenCode = null;
+    }
     // Evitamos re-renderizar cuando no cambió ni el lote ni la posición exacta
     const posicionActual = this.loteHoverPosicion();
     if (codigo === this.hoverCodActual && posicionActual?.x === x && posicionActual?.y === y) return;
@@ -1133,20 +1145,29 @@ export class MapService {
     if (cacheado) {
       this.loteHoverDatos.set(cacheado);
       this.loteHoverCargando.set(false);
-      return;
+    } else {
+      this.loteHoverDatos.set(null);
+      this.loteHoverCargando.set(true);
+      this.listarDatosLote(codigo).pipe(take(1)).subscribe(datos => {
+        if (datos) this.loteDatosCache.set(codigo, datos);
+        if (this.hoverCodActual === codigo) {
+          this.loteHoverDatos.set(datos);
+          this.loteHoverCargando.set(false);
+        }
+      });
     }
-    this.loteHoverDatos.set(null);
-    this.loteHoverCargando.set(true);
-    this.listarDatosLote(codigo).pipe(take(1)).subscribe(datos => {
-      if (datos) this.loteDatosCache.set(codigo, datos);
-      // Si el cursor ya se movió a otro lote, descartamos la respuesta tardía
-      if (this.hoverCodActual === codigo) {
-        this.loteHoverDatos.set(datos);
-        this.loteHoverCargando.set(false);
-      }
-    });
-  }
+    // Ocultamos automáticamente tras 8 s; reaparece al cambiar de lote.
+    if (this.hoverHideTimer) clearTimeout(this.hoverHideTimer);
+    const codigoActual = codigo;
+    this.hoverHideTimer = setTimeout(() => {
+      this.zone.run(() => {
+        this.hoverHiddenCode = codigoActual;
+        this.ocultarHover();
+      });
+      this.hoverHideTimer = null;
+    }, MapService.HOVER_AUTO_HIDE_MS);
 
+  }
   /**
    * Indica si la coordenada está tan cerca de la última consulta que no merece
    * una nueva llamada al servicio (evita repetir la petición con el temblor
@@ -1165,6 +1186,7 @@ export class MapService {
 
   /** Oculta el popup hover sin invalidar las consultas en curso. */
   private ocultarHover(): void {
+    if (this.hoverHideTimer) { clearTimeout(this.hoverHideTimer); this.hoverHideTimer = null; }
     this.hoverCodActual = null;
     this.loteHoverDatos.set(null);
     this.loteHoverCargando.set(false);

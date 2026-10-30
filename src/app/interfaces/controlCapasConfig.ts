@@ -80,8 +80,9 @@ const PANEL_BASE: Section[] = [
       subseccion('sectorizacion', 'CAPAS SECTORIZACION', [
         capa('sector-catastral', 'Sectores Catastrales', { visible: false, showInLegend: true }),
         capa('sector-vecinal', 'Sectores Vecinales', { visible: false, showInLegend: true }),
-        capa('urbanizaciones', 'Urbanizaciones', { visible: false, showInLegend: true }),
         capa('sub-sector-vecinal', 'Sub Sectores - Junta Vecinales', { visible: false, showInLegend: true }),
+        capa('urbanizaciones', 'Urbanizaciones', { visible: false, showInLegend: true }),
+        
       ]),
       /*Etiquetas Sectorización*/
       subseccion('lotizacion', 'ETIQUETAS', [
@@ -111,18 +112,18 @@ const PANEL_BASE: Section[] = [
       ]),
       /*Mobiliario Urbano*/
       subseccion('moviliario_urbano', 'MOBILIARIO URBANO', [
-        capa('mu_sub_sectores_vecinales_2025', 'Mobiliario urbano y Elementos del Espacio Público 2025', { visible: false, showInLegend: true }),        
+        capa('mobiliario_urbano_elementos_2026', 'Mobiliario urbano y Elementos del Espacio Público 2026', { visible: false, showInLegend: true }),
+        capa('mu_sub_sectores_vecinales_2025', 'Mobiliario urbano y Elementos del Espacio Público 2025', { visible: false, showInLegend: true }),
+        capa('mu_monu_bustos_toten_2021', 'Elementos Patrimoniales Urbanos 2021', { visible: false, showInLegend: true }),
+        capa('mu_monu_esculturas_2016', 'Elementos Patrimoniales Urbanos 2016', { visible: false, showInLegend: true }),
+        capa('mu_paneles_publicitarios_2018', 'Paneles Publicitarios 2018', { visible: false, showInLegend: true }),
+        capa('mu_postes_iluminacion', 'Postes de Iluminación Ornamentales 2018', { visible: false, showInLegend: true }),        
         capa('mu_estac_bicis_2016', 'Estacionamientos de bicicletas 2016', { visible: false, showInLegend: true }),
         capa('mu_juego_ninos_2016', 'Juegos para niños 2016', { visible: false, showInLegend: true }),
-        capa('mu_mini_gimnasios', 'Minigimnasios 2016', { visible: false, showInLegend: true }),
-        capa('mu_postes_iluminacion', 'Postes de Iluminación Ornamentales', { visible: false, showInLegend: true }),        
+        capa('mu_mini_gimnasios', 'Minigimnasios 2016', { visible: false, showInLegend: true }),        
         capa('mu_bancas_2016', 'Bancas 2016', { visible: false, showInLegend: true }),        
         capa('mu_papelera_2016', 'Papeleras 2016', { visible: false, showInLegend: true }),
         capa('mu_parklet', 'Parklets', { visible: false, showInLegend: true }),        
-        capa('mu_paneles_publicitarios_2018', 'Paneles Publicitarios 2018', { visible: false, showInLegend: true }),
-        capa('mu_monu_esculturas_2016', 'Elementos Patrimoniales Urbanos 2016', { visible: false, showInLegend: true }),
-        capa('mu_monu_bustos_toten_2021', 'Elementos Patrimoniales Urbanos 2021', { visible: false, showInLegend: true }),
-        capa('mobiliario_urbano_elementos_2026', 'Mobiliario urbano y Elementos del Espacio Público 2026', { visible: false, showInLegend: true }),        
       ], false, { requiresAuth: true }),
     ],
   },
@@ -203,7 +204,7 @@ const PANEL_BASE: Section[] = [
         capa('tem_view_lote_ley27157a', 'Declatatoria de Fabrica - ley 27157 A', { visible: false, showInLegend: true }),
         capa('tem_view_lote_ley27157b', 'Declatatoria de Fabrica - ley 27157 B', { visible: false, showInLegend: true }),
         capa('uso_predo_2021', 'Uso predominante 2021', { visible: false, showInLegend: true }),
-        capa('uso_predo_2026', 'Uso predominante 2026', { visible: false, showInLegend: true }),
+        capa('uso_predo_2026', 'Uso predominante 2026 (Actualización continua)', { visible: false, showInLegend: true }),
         
       ]),      
       subseccion('tramites_atendidos', 'TRAMITES ATENDIDOS', [

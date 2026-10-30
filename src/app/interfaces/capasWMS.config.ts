@@ -7,7 +7,7 @@ const wp = environment.geoserver.workspacePrefix;
 const CATASTRALES_LAYERS: WmsLayerConfig[] = [
   // zIndex 0 -> 3: menor valor se dibuja al fondo, mayor valor encima
   { id: 'manzana', layerName: `${wp}vw_tg_manzana`, zIndex: 0, title: 'Manzana Catastral' },
-  { id: 'com-vial', layerName: `${wp}vw_tg_comp_via`, zIndex: 0, title: 'Manzana Catastral' },
+  { id: 'com-vial', layerName: `${wp}vw_tg_comp_via`, zIndex: 0.75, title: 'Manzana Catastral' },
   { id: 'lim-oceano', layerName: `${wp}tg_oceano`, zIndex: 0, title: 'Manzana Catastral' },
   { id: 'manz-vecinas', layerName: `${wp}tg_manzana_colindante`, zIndex: 0, title: 'Manzana Catastral' },
   { id: 'nom-distrito-vecinos', layerName: `${wp}tg_distrito_colin_nombres`, zIndex: 0, title: 'Manzana Catastral' },

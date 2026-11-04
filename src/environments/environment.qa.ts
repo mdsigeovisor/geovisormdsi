@@ -8,5 +8,6 @@ import { crearEnvironment } from './environment.model';
 export const environment = crearEnvironment({
   production: false,
   ambiente: 'QA',
-  portalUrl: 'https://test.munisanisidro.gob.pe'
+  portalUrl: 'https://test.munisanisidro.gob.pe',
+  geoserverUrl: 'http://192.168.40.58:8081/geoserver'
 });

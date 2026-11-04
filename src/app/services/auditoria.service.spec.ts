@@ -381,7 +381,7 @@ describe('auditoriaInterceptor', () => {
     const cuerpo = new HttpParams()
       .set('codigoUsuario', 'ADMIN')
       .set('contrasena', '123456')
-      .set('codigoSistema', '010004')
+      .set('codigoSistema', '010011')
       .toString();
     http
       .post(`${environment.seguridadApiUrl}/auth/iniciar-sesion`, cuerpo)

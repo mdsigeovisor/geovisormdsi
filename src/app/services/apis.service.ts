@@ -63,15 +63,17 @@ export class ApisService {
   private readonly http = inject(HttpClient);
 
   /**
-   * Hosts en orden de intento. El primero (cadena vacía) resuelve la ruta
-   * relativa a través del proxy de desarrollo (`proxy.conf.json`) o del
-   * proxy inverso Nginx en QA/Prod (mismo origen); los otros dos son los
-   * respaldos directos usados en desarrollo.
+   * En producción la URL base ya apunta al host de servicios y no debe probar
+   * servidores de QA como respaldo. Desarrollo y QA conservan sus respaldos.
    */
   private static readonly HOSTS: readonly HostGeovisor[] = [
-    { url: '', etiqueta: 'ruta relativa' },
-    { url: 'https://test.munisanisidro.gob.pe', etiqueta: 'test.munisanisidro.gob.pe' },
-    { url: 'https://www.munisanisidro.gob.pe', etiqueta: 'www.munisanisidro.gob.pe' },
+    ...(environment.production
+      ? [{ url: '', etiqueta: 'API WSGEOVISOR de producción' }]
+      : [
+          { url: '', etiqueta: 'ruta relativa' },
+          { url: 'https://test.munisanisidro.gob.pe', etiqueta: 'test.munisanisidro.gob.pe' },
+          { url: 'https://www.munisanisidro.gob.pe', etiqueta: 'www.munisanisidro.gob.pe' },
+        ]),
   ];
 
   /** Construye la URL de un endpoint sobre el host indicado (vacío = ruta relativa). */
@@ -81,9 +83,8 @@ export class ApisService {
 
   /**
    * Ejecuta una petición GET contra el API del Geovisor probando, en orden:
-   *  1) la ruta relativa (proxy de desarrollo o Nginx de QA/Prod),
-   *  2) el host de pruebas y
-   *  3) el host de producción.
+   *  En producción usa exclusivamente el host de servicios. En desarrollo y QA
+   *  prueba la ruta relativa, el host de pruebas y luego el host alternativo.
    * Pasa al siguiente host solo si el anterior falla; si todos fallan, propaga
    * el error para que la UI distinga "sin resultados" de "sin conexión".
    * @param operacion Nombre del método (para los mensajes de log).

@@ -16,6 +16,8 @@ export interface ParametrosEnvironment {
   ambiente: 'Desarrollo' | 'QA' | 'Producción';
   /** URL pública del portal municipal donde vive el geovisor y sus APIs */
   portalUrl: string;
+  /** URL base del WSGEOVISOR; por defecto usa la ruta relativa del ambiente */
+  wsgeovisorUrl?: string;
   /**
    * Código del sistema con el que el API de Seguridad identifica al Geovisor
    * (por defecto `'010004'`). Solo hace falta informarlo si un ambiente se
@@ -34,6 +36,7 @@ export type Environment = ReturnType<typeof crearEnvironment>;
 
 export function crearEnvironment(cfg: ParametrosEnvironment) {
   const host = cfg.portalUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const wsgeovisorBase = (cfg.wsgeovisorUrl ?? '/WSGEOVISOR').replace(/\/$/, '');
   return {
     production: cfg.production,
     version: 'v. 1.0.0',
@@ -45,14 +48,13 @@ export function crearEnvironment(cfg: ParametrosEnvironment) {
     portalUrl: `https://${host}`,
 
     // --- API DEL GEOVISOR (WSGEOVISOR) ---
-    // Prefijo base de los endpoints del API del Geovisor (p. ej. "listar-datos-lote",
-    // "listar-via-numero"), cuya ruta real es /WSGEOVISOR/api/geovisor/<endpoint>.
-    // En desarrollo lo resuelve el proxy (proxy.conf) y en QA/Prod el proxy inverso
-    // Nginx (same-origin).
-    geovisorApiUrl: '/WSGEOVISOR/api/geovisor',
+    // Prefijo base de los endpoints del API del Geovisor. En desarrollo y QA
+    // usa la ruta relativa resuelta por el proxy; producción puede prefijar
+    // una ruta de proxy inverso.
+    geovisorApiUrl: `${wsgeovisorBase}/api/geovisor`,
 
     // --- API DE SEGURIDAD (WSGEOVISOR · módulo MSICAS) ---
-    seguridadApiUrl: '/WSGEOVISOR/api/seguridad',
+    seguridadApiUrl: `${wsgeovisorBase}/api/seguridad`,
     // Código del sistema con el que el API identifica al Geovisor en la tabla de
     // sistemas del módulo de Seguridad. Se envía en CADA inicio de sesión y debe
     // estar registrado en el API: con un código inexistente el servicio responde
@@ -60,7 +62,7 @@ export function crearEnvironment(cfg: ParametrosEnvironment) {
     // el visor entraba en modo público y la sesión se cerraba sola minutos
     // después. Verificado contra el API de integración: `010004` (el del
     // Geovisor) devuelve el JWT de 60 minutos con sus páginas y controles.
-    codigoSistema: cfg.codigoSistema ?? '010004',
+    codigoSistema: cfg.codigoSistema ?? '010011',
 
     // --- ENCUESTA DE SALIDA ---
     // Se abre en una pestaña nueva cuando el usuario confirma el cierre de sesión

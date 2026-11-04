@@ -39,11 +39,11 @@ src/environments/
 
 ### Ambientes disponibles
 
-| Archivo | Ambiente | Portal / API base | GeoServer |
-|---|---|---|---|
-| `environment.ts` | **Desarrollo** | `https://test.munisanisidro.gob.pe` | `http://192.168.40.58:8081/geoserver` (red interna) |
-| `environment.qa.ts` | **QA** | `https://test.munisanisidro.gob.pe` | `http://192.168.40.58:8081/geoserver` (red interna) |
-| `environment.prod.ts` | **Producción** | `https://munisanisidro.gob.pe` | `https://geomapas.munisanisidro.gob.pe/geoserver` (público) |
+| Archivo | Ambiente | Portal | API WSGEOVISOR | GeoServer |
+|---|---|---|---|---|
+| `environment.ts` | **Desarrollo** | `https://test.munisanisidro.gob.pe` | Ruta relativa (proxy local) | `http://192.168.40.58:8081/geoserver` (red interna) |
+| `environment.qa.ts` | **QA** | `https://test.munisanisidro.gob.pe` | Ruta relativa (proxy inverso) | `http://192.168.40.58:8081/geoserver` (red interna) |
+| `environment.prod.ts` | **Producción** | `https://munisanisidro.gob.pe` | `/api/WSGEOVISOR` (proxy inverso) | `https://geomapas.munisanisidro.gob.pe/geoserver` (público) |
 
 Los tres archivos se generan con la fábrica `crearEnvironment()` de
 `src/environments/environment.model.ts`, que centraliza toda la configuración
@@ -55,6 +55,7 @@ export const environment = crearEnvironment({
   production: true,
   ambiente: 'Producción',
   portalUrl: 'https://munisanisidro.gob.pe',
+  wsgeovisorUrl: '/api/WSGEOVISOR',
   // overrides opcionales de servidores internos:
   // geoserverUrl, ortofotoServerUrl, dataGisServerUrl, tusneServerUrl
 });

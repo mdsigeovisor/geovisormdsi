@@ -56,9 +56,13 @@ export class Login implements AfterViewInit, OnDestroy {
     // Restaura el usuario recordado de una sesión anterior (localStorage).
     const recordado = localStorage.getItem(CLAVE_RECORDADA);
     if (recordado) {
-      this.usuario = recordado;
+      this.usuario = recordado.toUpperCase();
       this.recordarme = true;
     }
+  }
+
+  actualizarUsuario(usuario: string): void {
+    this.usuario = usuario.toUpperCase();
   }
 
   ngAfterViewInit(): void {
@@ -94,7 +98,7 @@ export class Login implements AfterViewInit, OnDestroy {
   enviar(): void {
     if (this.cargando()) return;
 
-    const user = this.usuario.trim();
+    const user = this.usuario.trim().toUpperCase();
     const pass = this.clave;
 
     // Validaciones con foco en el campo inválido.

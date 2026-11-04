@@ -31,4 +31,10 @@ describe('Login', () => {
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Su sesión anterior finalizó');
   });
+
+  it('mantiene el usuario en mayúsculas al escribir', () => {
+    component.actualizarUsuario('Usuario@dominio.com');
+
+    expect(component.usuario).toBe('USUARIO@DOMINIO.COM');
+  });
 });

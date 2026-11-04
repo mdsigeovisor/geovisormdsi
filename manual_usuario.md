@@ -262,7 +262,7 @@ La cartografía está georreferenciada en **UTM WGS84 zona 18S (SIRGAS)**; el bu
 
 ## 12. Soporte
 
-Para consultas, reporte de errores o solicitudes de acceso con credenciales, contacte a la **Subgerencia de Planeamiento Urbano y Catastro — Municipalidad de San Isidro**, o a través del Observatorio Urbano: <https://test.munisanisidro.gob.pe/WebObservatorioUrbano/>
+Para consultas, reporte de errores o solicitudes de acceso con credenciales, contacte a la **Subgerencia de Planeamiento Urbano y Catastro — Municipalidad de San Isidro**, o a través del Observatorio Urbano: <https://observatoriourbano.munisanisidro.gob.pe/webobsurb/>
 
 ---
 *Documento generado a partir de la versión 1.0.0 del aplicativo Geovisor Catastral (Municipalidad de San Isidro).*

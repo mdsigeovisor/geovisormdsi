@@ -71,6 +71,7 @@
 
 @media (max-width: 639px) {
   .terms-backdrop {
+    align-items: center;
     padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right))
       max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
   }
@@ -78,10 +79,16 @@
   .terms-panel {
     max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1rem);
     max-width: 100%;
+    height: min(92dvh, 52rem);
+    border-radius: 0.75rem;
   }
 
   .terms-scroll {
     -webkit-overflow-scrolling: touch;
+  }
+
+  .terms-panel footer button {
+    min-height: 2.75rem;
   }
 }
 
@@ -93,6 +100,7 @@
 
   .terms-panel {
     max-height: calc(100dvh - 0.75rem);
+    height: auto;
     margin-block: auto;
   }
 }

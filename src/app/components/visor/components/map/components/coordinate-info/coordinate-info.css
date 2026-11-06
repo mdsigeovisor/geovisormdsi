@@ -1,3 +1,101 @@
 :host {
   display: contents;
 }
+
+@media (max-width: 640px), (orientation: landscape) and (max-height: 500px) {
+  .coordinate-info-container {
+    right: 0.625rem;
+    bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    left: 3.5rem;
+    width: auto;
+    max-width: none;
+    translate: none;
+  }
+
+  .coordinate-info-panel {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    scale: 1;
+    box-sizing: border-box;
+    border-color: rgb(255 255 255 / 25%);
+    border-radius: 0.875rem;
+    background-color: rgb(30 41 59 / 94%);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  }
+
+  .coordinate-info-content {
+    align-items: stretch;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .coordinate-info-geographic {
+    display: grid;
+    width: 100%;
+    gap: 0.375rem;
+  }
+
+  .coordinate-info-geographic > .w-px {
+    display: none;
+  }
+
+  .coordinate-info-datum {
+    color: #d9f99d;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .coordinate-info-geographic-values {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .coordinate-info-geographic-values > div,
+  .coordinate-info-utm > div {
+    gap: 0.25rem;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .coordinate-info-value {
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .coordinate-info-utm {
+    display: grid;
+    width: 100%;
+    grid-template-columns: auto repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    border-top: 1px solid rgb(255 255 255 / 18%);
+    padding-top: 0.5rem;
+  }
+
+  .coordinate-info-utm > div {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 360px) {
+  .coordinate-info-container {
+    right: 0.375rem;
+    left: 3.25rem;
+  }
+
+  .coordinate-info-panel {
+    padding: 0.5rem;
+  }
+
+  .coordinate-info-content {
+    font-size: 0.6875rem;
+  }
+
+  .coordinate-info-utm {
+    gap: 0.25rem;
+  }
+}

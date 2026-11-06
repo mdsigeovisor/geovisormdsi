@@ -1981,8 +1981,12 @@ export class MapService {
     if (!map) return;
     const view = map.getView();
     const transformedExtent = transformExtent(SAN_ISIDRO_EXTENT, 'EPSG:32718', view.getProjection());
+    const size = map.getSize();
+    const fitSize = window.matchMedia('(max-width: 640px)').matches && size
+      ? [size[0] * 6, size[1] * 6]
+      : undefined;
     this.cambiarMapaBase('blanco');
-    view.fit(transformedExtent, { duration, padding: [20, 20, 20, 20] });
+    view.fit(transformedExtent, { duration, padding: [20, 20, 20, 20], size: fitSize });
   }
   /**
    * Muestra el modal global de Términos y Condiciones.

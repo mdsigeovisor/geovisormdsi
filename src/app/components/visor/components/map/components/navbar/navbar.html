@@ -1,6 +1,6 @@
-<nav class="fixed z-10 top-0 left-0 w-full h-16 bg-primary backdrop-blur-md text-white flex items-center justify-between px-6 border-b border-white/10">
+<nav class="navbar-shell fixed z-10 top-0 left-0 w-full h-16 bg-primary backdrop-blur-md text-white flex items-center justify-between px-6 border-b border-white/10">
   <!-- Lado Izquierdo: Logo -->
-  <div class="flex-1 flex justify-start items-center gap-4">
+  <div class="navbar-brand flex-1 flex justify-start items-center gap-4">
     <div class="p-1.5 rounded-lg shadow-inner">
       <img #msiLogo
            src="assets/images/logo.png"
@@ -14,9 +14,9 @@
     <span class="navbar-title-glow text-3xl font-bold tracking-wider leading-tight text-white text-center">Geovisor Catastral</span>
   </div>
   <!-- Lado Derecho: Selector de Herramientas y Botón de Acceso -->
-  <div class="flex-1 flex justify-end items-center gap-2">
+  <div class="navbar-actions flex-1 flex justify-end items-center gap-2">
     <!-- Selector de Herramientas: Tour / Dashboard / Observatorio -->
-    <div class="relative">
+    <div class="navbar-tools relative">
       <select
         id="btn-menus"
         (change)="onOpcionSeleccionada($event)"
@@ -25,7 +25,7 @@
       >
         <option value="" disabled selected class="bg-white text-gray-800">Herramientas</option>
         <option value="tour" class="bg-white text-gray-800">Tour</option>
-        <option value="dashboard" class="bg-white text-gray-800">Dashboard</option>
+        <!-- <option value="dashboard" class="bg-white text-gray-800">Dashboard</option> -->
         <option value="observatorio" class="bg-white text-gray-800">Observatorio</option>
       </select>
       <svg class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

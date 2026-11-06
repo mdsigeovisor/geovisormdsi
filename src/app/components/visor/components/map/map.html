@@ -1,23 +1,24 @@
 @if (!mapService.isReady()) {
-<div class="fixed inset-0 z-[99999] flex flex-col items-center justify-center">
-  <img src="assets/images/fondo.jpg" alt="Fondo" class="absolute inset-0 w-full h-full object-cover grayscale">
+<div class="map-loading-overlay fixed inset-0 z-[99999] flex flex-col items-center justify-center"
+  role="status" aria-live="polite" aria-busy="true">
+  <img src="assets/images/fondo.jpg" alt="" class="absolute inset-0 w-full h-full object-cover grayscale">
   <div class="absolute inset-0 bg-black/70"></div>
-  <div class="relative z-10 flex flex-col items-center justify-center">
-    <app-spinner size="h-40 w-40" color="text-white" imageUrl="/assets/images/msibn.png">
+  <div class="map-loading-content relative z-10 flex flex-col items-center justify-center">
+    <app-spinner size="h-28 w-28 sm:h-40 sm:w-40" color="text-white" imageUrl="/assets/images/msibn.png">
     </app-spinner>
-    <span class="mt-4 text-white/70 text-sm font-bold tracking-[0.2em] animate-pulse uppercase">
-      Cargando...... Geovisor Catastral de la Municipalidad de San Isidro
+    <span class="map-loading-message mt-4 text-white/70 text-sm font-bold tracking-[0.2em] animate-pulse uppercase">
+      Cargando geovisor catastral de la Municipalidad de San Isidro
     </span>
     <img src="/assets/images/logo.png" alt="Logo San Isidro"
-      class="mt-8 h-20 w-auto [filter:drop-shadow(0_0_12px_rgba(255,255,255,0.7))]">
+      class="map-loading-logo mt-8 h-20 w-auto [filter:drop-shadow(0_0_12px_rgba(255,255,255,0.7))]">
   </div>
 </div>
 }
-<app-navbar [tourActivo]="isTourActive()" (login)="openLoginModal()" (tour)="startTour()"></app-navbar>
-<app-sidebar (onToggle)="handleSidebarToggle($event)"></app-sidebar>
+<app-navbar class="map-navbar" [tourActivo]="isTourActive()" (login)="openLoginModal()" (tour)="startTour()"></app-navbar>
+<app-sidebar class="map-sidebar" (onToggle)="handleSidebarToggle($event)"></app-sidebar>
 <div #mapContainer id="mapContainer" class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'" [class.sidebar-open]="sidebarAbierto">
 </div>
-<app-funciones></app-funciones>
+<app-funciones class="map-functions"></app-funciones>
 
 <!-- Logo institucional del visor: esquina inferior izquierda,
      desplazado a la derecha del sidebar (w-12) y elevado para no

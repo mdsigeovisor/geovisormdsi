@@ -1,39 +1,39 @@
-<div class="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-max max-w-[90vw] pointer-events-none">
-  <div id="tour-coordinate-info" class="bg-secondary backdrop-blur-md rounded-2xl px-6 py-1 shadow-2xl shadow-lime-400/50 border border-lime-400/30 pointer-events-auto cursor-pointer origin-bottom scale-[71.875%]">
-    <div class="flex flex-col md:flex-row items-center gap-y-2 md:gap-x-6 text-base text-white font-sans" style="font-family: 'Arial Narrow', sans-serif;">
+<div class="coordinate-info-container fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-max max-w-[90vw] pointer-events-none">
+  <div id="tour-coordinate-info" class="coordinate-info-panel bg-secondary backdrop-blur-md rounded-2xl px-6 py-1 shadow-2xl shadow-lime-400/50 border border-lime-400/30 pointer-events-auto cursor-pointer origin-bottom scale-[71.875%]">
+    <div class="coordinate-info-content flex flex-col md:flex-row items-center gap-y-2 md:gap-x-6 text-base text-white font-sans" style="font-family: 'Arial Narrow', sans-serif;">
       <!-- Grupo 1: DATUM + Coordenadas Geográficas -->
-      <div class="flex items-center gap-6">
+      <div class="coordinate-info-geographic flex items-center gap-6">
         <div class="flex items-center gap-1.5">
-          <span class="uppercase tracking-tighter">DATUM WGS 84</span>
+          <span class="coordinate-info-datum uppercase tracking-tighter">DATUM WGS 84</span>
         </div>
         <div class="w-px h-4 bg-white/20"></div>
         
-        <div class="flex items-center gap-6">
+        <div class="coordinate-info-geographic-values flex items-center gap-6">
           <div class="flex items-center gap-1.5">
             <span class="text-white/60 uppercase">Lat:</span>
-            <span>{{ lat.toFixed(4) || '---' }}</span>
+            <span class="coordinate-info-value">{{ lat.toFixed(4) || '---' }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="text-white/60 uppercase">Lon:</span>
-            <span>{{ lon.toFixed(4) || '---' }}</span>
+            <span class="coordinate-info-value">{{ lon.toFixed(4) || '---' }}</span>
           </div>
         </div>
       </div>
       <!-- Separador vertical que solo se muestra en Desktop -->
       <div class="hidden md:block w-px h-4 bg-white/20"></div>
       <!-- Grupo 2: Información UTM -->
-      <div class="flex items-center gap-6">
+      <div class="coordinate-info-utm flex items-center gap-6">
         <div class="flex items-center gap-1.5">
           <span class="text-white/60 uppercase">Zona:</span>
-          <span>{{ zona || '--' }}</span>
+          <span class="coordinate-info-value">{{ zona || '--' }}</span>
         </div>
         <div class="flex items-center gap-1.5">
           <span class="text-white/60 uppercase">N:</span>
-          <span>{{ norte.toFixed(4) || '---' }}</span>
+          <span class="coordinate-info-value">{{ norte.toFixed(4) || '---' }}</span>
         </div>
         <div class="flex items-center gap-1.5">
           <span class="text-white/60 uppercase">E:</span>
-          <span>{{ este.toFixed(4) || '---' }}</span>
+          <span class="coordinate-info-value">{{ este.toFixed(4) || '---' }}</span>
         </div>
       </div>
     </div>

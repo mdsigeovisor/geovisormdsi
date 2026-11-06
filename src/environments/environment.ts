@@ -7,5 +7,6 @@
 export const environment = crearEnvironment({
   production: false,
   ambiente: 'Desarrollo',
-  portalUrl: 'https://test.munisanisidro.gob.pe'
+  portalUrl: 'https://test.munisanisidro.gob.pe',
+  geoserverUrl: 'http://192.168.40.58:8081/geoserver'
 });

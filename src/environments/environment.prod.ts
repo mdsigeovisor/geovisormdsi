@@ -8,7 +8,7 @@ import { crearEnvironment } from './environment.model';
 export const environment = crearEnvironment({
   production: true,
   ambiente: 'Producción',
-  portalUrl: 'https://munisanisidro.gob.pe',
+  portalUrl: 'https://geovisorcatastral.munisanisidro.gob.pe/',
   wsgeovisorUrl: '/api/WSGEOVISOR',
   // GeoServer de PRODUCCIÓN (público, servido por el dominio del municipio).
   // Desarrollo y QA usan el servidor interno por defecto

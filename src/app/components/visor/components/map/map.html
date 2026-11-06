@@ -13,8 +13,7 @@
   </div>
 </div>
 }
-<app-navbar [tourActivo]="isTourActive()" (login)="openLoginModal()" (tour)="startTour()"
-  (dashboard)="abrirDashboard()"></app-navbar>
+<app-navbar [tourActivo]="isTourActive()" (login)="openLoginModal()" (tour)="startTour()"></app-navbar>
 <app-sidebar (onToggle)="handleSidebarToggle($event)"></app-sidebar>
 <div #mapContainer id="mapContainer" class="map-container" [class.blank-base]="mapService.baseLayerType() === 'blanco'" [class.sidebar-open]="sidebarAbierto">
 </div>

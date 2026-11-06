@@ -43,7 +43,7 @@ src/environments/
 |---|---|---|---|---|
 | `environment.ts` | **Desarrollo** | `https://test.munisanisidro.gob.pe` | Ruta relativa (proxy local) | `http://192.168.40.58:8081/geoserver` (red interna) |
 | `environment.qa.ts` | **QA** | `https://test.munisanisidro.gob.pe` | Ruta relativa (proxy inverso) | `http://192.168.40.58:8081/geoserver` (red interna) |
-| `environment.prod.ts` | **Producción** | `https://munisanisidro.gob.pe` | `/api/WSGEOVISOR` (proxy inverso) | `https://geomapas.munisanisidro.gob.pe/geoserver` (público) |
+| `environment.prod.ts` | **Producción** | `https://geovisorcatastral.munisanisidro.gob.pe/` | `/api/WSGEOVISOR` (proxy inverso) | `https://geomapas.munisanisidro.gob.pe/geoserver` (público) |
 
 Los tres archivos se generan con la fábrica `crearEnvironment()` de
 `src/environments/environment.model.ts`, que centraliza toda la configuración
@@ -54,7 +54,7 @@ Si algún servidor interno cambia por ambiente, se pasa como override:
 export const environment = crearEnvironment({
   production: true,
   ambiente: 'Producción',
-  portalUrl: 'https://munisanisidro.gob.pe',
+  portalUrl: 'https://geovisorcatastral.munisanisidro.gob.pe/',
   wsgeovisorUrl: '/api/WSGEOVISOR',
   // overrides opcionales de servidores internos:
   // geoserverUrl, ortofotoServerUrl, dataGisServerUrl, tusneServerUrl
@@ -63,49 +63,25 @@ export const environment = crearEnvironment({
 
 ### Comandos por ambiente
 
-#### 🧑💻 Desarrollo
+| Ambiente | Servir localmente | Generar build | Archivo de entorno | GeoServer incluido |
+|---|---|---|---|---|
+| **Desarrollo** | `npm start` | `ng build --configuration development` | `environment.ts` | `http://192.168.40.58:8081/geoserver` |
+| **QA** | `npm run start:qa` | `npm run build:qa` | `environment.qa.ts` | `http://192.168.40.58:8081/geoserver` |
+| **Producción** | `npm run start:prod` | `npm run build:prod` | `environment.prod.ts` | `https://geomapas.munisanisidro.gob.pe/geoserver` |
 
-```bash
-# Levantar el servidor de desarrollo (http://localhost:4200 · usa proxy.conf.json)
-npm start
+`npm run watch` también compila en modo desarrollo y vuelve a compilar al guardar.
 
-# Build de desarrollo (sin optimizar y con sourcemaps) → dist/visor-mdsi/browser
-ng build --configuration development
+> **Importante:** `npm run build` genera un build de **producción**; es equivalente
+> a `npm run build:prod` (`ng build -c production`). No uses ese comando para
+> generar el build de QA ni el de desarrollo. Para esos ambientes, usa los
+> comandos explícitos de la tabla.
 
-# Build de desarrollo en modo watch (recompila automáticamente al guardar)
-npm run watch
-```
-
-#### 🏭 Producción
-
-```bash
-# Build de producción (optimizado, con hashing y environment.prod.ts)
-npm run build:prod          # equivale a: ng build -c production
-
-# Atajo: 'npm run build' TAMBIÉN compila producción, porque el
-# defaultConfiguration del target build es "production" (ver angular.json)
-npm run build               # equivale a: ng build -c production
-```
-
-> ⚠️ **Ojo:** `npm run build` **no** compila para desarrollo: por defecto usa la
-> configuración `production` (`defaultConfiguration: "production"` en
-> `angular.json`). Para un build de desarrollo usa `ng build --configuration
-> development` o `npm run watch`.
-
-#### 🔍 QA (referencia)
-
-```bash
-npm run start:qa            # servir la configuración QA localmente
-npm run build:qa            # compilar para QA (equivale a: ng build -c qa)
-```
-
-**Salida del build:** `dist/visor-mdsi/browser/` (contiene el `index.html` y los
-`.js`/`.css` con hash de contenido, listos para publicar en Nginx).
-
-La selección del ambiente se hace mediante `fileReplacements` en
-`angular.json`: la configuración `qa` sustituye `environment.ts` por
-`environment.qa.ts` y la configuración `production` por `environment.prod.ts`,
-de modo que el bundle final solo contiene las URLs del ambiente elegido.
+Los comandos `start` sirven la aplicación localmente; no generan el paquete final.
+El build se genera en `dist/visor-mdsi/browser/`, listo para publicarse. Angular
+selecciona el archivo de entorno mediante `fileReplacements` en `angular.json`:
+`qa` reemplaza `environment.ts` por `environment.qa.ts` y `production` lo
+reemplaza por `environment.prod.ts`. Por eso, las URLs de GeoServer incluidas
+en el bundle corresponden al ambiente elegido al compilarlo.
 
 ---
 

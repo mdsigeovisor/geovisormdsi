@@ -595,6 +595,7 @@ export class MapService {
         }),
       ]),
       view: new View({
+        projection: 'EPSG:3857',
         center: fromLonLat(INITIAL_CENTER),
         zoom: INITIAL_ZOOM,
         minZoom: 4,
@@ -804,7 +805,7 @@ export class MapService {
     this.ortofotoLayerConfigs.forEach(config => {
       this.addXyzLayer({
         id: `ortofoto_${config.year}`,
-        url: `${environment.ortofotoServerUrl}/${config.year}/{z}/{x}/{y}.png`,
+        url: `${environment.ortofotoServerUrl}/tiles/${config.year}/{z}/{x}/{y}.png`,
         maxZoom: 22,
         zIndex: config.zIndex
       });
@@ -910,6 +911,7 @@ export class MapService {
     if (!map) return;
     const xyzSource = new XYZ({
       url: options.url,
+      projection: 'EPSG:3857',
       crossOrigin: 'anonymous',
       maxZoom: options.maxZoom,
       interpolate: true,

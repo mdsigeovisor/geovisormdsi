@@ -100,7 +100,7 @@ export function crearEnvironment(cfg: ParametrosEnvironment) {
     },
 
     // --- CONFIGURACIÓN DEL SERVIDOR DE ORTOFOTOS ---
-    ortofotoServerUrl: cfg.ortofotoServerUrl ?? 'http://192.168.40.58:8082',
+    ortofotoServerUrl: cfg.ortofotoServerUrl ?? 'https://geovisorcatastral.munisanisidro.gob.pe',
 
     // --- CONFIGURACIÓN DEL SERVIDOR DE DATOS CATASTRALES (DataGIS) ---
     // Centraliza las URLs de los servidores internos para no exponerlas

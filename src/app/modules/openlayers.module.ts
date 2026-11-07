@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import '../projections';
 /**
  * Este módulo centraliza las herramientas de OpenLayers.
  * Puedes usarlo como un punto central de exportación para simplificar tus componentes.
@@ -36,5 +37,4 @@ export { default as WKT } from 'ol/format/WKT';
 export { getCenter, extend, isEmpty } from 'ol/extent';
 export { getDistance } from 'ol/sphere';
 export { createXYZ } from 'ol/tilegrid';
-
 

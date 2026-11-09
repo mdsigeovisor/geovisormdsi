@@ -140,9 +140,9 @@ export function crearEnvironment(cfg: ParametrosEnvironment) {
       get esculturas2016Url(): string { return `${this.webFilesUrl}/2016_COMPONENTE3.asp`; },
       get panelesPublicitarios2018Url(): string { return `${this.webFilesUrl}/2018Paneles01.asp`; },
       // --- Endpoints de fichas y fotografía (lote) ---
-      get informacionUrl(): string { return `${this.webFilesUpperUrl}/LotePublico.asp`; },
+      get informacionUrl(): string { return this.lotePublicoUrl; },
       get informacionPrivadaUrl(): string { return `${this.webFilesUpperUrl}/informacion.asp`; },
-      get lotePublicoUrl(): string { return `${this.webFilesUpperUrl}/LotePublico.asp`; },
+      get lotePublicoUrl(): string { return 'https://servicios.munisanisidro.gob.pe/webgeoserverform/LotePublico.aspx'; },
       // --- Planos de levantamiento topográfico (TUSNE) ---
       get tusneUrlBase(): string {
         return `${this.tusneServerUrl}/DataGIS_WGS84/32_LEVANTAMIENTO_TOPOGRAFICO_(TUSNE)`;

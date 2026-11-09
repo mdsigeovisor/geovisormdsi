@@ -233,7 +233,7 @@ export class Imprimir {
   cargandoDatos = signal(false);
   /** URL de la ficha completa del lote (enlace en PDF/impresión) */
   fichaUrl = signal<string | null>(null);
-  /** Filas [etiqueta, valor] de la ficha pública (LotePublico.asp) del marco inferior */
+  /** Filas [etiqueta, valor] de la ficha pública (LotePublico.aspx) del marco inferior */
   infoPublicaFilas = signal<[string, string][]>([]);
 
   /** Feature crudo del lote seleccionado (para centrar/ajustar la vista) */
@@ -268,7 +268,7 @@ export class Imprimir {
       // sus atributos cualitativos ya NO se muestran en el plano.
       const feature = await firstValueFrom(this.mapService.searchLoteByCodigoCatastral(codigo));
       this.featureLote = feature ?? null;
-      this.fichaUrl.set(`${environment.dataGis.informacionUrl}?codigo_i=${codigo}`);
+      this.fichaUrl.set(`${environment.dataGis.lotePublicoUrl}?pCODLOTE=${encodeURIComponent(codigo)}`);
       // La fotografía es un dato restringido: solo se descarga para usuarios
       // autenticados; para el resto el PDF mostrará el aviso correspondiente.
       this.fotoLote.set(this.puedeImprimirFoto() ? await this.obtenerFotoLote(codigo) : null);
@@ -282,12 +282,13 @@ export class Imprimir {
   }
 
   /**
-   * Obtiene la ficha pública del lote desde LotePublico.asp (la misma que ve
+   * Obtiene la ficha pública del lote desde LotePublico.aspx (la misma que ve
    * el ciudadano) y la convierte en filas [etiqueta, valor] para el marco
    * inferior del plano. Devuelve [] si no está disponible (CORS/red/timeout).
    */
   private async obtenerInfoPublica(codigo: string): Promise<[string, string][]> {
-    const html = await this.descargarPaginaDataGIS('WEBFILES/LotePublico.asp', codigo);
+    const url = `${environment.dataGis.lotePublicoUrl}?pCODLOTE=${encodeURIComponent(codigo)}`;
+    const html = await this.descargarUrlDataGIS(url);
     if (!html) return [];
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const limpiar = (texto: string | null | undefined): string =>
@@ -365,16 +366,6 @@ export class Imprimir {
     }
     console.info(`[Imprimir] Ficha pública (${codigo}): ${unicas.length} campos`);
     return unicas;
-  }
-
-  /**
-   * Descarga una página ASP del servidor DataGIS probando primero la ruta
-   * relativa (proxy de desarrollo / same-origin en producción) y luego la URL
-   * absoluta. Decodifica correctamente ISO-8859-1 (codificación del ASP).
-   * Devuelve el HTML o null si ambos intentos fallan.
-   */
-  private async descargarPaginaDataGIS(ruta: string, codigo: string): Promise<string | null> {
-    return this.descargarUrlDataGIS(`/DataGIS_WGS84/${ruta}?codigo_i=${encodeURIComponent(codigo)}`);
   }
 
   /**
@@ -656,7 +647,7 @@ export class Imprimir {
       const foto = this.fotoLote();
 
       // Mapa a TODO el ancho útil; en la parte inferior, DOS marcos:
-      // fotografía · ficha pública (LotePublico.asp).
+      // fotografía · ficha pública (LotePublico.aspx).
       let mapaX = margen, mapaY = areaY, mapaW = areaW, mapaH = areaH;
       let yInferior = areaY;
       let altoInferior = 0;
@@ -742,7 +733,7 @@ export class Imprimir {
         // Marco inferior 1 · fotografía del lote
         this.dibujarFoto(pdf, foto, fotoX, yInferior, fotoW, altoInferior);
 
-        // Marco inferior 2 · ficha pública (LotePublico.asp)
+        // Marco inferior 2 · ficha pública (LotePublico.aspx)
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(7);
         pdf.setTextColor(...COLOR_INSTITUCIONAL);
@@ -758,7 +749,7 @@ export class Imprimir {
             'Ver ficha en línea',
             infoX,
             yInferior + 16,
-            { url: `${environment.dataGis.lotePublicoUrl}?codigo_i=${this.mapService.loteSeleccionadoCodigo()}` },
+            { url: `${environment.dataGis.lotePublicoUrl}?pCODLOTE=${encodeURIComponent(this.mapService.loteSeleccionadoCodigo() ?? '')}` },
           );
         }
       } else {
@@ -1118,4 +1109,3 @@ export class Imprimir {
     return `${Math.round(metros)} m`;
   }
 }
-

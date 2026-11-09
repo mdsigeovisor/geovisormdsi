@@ -185,7 +185,7 @@ export class MapService {
   /**
    * Sincroniza las ventanas de ficha de lote ya abiertas con el estado de
    * sesión: al autenticarse se recargan con la ficha interna (informacion.asp)
-   * y al cerrar sesión vuelven a la pública (LotePublico.asp), de modo que una
+   * y al cerrar sesión vuelven a la pública (LotePublico.aspx), de modo que una
    * ficha con datos restringidos nunca quede abierta tras el logout.
    */
   private readonly syncLoteFichasWithAuth = effect(() => {
@@ -1528,7 +1528,7 @@ export class MapService {
    */
   private static readonly LOTE_WINDOW_PUBLICO: Readonly<Required<Pick<LoteInfoWindow, 'title' | 'width' | 'heightPx' | 'zIndex'>>> = {
     title: 'Información del Lote',
-    // La ficha LotePublico.asp se maqueta con una tabla fija de 680px:
+    // La ficha LotePublico.aspx se maqueta con una tabla fija de 680px:
     // 700px evita espacios laterales muertos sin cortar el contenido.
     width: 685,
     // El contenido de la ficha mide ≈ 480-500px de alto; un valor fijo en px
@@ -1553,24 +1553,24 @@ export class MapService {
 
   /**
    * Construye la URL de la ficha del lote según el estado de sesión:
-   * autenticado → ficha interna (`informacion.asp`); público → `LotePublico.asp`.
+   * autenticado → ficha interna (`informacion.asp`); público → `LotePublico.aspx`.
    */
   private construirUrlFicha(codigoLote: string, autenticado: boolean): string {
-    const base = autenticado
-      ? environment.dataGis.informacionPrivadaUrl
-      : environment.dataGis.informacionUrl;
-    return `${base}?codigo_i=${encodeURIComponent(codigoLote)}`;
+    if (autenticado) {
+      return `${environment.dataGis.informacionPrivadaUrl}?codigo_i=${encodeURIComponent(codigoLote)}`;
+    }
+    return `${environment.dataGis.lotePublicoUrl}?pCODLOTE=${encodeURIComponent(codigoLote)}`;
   }
 
   /**
    * Normaliza el identificador del lote: recorta espacios y, si se recibió una
-   * URL completa (p. ej. "…/LotePublico.asp?codigo_i=3107007010"), extrae el
-   * valor real del parámetro `codigo_i` para evitar URLs anidadas inválidas.
+   * URL completa, extrae el valor real del parámetro de lote para evitar URLs
+   * anidadas inválidas.
    * @param valor Código catastral o URL que lo contiene.
    */
   private static normalizarCodigoLote(valor: string): string {
     const texto = (valor ?? '').trim();
-    const coincidencia = texto.match(/[?&]codigo_i=([^&\s]+)/i);
+    const coincidencia = texto.match(/[?&](?:codigo_i|pCODLOTE)=([^&\s]+)/i);
     return coincidencia ? decodeURIComponent(coincidencia[1]) : texto;
   }
 
@@ -1593,7 +1593,7 @@ export class MapService {
     const index = this.loteInfoWindows().length;
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
     const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
-    // Ficha según sesión: autenticado → informacion.asp (interna); público → LotePublico.asp
+    // Ficha según sesión: autenticado → informacion.asp (interna); público → LotePublico.aspx
     const autenticado = this.authService.isAuthenticated();
     const configVentana = autenticado ? MapService.LOTE_WINDOW_PRIVADO : MapService.LOTE_WINDOW_PUBLICO;
     // Escalonamos cada ventana nueva para que no queden exactamente superpuestas

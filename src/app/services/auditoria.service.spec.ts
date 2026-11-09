@@ -392,9 +392,9 @@ describe('auditoriaInterceptor', () => {
   });
 
   it('ignora los backends ajenos al visor (DataGIS, TUSNE)', () => {
-    http.get('/DataGIS_WGS84/LotePublico.asp?codigo_i=31').subscribe();
+    http.get('/DataGIS_WGS84/WEBFILES/2018Drone.asp?codigo_i=31').subscribe();
 
-    httpMock.expectOne(r => r.url.includes('LotePublico')).flush('ok');
+    httpMock.expectOne(r => r.url.includes('2018Drone.asp')).flush('ok');
     // Ni una sola auditoría: el interceptor cubre `/WSGEOVISOR/api/` y el OWS de
     // GeoServer, que son los dos backends que consulta el visor.
     // Las teselas WMS NO pasan por HttpClient (las pide OpenLayers con el
